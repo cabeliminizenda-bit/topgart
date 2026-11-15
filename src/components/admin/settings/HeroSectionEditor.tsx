@@ -7,7 +7,7 @@ import { ImageFramePicker, EditorModeTabs } from './ImageFramePicker';
 interface HeroSectionEditorProps {
   section: SectionConfig;
   previewMode: 'desktop' | 'tablet' | 'mobile';
-  updateSectionSettings: (id: string, keyOrUpdates: string | Record<string, any>, value?: any) => void;
+  updateSectionSettings: (id: string, keyOrUpdates: string | Record<string, unknown>, value?: unknown) => void;
   handleUpload: (id: string, key: string) => void;
   editingBlockNum?: number;
 }
@@ -166,15 +166,15 @@ export default function HeroSectionEditor({
   // Sync whenever user clicks a block pencil in the preview
   useEffect(() => {
     if (editingBlockNum !== undefined) {
-      setActiveBlock(editingBlockNum);
+      queueMicrotask(() => setActiveBlock(editingBlockNum));
     }
   }, [editingBlockNum]);
 
-  const handleFieldChange = (key: string, value: any) => {
+  const handleFieldChange = (key: string, value: unknown) => {
     updateSectionSettings(section.id, key, value);
   };
 
-  const handleMultiChange = (updates: Record<string, any>) => {
+  const handleMultiChange = (updates: Record<string, unknown>) => {
     updateSectionSettings(section.id, updates);
   };
 
@@ -647,15 +647,17 @@ export default function HeroSectionEditor({
               onChange={(v) => handleFieldChange('block2OverlayOpacity', v)}
             />
 
-            <RangeNumberField
-              label="Text-Box Deckkraft"
-              value={settings.block2CardBgOpacity}
-              defaultValue={75}
-              min={0}
-              max={100}
-              unit="%"
-              onChange={(v) => handleFieldChange('block2CardBgOpacity', v)}
-            />
+            <div className="flex items-center justify-between py-1">
+              <label className="text-xs text-gray-600">Overlay Stil</label>
+              <select
+                value={settings.block2OverlayStyle || 'gradient'}
+                onChange={(e) => handleFieldChange('block2OverlayStyle', e.target.value)}
+                className="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="gradient">Verlauf (Gradient)</option>
+                <option value="solid">Vollflächig (Solid)</option>
+              </select>
+            </div>
 
             <div className="pt-2 border-t border-gray-100 space-y-1.5">
               <ColorField

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
@@ -25,7 +25,8 @@ const defaultApplianceCategories: CategoryItem[] = [
 ];
 
 export interface HlgHeroProps {
-  config?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config?: Record<string, any>;
   categories?: Array<{ id?: string; name: string; slug: string | null }>;
   isPreview?: boolean;
   sectionId?: string;
@@ -84,12 +85,12 @@ export default function HlgHero({
   isPreview = false,
   sectionId,
 }: HlgHeroProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const cartStore = useCartStore();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const cartItems = cartStore.getTotalItems();
   const cartTotal = cartStore.getTotalPrice();
@@ -149,7 +150,7 @@ export default function HlgHero({
   const block2Padding = parseNumberSetting(config?.block2Padding, 28, 0, 80);
   const block2OverlayColor = parseColorSetting(config?.block2OverlayColor, '#ffffff');
   const block2OverlayOpacity = parseNumberSetting(config?.block2OverlayOpacity, 85, 0, 100);
-  const block2CardBgOpacity = parseNumberSetting(config?.block2CardBgOpacity, 75, 0, 100);
+  const block2OverlayStyle = (config?.block2OverlayStyle as 'gradient' | 'solid') || 'gradient';
   const block2BadgeBg = parseColorSetting(config?.block2BadgeBg, '#e01b1b');
   const block2BadgeTextColor = parseColorSetting(config?.block2BadgeTextColor, '#ffffff');
   const block2BadgeSize = parseNumberSetting(config?.block2BadgeSize, 11, 8, 28);
@@ -354,105 +355,103 @@ export default function HlgHero({
               />
             )}
 
-            {/* Gradient Overlay for legibility */}
+            {/* Overlay on Block Background */}
             <div
-              className="absolute inset-0 pointer-events-none"
+              className="absolute inset-0 pointer-events-none transition-opacity"
               style={{
-                background: `linear-gradient(to right, ${hexToRgba(block2OverlayColor, block2OverlayOpacity)} 0%, ${hexToRgba(block2OverlayColor, Math.round(block2OverlayOpacity * 0.78))} 55%, rgba(255,255,255,0) 100%)`,
+                background:
+                  block2OverlayStyle === 'solid'
+                    ? hexToRgba(block2OverlayColor, block2OverlayOpacity)
+                    : `linear-gradient(to right, ${hexToRgba(block2OverlayColor, block2OverlayOpacity)} 0%, ${hexToRgba(block2OverlayColor, Math.round(block2OverlayOpacity * 0.85))} 50%, ${hexToRgba(block2OverlayColor, Math.round(block2OverlayOpacity * 0.35))} 100%)`,
               }}
             />
 
-            {/* Banner Content Card */}
+            {/* Banner Content (placed directly on block, no translucent card background) */}
             <div className="relative z-10 max-w-xl" style={{ padding: `${block2Padding}px` }}>
-              <div
-                className="backdrop-blur-[2px] rounded-2xl p-4 sm:p-5 shadow-xs border border-white/80 max-w-lg"
-                style={{ backgroundColor: `rgba(255, 255, 255, ${block2CardBgOpacity / 100})` }}
-              >
-                {/* Badge */}
-                {block2BadgeText && (
-                  <div className="inline-flex items-center shadow-xs">
-                    <span
-                      className="relative font-black tracking-wider uppercase px-3.5 py-1 rounded-sm shadow-sm flex items-center gap-1.5"
-                      style={{
-                        backgroundColor: block2BadgeBg,
-                        color: block2BadgeTextColor,
-                        fontSize: `${block2BadgeSize}px`,
-                      }}
-                    >
-                      <span
-                        style={{
-                          color:
-                            block2BadgeTextColor.toLowerCase() === '#ffffff'
-                              ? '#fde047'
-                              : block2BadgeTextColor,
-                        }}
-                      >
-                        ⚡
-                      </span>
-                      <span>{renderRichText(block2BadgeText)}</span>
-                    </span>
-                  </div>
-                )}
-
-                {/* Main Title */}
-                <h1
-                  className="font-black leading-[1.15] tracking-tight mt-3"
-                  style={{
-                    color: block2TitleColor,
-                    fontSize: `${block2TitleSize}px`,
-                  }}
-                >
-                  {renderRichText(block2Title)}
-                </h1>
-
-                {/* Subtitle */}
-                {block2Subtitle && (
-                  <p
-                    className="font-semibold mt-2 max-w-md leading-relaxed"
+              {/* Badge */}
+              {block2BadgeText && (
+                <div className="inline-flex items-center shadow-xs">
+                  <span
+                    className="relative font-black tracking-wider uppercase px-3.5 py-1 rounded-sm shadow-sm flex items-center gap-1.5"
                     style={{
-                      color: block2SubtitleColor,
-                      fontSize: `${block2SubtitleSize}px`,
+                      backgroundColor: block2BadgeBg,
+                      color: block2BadgeTextColor,
+                      fontSize: `${block2BadgeSize}px`,
                     }}
                   >
-                    {renderRichText(block2Subtitle)}
-                  </p>
-                )}
-
-                {/* Trust Micro-Bullets */}
-                {(block2Trust1 || block2Trust2) && (
-                  <div
-                    className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-bold"
-                    style={{ fontSize: `${block2TrustSize}px`, color: block2TrustColor }}
-                  >
-                    {[block2Trust1, block2Trust2].filter(Boolean).map((item, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1">
-                        <span style={{ color: block2TrustIconColor }}>✓</span>
-                        <span style={{ color: block2TrustColor }}>{renderRichText(item)}</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* CTA Button */}
-                {block2CtaText && (
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <Link
-                      href={block2CtaUrl || '/shop'}
-                      className="font-extrabold px-7 py-3 rounded-full inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                    <span
                       style={{
-                        backgroundColor: block2BtnBg,
-                        color: block2BtnTextColor,
-                        fontSize: `${block2BtnSize}px`,
+                        color:
+                          block2BadgeTextColor.toLowerCase() === '#ffffff'
+                            ? '#fde047'
+                            : block2BadgeTextColor,
                       }}
                     >
-                      <span>{renderRichText(block2CtaText)}</span>
-                      <svg className="w-[1.05em] h-[1.05em]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </Link>
-                  </div>
-                )}
-              </div>
+                      ⚡
+                    </span>
+                    <span>{renderRichText(block2BadgeText)}</span>
+                  </span>
+                </div>
+              )}
+
+              {/* Main Title */}
+              <h1
+                className="font-black leading-[1.15] tracking-tight mt-3"
+                style={{
+                  color: block2TitleColor,
+                  fontSize: `${block2TitleSize}px`,
+                }}
+              >
+                {renderRichText(block2Title)}
+              </h1>
+
+              {/* Subtitle */}
+              {block2Subtitle && (
+                <p
+                  className="font-semibold mt-2 max-w-md leading-relaxed"
+                  style={{
+                    color: block2SubtitleColor,
+                    fontSize: `${block2SubtitleSize}px`,
+                  }}
+                >
+                  {renderRichText(block2Subtitle)}
+                </p>
+              )}
+
+              {/* Trust Micro-Bullets */}
+              {(block2Trust1 || block2Trust2) && (
+                <div
+                  className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-bold"
+                  style={{ fontSize: `${block2TrustSize}px`, color: block2TrustColor }}
+                >
+                  {[block2Trust1, block2Trust2].filter(Boolean).map((item, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1">
+                      <span style={{ color: block2TrustIconColor }}>✓</span>
+                      <span style={{ color: block2TrustColor }}>{renderRichText(item)}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* CTA Button */}
+              {block2CtaText && (
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <Link
+                    href={block2CtaUrl || '/shop'}
+                    className="font-extrabold px-7 py-3 rounded-full inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                    style={{
+                      backgroundColor: block2BtnBg,
+                      color: block2BtnTextColor,
+                      fontSize: `${block2BtnSize}px`,
+                    }}
+                  >
+                    <span>{renderRichText(block2CtaText)}</span>
+                    <svg className="w-[1.05em] h-[1.05em]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
