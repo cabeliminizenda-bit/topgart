@@ -69,9 +69,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   });
   const lowestShippingRate = deZone?.methods?.[0]?.rate ?? 0;
 
-  // Canonical category path for SEO
+  // Canonical category path for SEO (Strip Category Base)
   const primaryCat = (product as any).categories?.[0];
-  const primaryCatPath = primaryCat ? await getCategoryCanonicalPath(primaryCat.id) : null;
+  const primaryCatPath = primaryCat ? await getCategoryCanonicalPath(primaryCat) : null;
 
   // Check if logged in
   const supabase = await createClient();
@@ -199,7 +199,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   '@type': 'ListItem',
                   position: 2,
                   name: primaryCat.name,
-                  item: `${SITE_URL}${primaryCatPath || `/product-category/${primaryCat.slug || primaryCat.id}`}`,
+                  item: `${SITE_URL}${primaryCatPath || `/${primaryCat.slug || primaryCat.id}`}`,
                 }] : []),
                 {
                   '@type': 'ListItem',
@@ -219,7 +219,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <span className="text-gray-300">/</span>
             {primaryCat ? (
               <Link 
-                href={primaryCatPath || `/product-category/${primaryCat.slug || primaryCat.id}`}
+                href={primaryCatPath || `/${primaryCat.slug || primaryCat.id}`}
                 className="hover:text-[#107b46] transition"
               >
                 {primaryCat.name}

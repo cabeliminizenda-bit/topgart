@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import prisma from "@/lib/prisma";
 import CurrencyProvider from "@/components/CurrencyProvider";
-import { defaultCurrencyOptions } from "@/lib/formatPrice";
+import { defaultCurrencyOptions, type CurrencyOptions } from "@/lib/formatPrice";
 import DeferredWidgets from "@/components/layout/DeferredWidgets";
 import StoreLayout from "@/components/layout/StoreLayout";
 import ThemeProvider from "@/components/layout/ThemeProvider";
@@ -25,14 +25,23 @@ const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settingsDb = await prisma.setting.findMany({
-    where: { key: { in: ['FAVICON_IMAGE', 'HOME_META_TITLE', 'HOME_META_DESCRIPTION', 'HEADER_LOGO_IMAGE', 'GOOGLE_SITE_VERIFICATION'] } }
+    where: { key: { in: ['FAVICON_IMAGE', 'HOME_META_TITLE', 'HOME_META_DESCRIPTION', 'OG_IMAGE', 'HEADER_LOGO_IMAGE', 'GOOGLE_SITE_VERIFICATION', 'BING_SITE_VERIFICATION'] } }
   });
-  
+
   const settingsMap = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
   const faviconUrl = settingsMap['FAVICON_IMAGE'] || '/LOGO-HLG-HAUSGERAETE.png';
   const title = settingsMap['HOME_META_TITLE'] || `${storeName} | Hochwertige Haushaltsgeräte zu besten Preisen`;
   const description = settingsMap['HOME_META_DESCRIPTION'] || "Entdecken Sie hochwertige Haushaltsgeräte zu den besten Preisen bei HLG Hausgeräte. Waschmaschinen, Geschirrspüler, Kaffeemaschinen, Kühlschränke und mehr.";
-  const ogImage = settingsMap['HEADER_LOGO_IMAGE'] || '/LOGO-HLG-HAUSGERAETE.png';
+  const ogImage = settingsMap['OG_IMAGE'] || settingsMap['HEADER_LOGO_IMAGE'] || '/LOGO-HLG-HAUSGERAETE.png';
+
+  const rawGsc = (settingsMap['GOOGLE_SITE_VERIFICATION'] || '').trim();
+  const gscToken = rawGsc.match(/content=["']([^"']+)["']/i)?.[1]?.trim()
+    || rawGsc.match(/google-site-verification=([^"'\s&]+)/i)?.[1]?.trim()
+    || rawGsc.replace(/^["']|["']$/g, '').trim();
+
+  const rawBing = (settingsMap['BING_SITE_VERIFICATION'] || '').trim();
+  const bingToken = rawBing.match(/content=["']([^"']+)["']/i)?.[1]?.trim()
+    || rawBing.replace(/^["']|["']$/g, '').trim();
 
   const baseUrl = SITE_URL;
 
@@ -72,8 +81,9 @@ export async function generateMetadata(): Promise<Metadata> {
         { url: faviconUrl },
       ],
     } : undefined,
-    verification: settingsMap['GOOGLE_SITE_VERIFICATION'] ? {
-      google: settingsMap['GOOGLE_SITE_VERIFICATION']
+    verification: (gscToken || bingToken) ? {
+      ...(gscToken ? { google: gscToken } : {}),
+      ...(bingToken ? { other: { 'msvalidate.01': [bingToken] } } : {})
     } : undefined
   };
 }
@@ -81,14 +91,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const messages = await getMessages();
   const locale = await getLocale();
-  
-  let userRole: 'ADMIN' | 'CUSTOMER' | null = null;
-  
+
+  const userRole: 'ADMIN' | 'CUSTOMER' | null = null;
+
   const settingsMap = await getCachedSettings();
-  
-  const currencyOptions = {
+
+  const currencyOptions: CurrencyOptions = {
     currencySymbol: settingsMap.currencySymbol || defaultCurrencyOptions.currencySymbol,
-    currencyPosition: (settingsMap.currencyPosition as any) || defaultCurrencyOptions.currencyPosition,
+    currencyPosition: (settingsMap.currencyPosition as CurrencyOptions['currencyPosition']) || defaultCurrencyOptions.currencyPosition,
     thousandSeparator: settingsMap.thousandSeparator !== undefined ? settingsMap.thousandSeparator : defaultCurrencyOptions.thousandSeparator,
     decimalSeparator: settingsMap.decimalSeparator || defaultCurrencyOptions.decimalSeparator,
     taxIncludedInPrice: settingsMap.TAX_INCLUDED_IN_PRICE === 'true',
@@ -110,7 +120,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   } catch (e) {
     console.error("Erreur parsing HEADER_MENU_LINKS", e);
   }
-  
+
   const defaultFooterColumns = [
     { title: 'Kundenservice', links: [{ label: 'Kontakt', url: `/${contactSlug}` }, { label: 'Rückgabe & Erstattung', url: '/rueckgabe-und-erstattung' }] },
     { title: 'Mein Konto', links: [{ label: 'Shop', url: '/shop' }, { label: 'Warenkorb', url: '/cart' }] }
@@ -120,9 +130,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     if (settingsMap.FOOTER_COLUMNS) {
       footerColumns = JSON.parse(settingsMap.FOOTER_COLUMNS);
     }
-  } catch (e) {}
+  } catch { }
 
-  const defaultTopBarLinks = [
+  const defaultTopBarLinks: { label: string; icon: string; url: string }[] = [
     { label: 'Bestellung verfolgen', icon: 'truck', url: '/order-tracking' },
   ];
   let topBarLinks = defaultTopBarLinks;
@@ -130,12 +140,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     if (settingsMap.TOP_BAR_LINKS) {
       topBarLinks = JSON.parse(settingsMap.TOP_BAR_LINKS);
     }
-  } catch (e) {}
+  } catch { }
 
   // Remove Store location and ensure Order Tracking is in German
   topBarLinks = (topBarLinks || [])
-    .filter((link: any) => !link.label?.toLowerCase().includes('store') && !link.url?.includes('store-locator'))
-    .map((link: any) => {
+    .filter((link) => !link.label?.toLowerCase().includes('store') && !link.url?.includes('store-locator'))
+    .map((link) => {
       if (link.label?.toLowerCase().includes('order') || link.label?.toLowerCase().includes('track') || link.url?.includes('order-tracking') || link.label?.toLowerCase().includes('rastrear')) {
         return { ...link, label: 'Bestellung verfolgen' };
       }
@@ -293,10 +303,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <StoreLayout settings={storeSettings} userRole={userRole}>
                 <Toaster position="bottom-right" />
                 {children}
-                <DeferredWidgets 
-                  chatEnabled={settingsMap.CHAT_ENABLED !== 'false'} 
-                  chatStoreName={settingsMap.CHAT_STORE_NAME || settingsMap.STORE_NAME || 'HLG Hausgeräte'} 
-                  chatStoreIcon={settingsMap.CHAT_STORE_ICON || settingsMap.HEADER_LOGO_IMAGE || settingsMap.FAVICON_IMAGE || '/LOGO-HLG-HAUSGERAETE.png'} 
+                <DeferredWidgets
+                  chatEnabled={settingsMap.CHAT_ENABLED !== 'false'}
+                  chatStoreName={settingsMap.CHAT_STORE_NAME || settingsMap.STORE_NAME || 'HLG Hausgeräte'}
+                  chatStoreIcon={settingsMap.CHAT_STORE_ICON || settingsMap.HEADER_LOGO_IMAGE || settingsMap.FAVICON_IMAGE || '/LOGO-HLG-HAUSGERAETE.png'}
                 />
               </StoreLayout>
             </CurrencyProvider>

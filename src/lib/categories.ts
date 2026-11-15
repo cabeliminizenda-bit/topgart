@@ -31,17 +31,25 @@ export const getCachedAllCategories = unstable_cache(
 
 /**
  * Computes the full hierarchical path for a category (RankMath Strip Category Base style)
- * e.g. /combustiveis/lenha-e-pellets
+ * e.g. /waschmaschinen or /kuehlen-gefrieren/side-by-side
  */
 export async function getCategoryCanonicalPath(
-  category: { id: string; slug: string | null; parentId: string | null },
+  category: { id: string; slug: string | null; parentId: string | null } | string,
   allCategories?: CategoryWithHierarchy[]
 ): Promise<string> {
   const cats = allCategories || (await getCachedAllCategories());
   const catMap = new Map(cats.map(c => [c.id, c]));
 
-  const segments: string[] = [category.slug || category.id];
-  let currentParentId = category.parentId;
+  let catObj: { id: string; slug: string | null; parentId: string | null } | undefined;
+  if (typeof category === 'string') {
+    catObj = catMap.get(category) || cats.find(c => c.slug === category);
+    if (!catObj) return `/${encodeURIComponent(category)}`;
+  } else {
+    catObj = category;
+  }
+
+  const segments: string[] = [catObj.slug || catObj.id];
+  let currentParentId = catObj.parentId;
 
   while (currentParentId && catMap.has(currentParentId)) {
     const parent = catMap.get(currentParentId)!;
@@ -131,10 +139,10 @@ export async function resolveCategoryFilter(categoryIdOrSlug: string): Promise<{
     cats.find(c => c.slug && c.slug.toLowerCase() === lower) ||
     (normalizedTarget.length > 0
       ? cats.find(
-          c =>
-            (c.slug && normalizeCategoryLookupKey(c.slug) === normalizedTarget) ||
-            normalizeCategoryLookupKey(c.name) === normalizedTarget
-        )
+        c =>
+          (c.slug && normalizeCategoryLookupKey(c.slug) === normalizedTarget) ||
+          normalizeCategoryLookupKey(c.name) === normalizedTarget
+      )
       : undefined);
 
   // Fallback directly to DB if cached tree did not include a newly created category
@@ -143,11 +151,11 @@ export async function resolveCategoryFilter(categoryIdOrSlug: string): Promise<{
       where: UUID_REGEX.test(decoded)
         ? { id: decoded }
         : {
-            OR: [
-              { slug: { equals: decoded, mode: 'insensitive' } },
-              { name: { equals: decoded, mode: 'insensitive' } },
-            ],
-          },
+          OR: [
+            { slug: { equals: decoded, mode: 'insensitive' } },
+            { name: { equals: decoded, mode: 'insensitive' } },
+          ],
+        },
       select: {
         id: true,
         name: true,

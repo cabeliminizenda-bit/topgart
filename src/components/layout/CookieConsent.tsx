@@ -36,11 +36,11 @@ export default function CookieConsent() {
       role="dialog"
       aria-live="polite"
       aria-label={t('title')}
-      className="fixed bottom-[68px] sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md z-[80] bg-white/95 backdrop-blur-md rounded-2xl border border-stone-200/90 shadow-2xl shadow-stone-900/15 p-4 sm:p-5 animate-in fade-in slide-in-from-bottom-3 duration-300"
+      className="fixed bottom-[68px] sm:bottom-6 left-3 right-3 sm:left-6 sm:right-auto sm:max-w-md z-[80] bg-white/95 backdrop-blur-md rounded-2xl border border-stone-200/90 shadow-2xl shadow-stone-900/15 p-4 sm:p-5 animate-in fade-in slide-in-from-bottom-3 duration-300"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-100">
+          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#107b46] flex items-center justify-center shrink-0 border border-emerald-100">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
@@ -52,7 +52,7 @@ export default function CookieConsent() {
         <button
           type="button"
           onClick={handleDecline}
-          aria-label="Fechar"
+          aria-label="Schließen"
           className="text-stone-400 hover:text-stone-600 p-1 -mr-1 -mt-1 rounded-lg transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,8 +67,8 @@ export default function CookieConsent() {
 
       <div className="mt-2">
         <Link 
-          href="/privacidade" 
-          className="inline-flex items-center gap-1 text-[11px] font-semibold text-stone-500 hover:text-red-600 underline transition-colors"
+          href="/datenschutz" 
+          className="inline-flex items-center gap-1 text-[11px] font-semibold text-stone-500 hover:text-[#107b46] underline transition-colors"
         >
           <span>{t('privacy_policy')}</span>
           <span aria-hidden="true">&rarr;</span>
@@ -86,7 +86,7 @@ export default function CookieConsent() {
         <button
           type="button"
           onClick={handleAccept}
-          className="flex-1 py-2 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all text-center"
+          className="flex-1 py-2 px-3 rounded-xl bg-[#107b46] hover:bg-[#0d683b] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all text-center"
         >
           {t('accept')}
         </button>

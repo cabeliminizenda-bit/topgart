@@ -70,14 +70,14 @@ export async function generateMetadata({
     const canonicalPath = await getCategoryCanonicalPath(category);
     return {
       title: category.metaTitle ? category.metaTitle : `${category.name} | ${storeName}`,
-      description: category.metaDescription || `Compre produtos de ${category.name} com os melhores preços e entrega rápida na Lenha & Carvão Silva Dias.`,
+      description: category.metaDescription || `Entdecken Sie ${category.name} zu besten Preisen bei ${storeName}. Schnelle Lieferung & geprüfte Qualität.`,
       keywords: category.metaKeywords || undefined,
       alternates: {
         canonical: canonicalPath,
       },
       openGraph: {
         title: category.metaTitle || `${category.name} | ${storeName}`,
-        description: category.metaDescription || `Compre produtos de ${category.name} na Lenha & Carvão Silva Dias.`,
+        description: category.metaDescription || `Entdecken Sie ${category.name} bei ${storeName}.`,
         url: `${SITE_URL}${canonicalPath}`,
         siteName: storeName,
         type: 'website',

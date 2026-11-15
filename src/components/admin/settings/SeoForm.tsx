@@ -6,14 +6,31 @@ import MediaPickerModal from '@/components/admin/MediaPickerModal';
 import { useTranslations } from 'next-intl';
 import Image from "next/image";
 
+function cleanVerificationToken(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  const match = trimmed.match(/content=["']([^"']+)["']/i) || trimmed.match(/google-site-verification=([^"'\s&]+)/i);
+  if (match) return match[1].trim();
+  return trimmed.replace(/^["']|["']$/g, '').trim();
+}
+
+function cleanAnalyticsId(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  const match = trimmed.match(/\b(G-[A-Z0-9]+|UA-[0-9]+-[0-9]+|GT-[A-Z0-9]+)\b/i);
+  if (match) return match[1].toUpperCase();
+  return trimmed;
+}
+
 export default function SeoForm({ initialSettings }: { initialSettings: Record<string, string> }) {
   const router = useRouter();
   const tSeo = useTranslations('AdminSEO');
   
   const [metaTitle, setMetaTitle] = useState(initialSettings.HOME_META_TITLE || '');
   const [metaDescription, setMetaDescription] = useState(initialSettings.HOME_META_DESCRIPTION || '');
-  const [ogImage, setOgImage] = useState(initialSettings.HEADER_LOGO_IMAGE || '');
+  const [ogImage, setOgImage] = useState(initialSettings.OG_IMAGE || '');
   const [googleSiteVerification, setGoogleSiteVerification] = useState(initialSettings.GOOGLE_SITE_VERIFICATION || '');
+  const [bingSiteVerification, setBingSiteVerification] = useState(initialSettings.BING_SITE_VERIFICATION || '');
   const [googleAnalyticsId, setGoogleAnalyticsId] = useState(initialSettings.GOOGLE_ANALYTICS_ID || '');
   
   const [storeCountry, setStoreCountry] = useState(initialSettings.STORE_COUNTRY || 'FR');
@@ -33,9 +50,10 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
     const settingsMap: Record<string, string> = {
       HOME_META_TITLE: metaTitle,
       HOME_META_DESCRIPTION: metaDescription,
-      HEADER_LOGO_IMAGE: ogImage,
-      GOOGLE_SITE_VERIFICATION: googleSiteVerification,
-      GOOGLE_ANALYTICS_ID: googleAnalyticsId,
+      OG_IMAGE: ogImage,
+      GOOGLE_SITE_VERIFICATION: cleanVerificationToken(googleSiteVerification),
+      BING_SITE_VERIFICATION: cleanVerificationToken(bingSiteVerification),
+      GOOGLE_ANALYTICS_ID: cleanAnalyticsId(googleAnalyticsId),
       STORE_COUNTRY: storeCountry,
       RSS_BEFORE_CONTENT: rssBeforeContent,
       RSS_AFTER_CONTENT: rssAfterContent,
@@ -103,15 +121,48 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
         <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-gray-100 pb-6">
           <div className="mb-4 md:mb-0 md:w-1/3">
             <label className="block text-sm font-medium text-gray-700">{tSeo('gsc_label') || 'Google Search Console'}</label>
-            <p className="text-xs text-gray-500 mt-1">{tSeo('gsc_help') || 'Clé de vérification (ex: xxxxxxx-yyyyyy). Récupérez-la lors de l\'ajout de la propriété "Préfixe de l\'URL" (méthode balise HTML).'}</p>
+            <p className="text-xs text-gray-500 mt-1">{tSeo('gsc_help') || 'Jeton de vérification ou balise HTML complète copiée depuis Search Console ou Rank Math.'}</p>
           </div>
           <div className="md:w-2/3">
             <input
               type="text"
               value={googleSiteVerification}
-              onChange={(e) => setGoogleSiteVerification(e.target.value)}
-              placeholder={tSeo('gsc_placeholder') || "votre_code_de_verification"}
-              className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.includes('<') || val.includes('content=') || val.includes('google-site-verification')) {
+                  setGoogleSiteVerification(cleanVerificationToken(val));
+                } else {
+                  setGoogleSiteVerification(val);
+                }
+              }}
+              onBlur={() => setGoogleSiteVerification(cleanVerificationToken(googleSiteVerification))}
+              placeholder="Ex: abcdef12345 ou <meta name='google-site-verification' content='...' />"
+              className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+            />
+            <p className="text-xs text-gray-400 mt-1">Collez votre jeton ou balise HTML complète — le jeton est extrait automatiquement.</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-gray-100 pb-6">
+          <div className="mb-4 md:mb-0 md:w-1/3">
+            <label className="block text-sm font-medium text-gray-700">Bing Webmaster Tools</label>
+            <p className="text-xs text-gray-500 mt-1">Code de vérification Bing / Yahoo / DuckDuckGo (balise <code>msvalidate.01</code> ou jeton brut).</p>
+          </div>
+          <div className="md:w-2/3">
+            <input
+              type="text"
+              value={bingSiteVerification}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.includes('<') || val.includes('content=') || val.includes('msvalidate')) {
+                  setBingSiteVerification(cleanVerificationToken(val));
+                } else {
+                  setBingSiteVerification(val);
+                }
+              }}
+              onBlur={() => setBingSiteVerification(cleanVerificationToken(bingSiteVerification))}
+              placeholder="Ex: 1234567890ABCDEF..."
+              className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
             />
           </div>
         </div>
@@ -119,16 +170,25 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
         <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-gray-100 pb-6">
           <div className="mb-4 md:mb-0 md:w-1/3">
             <label className="block text-sm font-medium text-gray-700">{tSeo('ga_label') || 'Google Analytics (G-XXXXX)'}</label>
-            <p className="text-xs text-gray-500 mt-1">{tSeo('ga_help') || 'ID de mesure de votre propriété Google Analytics 4. Le script s\'activera automatiquement quand l\'utilisateur accepte les cookies statistiques.'}</p>
+            <p className="text-xs text-gray-500 mt-1">{tSeo('ga_help') || 'ID de mesure GA4. Le script s\'activera automatiquement dès l\'acceptation des cookies.'}</p>
           </div>
           <div className="md:w-2/3">
             <input
               type="text"
               value={googleAnalyticsId}
-              onChange={(e) => setGoogleAnalyticsId(e.target.value)}
-              placeholder={tSeo('ga_placeholder') || "G-XXXXXXXXXX"}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.includes('<') || val.includes('gtag') || val.includes('googletagmanager')) {
+                  setGoogleAnalyticsId(cleanAnalyticsId(val));
+                } else {
+                  setGoogleAnalyticsId(val);
+                }
+              }}
+              onBlur={() => setGoogleAnalyticsId(cleanAnalyticsId(googleAnalyticsId))}
+              placeholder="G-XXXXXXXXXX"
               className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono"
             />
+            <p className="text-xs text-gray-400 mt-1">Collez votre ID (G-XXXXXXXXXX) ou le snippet complet — l&apos;ID est extrait automatiquement.</p>
           </div>
         </div>
 
@@ -143,13 +203,24 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
                 <Image width={800} height={800} src={ogImage} alt="OG Image" className="max-w-xs rounded-md border border-gray-200 shadow-sm" />
               </div>
             )}
-            <button
-              type="button"
-              onClick={() => setShowMediaModal(true)}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {ogImage ? tSeo('change_image') : tSeo('choose_image')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowMediaModal(true)}
+                className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                {ogImage ? (tSeo('change_image') || 'Modifier l\'image') : (tSeo('choose_image') || 'Sélectionner une image')}
+              </button>
+              {ogImage && (
+                <button
+                  type="button"
+                  onClick={() => setOgImage('')}
+                  className="px-3 py-2 bg-white border border-red-200 text-red-600 rounded-md text-sm font-medium hover:bg-red-50 focus:outline-none"
+                >
+                  Supprimer
+                </button>
+              )}
+            </div>
             
             {showMediaModal && (
               <MediaPickerModal 
