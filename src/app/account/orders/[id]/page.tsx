@@ -204,11 +204,11 @@ export default async function OrderDetailsPage({
                       </div>
                     )}
                     <div>
-                      <Link href={`/produkt/${item.product.slug}`} className="font-semibold text-sm text-gray-900 hover:text-orange-700 transition-colors">
+                      <Link href={`/produkt/${item.product.slug}`} className="font-semibold text-sm text-gray-900 hover:text-[#107b46] transition-colors">
                         {item.product.title}
                       </Link>
                       {item.attributes && (
-                        <p className="text-xs text-orange-700 font-medium mt-1">
+                        <p className="text-xs text-[#107b46] font-medium mt-1">
                           {(() => {
                             try {
                               const attrs = typeof item.attributes === 'string' ? JSON.parse(item.attributes) : item.attributes;
@@ -219,7 +219,7 @@ export default async function OrderDetailsPage({
                           })()}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">Quantité: {item.quantity}</p>
+                      <p className="text-xs text-gray-500 mt-1">Menge: {item.quantity}</p>
                     </div>
                   </div>
                   <p className="font-bold text-sm text-gray-900"><Price amount={item.price * item.quantity} showTax={false} /></p>
@@ -252,10 +252,10 @@ export default async function OrderDetailsPage({
         {/* Infos client — 1/3 */}
         <div className="lg:col-span-1">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 h-full">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">👤 Informations client</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">👤 Kundeninformationen</h2>
 
-            {/* Adresse de facturation */}
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">ADRESSE DE FACTURATION</p>
+            {/* Rechnungsadresse */}
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">RECHNUNGSADRESSE</p>
             <div className="space-y-2 text-sm text-gray-700 mb-5">
               <div className="flex items-center gap-2">
                 <span className="text-gray-500 w-4 shrink-0">👤</span>
@@ -264,7 +264,7 @@ export default async function OrderDetailsPage({
               {customerEmail && (
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500 w-4 shrink-0">✉️</span>
-                  <a href={`mailto:${customerEmail}`} className="text-orange-700 hover:underline break-all text-xs">
+                  <a href={`mailto:${customerEmail}`} className="text-[#107b46] hover:underline break-all text-xs">
                     {customerEmail}
                   </a>
                 </div>
@@ -281,12 +281,12 @@ export default async function OrderDetailsPage({
               </div>
             </div>
 
-            {/* Adresse de livraison */}
+            {/* Lieferadresse */}
             <div className="border-t pt-4">
               {formattedShippingAddress && formattedShippingAddress !== formattedBillingAddress ? (
                 <>
-                  <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide mb-3">🚚 {t('shipping_address')}</p>
-                  <div className="space-y-2 text-sm text-gray-700 bg-orange-50 border border-orange-100 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-[#107b46] uppercase tracking-wide mb-3">🚚 {t('shipping_address')}</p>
+                  <div className="space-y-2 text-sm text-gray-700 bg-emerald-50 border border-emerald-100 rounded-lg p-3">
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 w-4 shrink-0">👤</span>
                       <span className="font-medium">{customerNameShipping}</span>
@@ -306,7 +306,7 @@ export default async function OrderDetailsPage({
               ) : (
                 <>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">🚚 {t('shipping_address')}</p>
-                  <p className="text-sm text-gray-500 italic">Identique à l'adresse de facturation</p>
+                  <p className="text-sm text-gray-500 italic">Identisch mit der Rechnungsadresse</p>
                 </>
               )}
             </div>

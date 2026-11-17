@@ -63,7 +63,7 @@ export default async function OrdersPage() {
       <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-stone-100 flex items-center justify-between">
         <h2 className="text-lg sm:text-xl font-bold text-stone-900">{t('orders_title')}</h2>
         <span className="text-xs font-semibold text-stone-500 bg-stone-100 px-2.5 py-1 rounded-full">
-          {orders.length} {orders.length === 1 ? 'encomenda' : 'encomendas'}
+          {orders.length} {orders.length === 1 ? 'Bestellung' : 'Bestellungen'}
         </span>
       </div>
       
@@ -97,7 +97,7 @@ export default async function OrdersPage() {
                     })}
                   </span>
                   <span>
-                    {totalItems} {totalItems === 1 ? 'artigo' : 'artigos'}
+                    {totalItems} {totalItems === 1 ? 'Artikel' : 'Artikel'}
                   </span>
                 </div>
 
@@ -107,9 +107,9 @@ export default async function OrdersPage() {
                   </div>
                   <Link 
                     href={`/account/orders/${order.id}`} 
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#107b46] hover:bg-[#0d6338] active:scale-95 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
                   >
-                    <span>Ver Encomenda</span>
+                    <span>Bestellung ansehen</span>
                     <span aria-hidden="true">&rarr;</span>
                   </Link>
                 </div>
@@ -168,10 +168,10 @@ export default async function OrdersPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link 
                         href={`/account/orders/${order.id}`} 
-                        className="inline-flex items-center justify-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors"
+                        className="inline-flex items-center justify-center px-3 py-1.5 bg-[#107b46] hover:bg-[#0d6338] text-white rounded-lg text-xs font-bold transition-colors"
                         title={t('view_order')}
                       >
-                        Ver Detalhes
+                        Details anzeigen
                       </Link>
                     </td>
                   </tr>

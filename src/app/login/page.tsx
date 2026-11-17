@@ -99,7 +99,7 @@ export default function LoginPage() {
                 <input
                   id="remember_me"
                   type="checkbox"
-                  className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                  className="h-4 w-4 text-[#107b46] border-gray-300 rounded focus:ring-[#107b46]"
                 />
                 <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-700">
                   {t('remember_me')}
@@ -110,7 +110,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isPendingLogin}
-                  className="w-1/2 min-w-[140px] py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none disabled:opacity-50"
+                  className="w-1/2 min-w-[140px] py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#107b46] hover:bg-[#0d6338] focus:outline-none disabled:opacity-50"
                 >
                   {isPendingLogin ? t('logging_in') : t('log_in_btn')}
                 </button>
@@ -181,7 +181,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isPendingRegister}
-                  className="w-1/2 min-w-[140px] py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none disabled:opacity-50"
+                  className="w-1/2 min-w-[140px] py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#107b46] hover:bg-[#0d6338] focus:outline-none disabled:opacity-50"
                 >
                   {isPendingRegister ? t('registering') : t('register_btn')}
                 </button>

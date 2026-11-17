@@ -9,14 +9,14 @@ export async function loginUser(formData: FormData) {
   const ip = await getClientIp();
   const rl = await checkRateLimit(`login_${ip}`, 5, 300); // 5 attempts per 5 mins
   if (!rl.success) {
-    return { error: 'Trop de tentatives de connexion. Veuillez patienter 5 minutes.' };
+    return { error: 'Zu viele Anmeldeversuche. Bitte warten Sie 5 Minuten.' };
   }
 
   const email = String(formData.get('email') || '').trim().toLowerCase();
   const password = String(formData.get('password') || '');
 
   if (!email || !password) {
-    return { error: 'L\'email et le mot de passe sont requis.' };
+    return { error: 'E-Mail und Passwort sind erforderlich.' };
   }
 
   const supabase = await createClient();
@@ -27,7 +27,7 @@ export async function loginUser(formData: FormData) {
   });
 
   if (error || !signInData.user) {
-    return { error: 'Identifiants incorrects.' };
+    return { error: 'Ungültige Anmeldedaten.' };
   }
 
   // Once authenticated with verified password/email:
@@ -73,7 +73,7 @@ export async function registerUser(formData: FormData) {
   const ip = await getClientIp();
   const rl = await checkRateLimit(`register_${ip}`, 5, 1800); // 5 registrations per 30 mins
   if (!rl.success) {
-    return { error: 'Trop de tentatives d’inscription. Veuillez patienter plus tard.' };
+    return { error: 'Zu viele Registrierungsversuche. Bitte versuchen Sie es später erneut.' };
   }
 
   const username = String(formData.get('username') || '').trim();
@@ -81,11 +81,11 @@ export async function registerUser(formData: FormData) {
   const password = String(formData.get('password') || '');
 
   if (!email || !password || !username) {
-    return { error: 'Tous les champs sont requis.' };
+    return { error: 'Alle Felder sind erforderlich.' };
   }
 
   if (password.length < 8) {
-    return { error: 'Le mot de passe doit comporter au moins 8 caractères.' };
+    return { error: 'Das Passwort muss mindestens 8 Zeichen lang sein.' };
   }
 
   const supabase = await createClient();
@@ -104,9 +104,9 @@ export async function registerUser(formData: FormData) {
     console.warn('[Register] Supabase signup error:', error.message);
     // Generic sanitized error to avoid account enumeration
     if (error.message.toLowerCase().includes('already registered')) {
-      return { error: 'Un compte existe déjà avec cette adresse e-mail ou les données sont invalides.' };
+      return { error: 'Ein Konto mit dieser E-Mail-Adresse existiert bereits oder die Daten sind ungültig.' };
     }
-    return { error: 'Erreur lors de l’inscription. Veuillez vérifier vos informations.' };
+    return { error: 'Fehler bei der Registrierung. Bitte überprüfen Sie Ihre Eingaben.' };
   }
 
   if (data.user) {
@@ -137,7 +137,7 @@ export async function registerUser(formData: FormData) {
   revalidatePath('/', 'layout');
   
   if (!data.session) {
-    return { success: true, message: "Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte avant de vous connecter." };
+    return { success: true, message: "Registrierung erfolgreich! Bitte überprüfen Sie Ihre E-Mails, um Ihr Konto vor der Anmeldung zu bestätigen." };
   }
   
   return { success: true };

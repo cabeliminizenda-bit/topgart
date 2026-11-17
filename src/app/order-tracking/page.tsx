@@ -11,7 +11,7 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
   const trackingNumber = number;
   const t = await getTranslations('OrderTracking');
   const locale = await getLocale();
-  
+
   let order = null;
   let error = null;
 
@@ -19,7 +19,7 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
     const ip = await getClientIp();
     const rl = await checkRateLimit(`tracking_${ip}`, 20, 60);
     if (!rl.success) {
-      error = "Trop de requêtes. Veuillez patienter une minute.";
+      error = "Zu viele Anfragen. Bitte warten Sie eine Minute.";
     } else {
       order = await prisma.order.findUnique({
         where: { trackingNumber },
@@ -43,7 +43,7 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
 
   // ── Determine tracking mode ──────────────────────────────────────────────
   const isAutoMode = !!(order?.preparationStartedAt && !order?.delayNote);
-  
+
   // Compute auto status at read-time (no cron needed)
   const autoStatus = isAutoMode && order?.preparationStartedAt && order?.deliveryDays
     ? computeAutoStatus(new Date(order.preparationStartedAt), order.deliveryDays)
@@ -78,8 +78,8 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
     const totalDist = distanceKm(order.originLat, order.originLng, order.destinationLat, order.destinationLng);
@@ -94,21 +94,21 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 min-h-screen">
-      
+
       {!order ? (
         /* ─── FORMULAIRE DE RECHERCHE ─────────────────────────────────────── */
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 text-gray-900">{t('track_delivery')}</h1>
-          
+
           {error && <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 text-sm">{error}</div>}
-          
+
           <form method="GET" action="/order-tracking" className="flex flex-col gap-4">
             <div>
               <label htmlFor="number" className="sr-only">{t('tracking_number_label')}</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 id="number"
-                name="number" 
+                name="number"
                 placeholder={t('tracking_number_placeholder')}
                 required
                 defaultValue={trackingNumber}
@@ -180,8 +180,8 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
               <span>{t('arrival')} {billing?.address1 ? `${maskAddress(billing.address1)}, ${billing.city || ''}` : (maskAddress(order.destinationAddress || '') || order.destinationCountry || '')}</span>
             </div>
             <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-400 to-orange-500 transition-all duration-1000 rounded-full" 
+              <div
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-400 to-orange-500 transition-all duration-1000 rounded-full"
                 style={{ width: `${autoStatus.progressPercent}%` }}
               />
             </div>
@@ -193,7 +193,7 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
           {/* Timeline des étapes */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-base font-bold text-gray-900 mb-4">{t('tracking_steps_title')}</h2>
-            
+
             {[
               {
                 key: 'PROCESSING',
@@ -230,13 +230,12 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
             ].map((step, idx, arr) => (
               <div key={step.key} className="flex items-start gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base border-2 flex-shrink-0 ${
-                    step.active
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base border-2 flex-shrink-0 ${step.active
                       ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200'
                       : step.done
-                      ? 'bg-green-500 border-green-500 text-white'
-                      : 'bg-white border-gray-200 text-gray-500'
-                  }`}>
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : 'bg-white border-gray-200 text-gray-500'
+                    }`}>
                     {step.icon}
                   </div>
                   {idx < arr.length - 1 && (
@@ -280,9 +279,8 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
         <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">{t('tracking_title')} <span className="text-orange-600">{order.trackingNumber}</span></h1>
-            <span className={`px-4 py-1 rounded-full text-sm font-bold ${
-              order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-            }`}>
+            <span className={`px-4 py-1 rounded-full text-sm font-bold ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+              }`}>
               {order.status === 'DELIVERED' ? t('delivered') : t('in_transit')}
             </span>
           </div>
@@ -320,7 +318,7 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
           {order.deliveryPositions.length > 0 && order.status !== 'DELIVERED' && (
             <div className="mb-8">
               <p className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <span className="text-orange-600 text-xl">📍</span> 
+                <span className="text-orange-600 text-xl">📍</span>
                 {t('current_pos')} {order.deliveryPositions[order.deliveryPositions.length - 1].city}, {order.deliveryPositions[order.deliveryPositions.length - 1].country}
               </p>
               <p className="text-sm text-gray-500 ml-7 mt-1">
@@ -335,7 +333,7 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
           )}
 
           <div className="mb-8">
-            <TrackingMap 
+            <TrackingMap
               originLat={order.originLat}
               originLng={order.originLng}
               originName={`${order.originCity}, ${order.originCountry}`}
