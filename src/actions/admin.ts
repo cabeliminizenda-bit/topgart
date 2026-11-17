@@ -972,7 +972,7 @@ export async function sendRecoveryEmail(id: string) {
     if (!cart.email) return { error: "E-mail não indicado para este carrinho." };
 
     const { sendAbandonedCartRecoveryEmail } = await import('@/lib/mailer');
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lenhaecarvaosilvadias.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hlghausgeraete.de';
     const checkoutUrl = `${baseUrl}/checkout`;
 
     const name = cart.firstName ? `${cart.firstName} ${cart.lastName || ''}`.trim() : '';

@@ -8,12 +8,12 @@ export default function NavigationForm({ initialSettings }: { initialSettings: R
   const tSettings = useTranslations('AdminSettings');
   const router = useRouter();
   
-  const [mobileAboutTitle, setMobileAboutTitle] = useState(initialSettings.MOBILE_ABOUT_TITLE || 'Silva Dias');
-  const [mobileAboutDesc, setMobileAboutDesc] = useState(initialSettings.MOBILE_ABOUT_DESC || 'Especialistas em biomassa e aquecimento.');
+  const [mobileAboutTitle, setMobileAboutTitle] = useState(initialSettings.MOBILE_ABOUT_TITLE || 'HLG Hausgeräte');
+  const [mobileAboutDesc, setMobileAboutDesc] = useState(initialSettings.MOBILE_ABOUT_DESC || 'Ihr Fachhändler für hochwertige Haushaltsgeräte.');
   const [mobileContactAddress, setMobileContactAddress] = useState(initialSettings.MOBILE_CONTACT_ADDRESS ?? (initialSettings.FOOTER_ADDRESS_1 || ''));
   const [mobileContactPhone, setMobileContactPhone] = useState(initialSettings.MOBILE_CONTACT_PHONE ?? (initialSettings.FOOTER_SUPPORT_PHONE || ''));
-  const [mobileContactEmail, setMobileContactEmail] = useState(initialSettings.MOBILE_CONTACT_EMAIL ?? (initialSettings.FOOTER_SUPPORT_EMAIL || 'info@lenhaecarvaosilvadias.com'));
-  const [mobileContactWebsite, setMobileContactWebsite] = useState(initialSettings.MOBILE_CONTACT_WEBSITE ?? 'lenhaecarvaosilvadias.com');
+  const [mobileContactEmail, setMobileContactEmail] = useState(initialSettings.MOBILE_CONTACT_EMAIL ?? (initialSettings.FOOTER_SUPPORT_EMAIL || 'info@hlghausgeraete.de'));
+  const [mobileContactWebsite, setMobileContactWebsite] = useState(initialSettings.MOBILE_CONTACT_WEBSITE ?? 'hlghausgeraete.de');
   
   const [loginText, setLoginText] = useState(initialSettings.LOGIN_TEXT || '');
   const [myAccountText, setMyAccountText] = useState(initialSettings.MY_ACCOUNT_TEXT || '');

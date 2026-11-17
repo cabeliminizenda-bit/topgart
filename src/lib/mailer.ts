@@ -13,62 +13,80 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
-// Fetch SMTP settings and store branding from DB
+// Fetch SMTP settings, Resend API key and store branding
 async function getTransporter() {
-  const settingsDb = await prisma.setting.findMany({
-    where: {
-      key: {
-        in: [
-          'SMTP_HOST',
-          'SMTP_PORT',
-          'SMTP_USER',
-          'SMTP_PASS',
-          'SMTP_FROM',
-          'HEADER_LOGO_IMAGE',
-          'STYLE2_LOGO',
-          'STORE_NAME',
-          'NEXT_PUBLIC_STORE_NAME',
-          'CONTACT_ADDRESS',
-          'FOOTER_ADDRESS_1',
-          'CONTACT_EMAIL_DISPLAY',
-          'FOOTER_SUPPORT_EMAIL'
-        ]
+  let settingsDb: any[] = [];
+  try {
+    settingsDb = await prisma.setting.findMany({
+      where: {
+        key: {
+          in: [
+            'SMTP_HOST',
+            'SMTP_PORT',
+            'SMTP_USER',
+            'SMTP_PASS',
+            'SMTP_FROM',
+            'HEADER_LOGO_IMAGE',
+            'STYLE2_LOGO',
+            'STORE_NAME',
+            'NEXT_PUBLIC_STORE_NAME',
+            'CONTACT_ADDRESS',
+            'FOOTER_ADDRESS_1',
+            'CONTACT_EMAIL_DISPLAY',
+            'FOOTER_SUPPORT_EMAIL',
+            'RESEND_API_KEY'
+          ]
+        }
       }
-    }
-  });
+    });
+  } catch (dbErr) {
+    console.error('[getTransporter] Could not read settings from DB:', dbErr);
+  }
 
   const settings = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
 
-  if (!settings.SMTP_HOST || !settings.SMTP_USER || !settings.SMTP_PASS) {
-    throw new Error('Configuração SMTP não encontrada na base de dados.');
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: settings.SMTP_HOST,
-    port: parseInt(settings.SMTP_PORT || '587', 10),
-    secure: settings.SMTP_PORT === '465',
-    auth: {
-      user: settings.SMTP_USER,
-      pass: settings.SMTP_PASS,
-    },
-  });
-
   const storeName = settings.STORE_NAME || settings.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
-  const storeEmail = settings.CONTACT_EMAIL_DISPLAY || settings.FOOTER_SUPPORT_EMAIL || 'info@hlg-hausgeraete.de';
+  const storeEmail = settings.CONTACT_EMAIL_DISPLAY || settings.FOOTER_SUPPORT_EMAIL || 'info@hlghausgeraete.de';
   const storeAddress = settings.CONTACT_ADDRESS || settings.FOOTER_ADDRESS_1 || 'Borseler Chaussee 123, 22453 Hamburg, Deutschland';
   const logo = settings.HEADER_LOGO_IMAGE || settings.STYLE2_LOGO || '';
 
+  // Clean from address: avoid gamingbm.com or bare 'resend' username
+  let from = settings.SMTP_FROM || `"${storeName}" <info@hlghausgeraete.de>`;
+  if (from.includes('gamingbm.com') || from.includes('<resend>')) {
+    from = `"${storeName}" <info@hlghausgeraete.de>`;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY || settings.RESEND_API_KEY || (settings.SMTP_PASS?.startsWith('re_') ? settings.SMTP_PASS : null);
+
+  let transporter: any = null;
+  if (settings.SMTP_HOST && settings.SMTP_USER && settings.SMTP_PASS) {
+    try {
+      transporter = nodemailer.createTransport({
+        host: settings.SMTP_HOST,
+        port: parseInt(settings.SMTP_PORT || '587', 10),
+        secure: settings.SMTP_PORT === '465',
+        auth: {
+          user: settings.SMTP_USER,
+          pass: settings.SMTP_PASS,
+        },
+      });
+    } catch (e) {
+      console.error('[getTransporter] Failed to create nodemailer transport:', e);
+    }
+  }
+
   return {
     transporter,
-    from: settings.SMTP_FROM || `"${storeName}" <${settings.SMTP_USER || 'info@hlg-hausgeraete.de'}>`,
+    from,
     logo,
     storeName,
     storeEmail,
-    storeAddress
+    storeAddress,
+    resendApiKey,
   };
 }
 
-// General email sender
+// General email sender (Resend API with auto-fallback + SMTP fallback)
 export async function sendEmail({
   to,
   subject,
@@ -82,21 +100,109 @@ export async function sendEmail({
   attachments?: any[];
   replyTo?: string;
 }) {
-  try {
-    const { transporter, from } = await getTransporter();
-    
-    const info = await transporter.sendMail({
-      from,
-      to,
-      replyTo,
-      subject,
-      html,
-      attachments,
-    });
+  const targetEmail = String(to || '').trim().toLowerCase();
+  if (!targetEmail) {
+    console.error('[sendEmail] Error: No recipient email specified.');
+    return { success: false, error: 'Keine Empfänger-E-Mail angegeben.' };
+  }
 
-    return { success: true, messageId: info.messageId };
+  try {
+    const { transporter, from, storeName, storeEmail, resendApiKey } = await getTransporter();
+
+    // 1. Primary delivery: Resend HTTP API (Fastest and serverless-safe)
+    if (resendApiKey && resendApiKey.startsWith('re_')) {
+      try {
+        const formattedAttachments = (attachments || []).map((att: any) => {
+          let content = att.content;
+          if (Buffer.isBuffer(content)) {
+            content = content.toString('base64');
+          } else if (typeof content === 'string') {
+            content = Buffer.from(content).toString('base64');
+          }
+          return {
+            filename: att.filename || 'attachment.pdf',
+            content: content,
+          };
+        });
+
+        const resendPayload: any = {
+          from,
+          to: [targetEmail],
+          subject,
+          html,
+          reply_to: replyTo || storeEmail,
+        };
+        if (formattedAttachments.length > 0) {
+          resendPayload.attachments = formattedAttachments;
+        }
+
+        console.log(`[sendEmail] Sending via Resend API to: ${targetEmail} | Subject: "${subject}"`);
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(resendPayload),
+        });
+
+        const data = await res.json();
+        if (res.ok && data?.id) {
+          console.log(`[sendEmail] Successfully sent via Resend API! Message ID: ${data.id}`);
+          return { success: true, messageId: data.id };
+        }
+
+        // Check if custom domain is unverified in Resend, retry with onboarding@resend.dev
+        const errMsg = String(data?.message || '');
+        if (errMsg.includes('not verified') || errMsg.includes('domain')) {
+          console.warn(`[sendEmail] Resend domain not verified: ${errMsg}. Retrying with onboarding@resend.dev...`);
+          resendPayload.from = `${storeName} <onboarding@resend.dev>`;
+          const retryRes = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(resendPayload),
+          });
+          const retryData = await retryRes.json();
+          if (retryRes.ok && retryData?.id) {
+            console.log(`[sendEmail] Successfully sent via Resend onboarding fallback! ID: ${retryData.id}`);
+            return { success: true, messageId: retryData.id };
+          }
+          console.error('[sendEmail] Resend onboarding fallback failed:', retryData);
+        } else {
+          console.error('[sendEmail] Resend API error response:', data);
+        }
+      } catch (resendErr) {
+        console.error('[sendEmail] Resend API call threw exception:', resendErr);
+      }
+    }
+
+    // 2. Secondary delivery: Nodemailer SMTP
+    if (transporter) {
+      try {
+        console.log(`[sendEmail] Attempting SMTP delivery to: ${targetEmail}`);
+        const info = await transporter.sendMail({
+          from,
+          to: targetEmail,
+          replyTo: replyTo || storeEmail,
+          subject,
+          html,
+          attachments,
+        });
+
+        console.log(`[sendEmail] Successfully sent via SMTP! Message ID: ${info.messageId}`);
+        return { success: true, messageId: info.messageId };
+      } catch (smtpErr) {
+        console.error('[sendEmail] SMTP delivery failed:', smtpErr);
+      }
+    }
+
+    console.error(`[sendEmail] All email delivery attempts failed for: ${targetEmail}`);
+    return { success: false, error: 'E-Mail konnte über keinen Dienst versendet werden.' };
   } catch (error) {
-    console.error("Erro ao enviar e-mail: ", error);
+    console.error('[sendEmail] Unexpected error in sendEmail:', error);
     return { success: false, error };
   }
 }
@@ -421,7 +527,7 @@ export async function sendAdminOrderNotification(order: any, adminEmail: string,
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 25px; background: #ffffff;">
         ${logoHtml}
         <h1 style="font-size: 22px; color: #0f172a; margin-top: 0; margin-bottom: 10px;">
-          🎉 Neue Bestellung erhalten: Nr. ${orderId}
+          Du hast eine neue Bestellung: Nr. #${orderId}
         </h1>
         <p style="font-size: 14px; color: #475569;">
           Sie haben eine neue Bestellung von <strong>${billingName}</strong> am ${formatDate(new Date(order.createdAt))} erhalten.
@@ -506,7 +612,7 @@ export async function sendAdminOrderNotification(order: any, adminEmail: string,
     return sendEmail({
       to: adminEmail,
       replyTo,
-      subject: `🚨 [Neue Bestellung] #${orderId} - ${formatPrice(order.total)} (${billingName})`,
+      subject: `[HLG HAUSGERÄTE]: Du hast eine neue Bestellung: Nr. #${orderId}`,
       html
     });
   } catch (e) {

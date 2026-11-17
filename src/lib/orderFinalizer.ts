@@ -1,5 +1,7 @@
 'use server';
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+
 import prisma from '@/lib/prisma';
 
 /**
@@ -31,16 +33,19 @@ export async function finalizeOrder(orderId: string) {
       return;
     }
 
-    const userEmail = order.user.email;
-
-    // Parse order metadata for customer name
-    let customerName = 'Client';
+    let userEmail = order.user.email;
+    let customerName = 'Kunde';
     if (order.destinationAddress) {
       try {
-        const metadata = JSON.parse(order.destinationAddress);
-        const billing = metadata?.billing;
-        if (billing?.firstName) {
-          customerName = `${billing.firstName} ${billing.lastName || ''}`.trim();
+        const metadata = typeof order.destinationAddress === 'string' ? JSON.parse(order.destinationAddress) : order.destinationAddress;
+        const billing = metadata?.billing || metadata?.shipping;
+        if (billing) {
+          if (billing.firstName) {
+            customerName = `${billing.firstName} ${billing.lastName || ''}`.trim();
+          }
+          if (billing.email && typeof billing.email === 'string') {
+            userEmail = billing.email.trim().toLowerCase();
+          }
         }
       } catch (e) {
         // Metadata parse failed, use default name
@@ -67,22 +72,23 @@ export async function finalizeOrder(orderId: string) {
       (acc, s) => ({ ...acc, [s.key]: s.value }),
       {} as Record<string, string>
     );
-    const adminEmail = settingsMap['CONTACT_RECEIVER_EMAIL'] || 'cabeliminizenda@gmail.com';
+    const adminEmail = settingsMap['CONTACT_RECEIVER_EMAIL'] || settingsMap['CONTACT_FORM_RECIPIENT'] || 'cabeliminizenda@gmail.com';
 
-    // 3. Send emails (non-blocking)
+    // 3. Send emails (awaited to ensure serverless completion)
     try {
       const { sendClientOrderConfirmation, sendAdminOrderNotification } = await import(
         '@/lib/mailer'
       );
 
-      sendClientOrderConfirmation(order, userEmail, customerName).catch((e) =>
-        console.error('[finalizeOrder] Client email failed', e)
-      );
-
-      sendAdminOrderNotification(order, adminEmail, {
-        name: customerName,
-        email: userEmail,
-      }).catch((e) => console.error('[finalizeOrder] Admin email failed', e));
+      console.log(`[finalizeOrder] Sending order confirmation to client (${userEmail}) and admin (${adminEmail})...`);
+      const emailResults = await Promise.allSettled([
+        sendClientOrderConfirmation(order, userEmail, customerName),
+        sendAdminOrderNotification(order, adminEmail, {
+          name: customerName,
+          email: userEmail,
+        })
+      ]);
+      console.log(`[finalizeOrder] Emails processed for order ${order.id}:`, emailResults.map(r => r.status));
     } catch (e) {
       console.error('[finalizeOrder] Email sending setup failed', e);
     }
@@ -90,7 +96,7 @@ export async function finalizeOrder(orderId: string) {
     // 4. Stock decrement inside a Prisma interactive transaction (race-condition safe)
     try {
       const threshold = parseInt(settingsMap['LOW_STOCK_THRESHOLD'] || '5', 10);
-      const storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lenhaecarvaosilvadias.com';
+      const storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de';
       const { sendLowStockAlertEmail } = await import('@/lib/mailer');
 
       await prisma.$transaction(async (tx) => {

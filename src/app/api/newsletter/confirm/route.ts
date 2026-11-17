@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     }
 
     const settings = await getSettings();
-    const receiverEmail = settings.CONTACT_RECEIVER_EMAIL || 'info@hlg-hausgeraete.de';
+    const receiverEmail = settings.CONTACT_RECEIVER_EMAIL || settings.CONTACT_FORM_RECIPIENT || 'cabeliminizenda@gmail.com';
     const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'HLG Hausgeräte';
 
     // 1. Persist subscriber in Setting table
@@ -85,7 +85,7 @@ export async function GET(request: Request) {
     // 3. Send notification to admin email in German
     await sendEmail({
       to: receiverEmail,
-      subject: `📬 [Newsletter] Neue Anmeldung bestätigt: ${escapeHtml(email)}`,
+      subject: `[HLG HAUSGERÄTE]: Newsletter-Anmeldung bestätigt: ${escapeHtml(email)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.5; padding: 20px;">
           <h1 style="font-size: 20px; color: #107b46; margin-top: 0; margin-bottom: 15px;">📬 Neue Newsletter-Anmeldung</h1>
