@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import HlgHero from '@/components/home/HlgHero';
 import AktuelleAngebote from '@/components/home/AktuelleAngebote';
 import CategoryShowcaseSections from '@/components/home/CategoryShowcaseSections';
@@ -136,7 +137,14 @@ export default async function Home() {
         return <HlgHero key={section.id} config={section.settings} />;
       case 'AktuelleAngebote':
       case 'BestDeals':
-        return <AktuelleAngebote key={section.id} dbBestsellers={dbBestsellers} config={section.settings} />;
+        return (
+          <AktuelleAngebote
+            key={section.id}
+            dbBestsellers={dbBestsellers}
+            catalogProducts={formattedProducts}
+            config={section.settings}
+          />
+        );
       case 'CategoryShowcaseSection':
         return (
           <CategoryShowcaseSection

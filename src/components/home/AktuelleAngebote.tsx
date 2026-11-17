@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -102,10 +104,11 @@ function ProductImageBox({
 
 interface AktuelleAngeboteProps {
   dbBestsellers?: BestsellerItem[];
+  catalogProducts?: any[];
   config?: any;
 }
 
-export default function AktuelleAngebote({ dbBestsellers, config }: AktuelleAngeboteProps) {
+export default function AktuelleAngebote({ dbBestsellers, catalogProducts, config }: AktuelleAngeboteProps) {
   const wishlistStore = useWishlistStore();
   const cartStore = useCartStore();
   const [filterDepartment, setFilterDepartment] = useState<TabFilterKey>('ALL');
@@ -154,6 +157,7 @@ export default function AktuelleAngebote({ dbBestsellers, config }: AktuelleAnge
     cartStore.addItem({
       id: item.id,
       productId: item.id,
+      slug: item.slug,
       title: item.title,
       price: item.rawPrice || 0,
       image: item.image || '',
@@ -182,10 +186,49 @@ export default function AktuelleAngebote({ dbBestsellers, config }: AktuelleAnge
     dbBestsellers && dbBestsellers.length > 0 ? dbBestsellers.slice(0, 6) : DEFAULT_BESTSELLERS;
 
   // Resolve current pill's spotlight + 6 grid products (respecting manual admin overrides)
-  const { spotlight: currentSpotlight, deals: currentGrid } = resolveTabOffers(
+  const { spotlight: rawSpotlight, deals: rawGrid } = resolveTabOffers(
     filterDepartment,
     config
   );
+
+  // Map offers against real database products when available
+  const matchWithCatalog = (deal: DealItem): DealItem => {
+    if (!catalogProducts || catalogProducts.length === 0) return deal;
+    const dealSlugLower = (deal.slug || '').toLowerCase();
+    const dealTitleTrim = (deal.title || '').toLowerCase().trim();
+
+    const matched = catalogProducts.find((cp: any) => {
+      const cpSlug = (cp.slug || '').toLowerCase();
+      const cpTitle = (cp.title || '').toLowerCase().trim();
+      return (
+        (cpSlug && dealSlugLower && cpSlug === dealSlugLower) ||
+        (cpTitle && dealTitleTrim && cpTitle === dealTitleTrim) ||
+        (cpSlug && dealSlugLower && (cpSlug.includes(dealSlugLower) || dealSlugLower.includes(cpSlug)))
+      );
+    });
+
+    if (!matched) return deal;
+
+    const compareAt = matched.compareAtPrice && matched.compareAtPrice > matched.price
+      ? matched.compareAtPrice
+      : deal.compareAtPrice;
+
+    return {
+      ...deal,
+      id: matched.id, // Real database UUID
+      title: matched.title || deal.title,
+      slug: matched.slug || deal.slug,
+      rawPrice: matched.price,
+      price: `${Number(matched.price).toFixed(2).replace('.', ',')}€`,
+      compareAtPrice: typeof compareAt === 'number'
+        ? `${Number(compareAt).toFixed(2).replace('.', ',')}€`
+        : compareAt,
+      image: (matched.images && matched.images[0]) || deal.image,
+    };
+  };
+
+  const currentSpotlight = matchWithCatalog(rawSpotlight);
+  const currentGrid = rawGrid.map(matchWithCatalog);
 
   return (
     <section

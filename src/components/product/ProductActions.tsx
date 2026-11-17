@@ -93,6 +93,7 @@ export default function ProductActions({ product, enableBuyNow = false, onVariat
   const getCartItemBase = (prod: any, price: number, qty: number = 1, currentVar: any = null, attrs: any = undefined) => ({
     id: currentVar ? `${prod.id}-${currentVar.id}` : prod.id,
     productId: prod.id,
+    slug: prod.slug,
     variationId: currentVar?.id,
     title: prod.title,
     price: price,

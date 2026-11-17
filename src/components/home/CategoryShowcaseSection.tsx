@@ -77,6 +77,7 @@ function CategoryProductCard({
     cartStore.addItem({
       id: item.id,
       productId: item.id,
+      slug: item.slug,
       title: item.title,
       price: item.rawPrice || 0,
       image: item.image || '',
@@ -516,6 +517,7 @@ export default function CategoryShowcaseSection({
                     cartStore.addItem({
                       id: quickViewItem.id,
                       productId: quickViewItem.id,
+                      slug: quickViewItem.slug,
                       title: quickViewItem.title,
                       price: quickViewItem.rawPrice || 0,
                       image: quickViewItem.image || '',

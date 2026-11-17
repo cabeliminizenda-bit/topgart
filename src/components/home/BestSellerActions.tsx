@@ -16,6 +16,7 @@ export const AddToCartBtn = ({ product, btnBgColor, btnTextColor, btnHoverBgColo
     cartStore.addItem({
       id: product.id,
       productId: product.id,
+      slug: product.slug,
       title: product.title,
       price: product.price,
       quantity: 1,
@@ -49,6 +50,7 @@ export const AddToCartBtnBig = ({ product, btnBgColor, btnTextColor, btnHoverBgC
     cartStore.addItem({
       id: product.id,
       productId: product.id,
+      slug: product.slug,
       title: product.title,
       price: product.price,
       quantity: 1,

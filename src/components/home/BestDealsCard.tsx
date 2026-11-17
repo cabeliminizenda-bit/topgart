@@ -49,6 +49,7 @@ export default function BestDealsCard({
     cartStore.addItem({
       id: product.id,
       productId: product.id,
+      slug: product.slug,
       title: product.title,
       price: product.rawPrice || 0,
       image: product.imageUrl || '',

@@ -781,6 +781,7 @@ export default function ShippingSimulator({ productsData }: ShippingSimulatorPro
     cartStore.addItem({
       id: activeProduct.id,
       productId: activeProduct.id,
+      slug: activeProduct.slug,
       title: activeProduct.title,
       price: activeProduct.price,
       image: activeProduct.image,

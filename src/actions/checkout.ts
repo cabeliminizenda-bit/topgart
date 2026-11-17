@@ -1,9 +1,12 @@
 'use server';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import prisma from '@/lib/prisma';
 import { createClient } from '@/utils/supabase/server';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { isGermanyCountryName, isShippingMethodEligible } from '@/lib/shipping';
+import { KNOWN_OFFERS_BY_ID } from '@/components/home/aktuelleAngeboteData';
 
 const ALLOWED_PAYMENT_METHODS = ['STRIPE', 'PAYPAL', 'BANK_TRANSFER'] as const;
 const MAX_CART_LINES = 50;
@@ -14,22 +17,22 @@ export async function validateCoupon(code: string) {
     const ip = await getClientIp();
     const rl = await checkRateLimit(`coupon_${ip}`, 10, 60); // 10 attempts per minute
     if (!rl.success) {
-      return { error: "Trop de tentatives de code promo. Veuillez patienter un instant." };
+      return { error: "Zu viele Versuche für den Gutscheincode. Bitte warten Sie einen Moment." };
     }
 
     if (!code || typeof code !== 'string' || code.trim().length === 0 || code.length > 50) {
-      return { error: "Code promo invalide." };
+      return { error: "Ungültiger Gutscheincode." };
     }
     const coupon = await prisma.coupon.findUnique({
       where: { code: code.toUpperCase() }
     });
 
     if (!coupon) {
-      return { error: "Invalid coupon code." };
+      return { error: "Ungültiger Gutscheincode." };
     }
 
     if (!coupon.isActive) {
-      return { error: "This coupon code is no longer active." };
+      return { error: "Dieser Gutscheincode ist leider nicht mehr gültig." };
     }
 
     return { 
@@ -42,7 +45,7 @@ export async function validateCoupon(code: string) {
     };
   } catch (error) {
     console.error("Coupon validation error:", error);
-    return { error: "Error validating the coupon code." };
+    return { error: "Fehler bei der Überprüfung des Gutscheincodes." };
   }
 }
 
@@ -52,7 +55,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     const ip = await getClientIp();
     const rl = await checkRateLimit(`checkout_${ip}`, 10, 60); // 10 checkouts per min
     if (!rl.success) {
-      return { error: "Too many checkout requests. Please wait a moment." };
+      return { error: "Zu viele Anfragen. Bitte warten Sie einen Moment." };
     }
 
     const email = String(formData.get('email') || '').trim().toLowerCase();
@@ -67,37 +70,103 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
 
     // ===== INPUT VALIDATION (never trust the client) =====
     if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return { error: "Please provide a valid email address." };
+      return { error: "Bitte geben Sie eine gültige E-Mail-Adresse an." };
     }
 
     if (!(ALLOWED_PAYMENT_METHODS as readonly string[]).includes(paymentMethod)) {
-      return { error: "Invalid payment method." };
+      return { error: "Ungültige Zahlungsmethode ausgewählt." };
     }
 
     if (!Array.isArray(cartItems) || cartItems.length === 0) {
-      return { error: "Your cart is empty." };
+      return { error: "Ihr Warenkorb ist leer." };
     }
     if (cartItems.length > MAX_CART_LINES) {
-      return { error: "Too many items in cart." };
+      return { error: "Zu viele Artikel im Warenkorb." };
     }
 
     // Validate shippingMethodId is a valid UUID to prevent Prisma P2023 errors
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+    // 1. Sanitize quantities and pre-resolve non-UUID or mock product IDs
     for (const item of cartItems) {
-      const qty = Number(item?.quantity);
-      if (!item || typeof item.productId !== 'string' || !uuidRegex.test(item.productId)) {
-        return { error: "Invalid product in cart. Please refresh your cart." };
+      if (!item || typeof item !== 'object') {
+        return { error: "Ungültiger Artikel im Warenkorb. Bitte aktualisieren Sie Ihren Warenkorb." };
       }
+      const qty = Number(item.quantity);
       // SECURITY: negative / fractional / huge quantities would alter the total
       if (!Number.isInteger(qty) || qty < 1 || qty > MAX_QTY_PER_LINE) {
-        return { error: "Invalid quantity in cart." };
+        return { error: "Ungültige Artikelmenge im Warenkorb." };
       }
       item.quantity = qty;
+
+      const rawId = typeof item.productId === 'string' ? item.productId.trim() : '';
+      const isUuid = uuidRegex.test(rawId);
+
+      // If not a UUID or if it is a known mock ID (like 'deal-1', 'wasch-1', etc.)
+      if (!isUuid || KNOWN_OFFERS_BY_ID[rawId]) {
+        const knownOffer = KNOWN_OFFERS_BY_ID[rawId];
+        const targetSlug = (knownOffer?.slug || item.slug || (isUuid ? '' : rawId)).trim();
+        const targetTitle = (knownOffer?.title || item.title || '').trim();
+
+        let dbProd = null;
+        if (targetSlug) {
+          dbProd = await prisma.product.findFirst({
+            where: { slug: targetSlug, isDeleted: false },
+            select: { id: true, price: true, title: true, images: true, variations: true }
+          });
+        }
+        if (!dbProd && targetSlug) {
+          dbProd = await prisma.product.findFirst({
+            where: { slug: { equals: targetSlug, mode: 'insensitive' }, isDeleted: false },
+            select: { id: true, price: true, title: true, images: true, variations: true }
+          });
+        }
+        if (!dbProd && targetTitle) {
+          dbProd = await prisma.product.findFirst({
+            where: { title: { equals: targetTitle, mode: 'insensitive' }, isDeleted: false },
+            select: { id: true, price: true, title: true, images: true, variations: true }
+          });
+        }
+
+        // If not found in DB, auto-create it from curated showcase data or item data
+        if (!dbProd && (knownOffer || (targetTitle && typeof item.price === 'number' && item.price > 0))) {
+          const finalTitle = targetTitle || knownOffer?.title || 'Produkt';
+          const finalSlug = targetSlug || `prod-${Date.now()}`;
+          const finalPrice = knownOffer?.rawPrice ?? (typeof item.price === 'number' && item.price > 0 ? item.price : 0);
+          const finalImage = knownOffer?.image || (typeof item.image === 'string' ? item.image : '');
+
+          try {
+            dbProd = await prisma.product.create({
+              data: {
+                title: finalTitle,
+                slug: finalSlug,
+                price: finalPrice,
+                images: finalImage ? [finalImage] : [],
+                type: 'SIMPLE',
+                stock: 100,
+                isDeleted: false,
+              },
+              select: { id: true, price: true, title: true, images: true, variations: true }
+            });
+          } catch (createErr) {
+            console.error('[Checkout] Auto-create product fallback lookup:', createErr);
+            dbProd = await prisma.product.findFirst({
+              where: { slug: finalSlug },
+              select: { id: true, price: true, title: true, images: true, variations: true }
+            });
+          }
+        }
+
+        if (dbProd && uuidRegex.test(dbProd.id)) {
+          item.productId = dbProd.id;
+        } else if (!isUuid) {
+          return { error: "Ein Artikel in Ihrem Warenkorb ist leider nicht mehr verfügbar. Bitte aktualisieren Sie Ihren Warenkorb." };
+        }
+      }
     }
 
     if (!shippingMethodId || !uuidRegex.test(shippingMethodId)) {
-      return { error: "Invalid shipping method. Please refresh the page." };
+      return { error: "Ungültige Versandart. Bitte aktualisieren Sie die Seite." };
     }
 
     // Check that the selected payment method is enabled by the admin
@@ -107,7 +176,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     const flagMap = Object.fromEntries(paymentFlags.map(s => [s.key, s.value]));
     const flagKey = paymentMethod === 'BANK_TRANSFER' ? 'ENABLE_BANK_TRANSFER' : `ENABLE_${paymentMethod}`;
     if (flagMap[flagKey] === 'false') {
-      return { error: "This payment method is not available." };
+      return { error: "Diese Zahlungsmethode ist derzeit nicht verfügbar." };
     }
 
     let validZone = await prisma.shippingZone.findFirst({
@@ -123,11 +192,11 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     }
 
     if (!validZone) {
-      return { error: "This shipping zone is not currently covered." };
+      return { error: "Für dieses Liefergebiet steht derzeit kein Versand zur Verfügung." };
     }
 
     if (!validZone.methods || validZone.methods.length === 0) {
-      return { error: "Invalid shipping method." };
+      return { error: "Ungültige Versandart." };
     }
 
     const chosenShippingMethod = validZone.methods[0];
@@ -145,9 +214,28 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     let serverCartTotal = 0;
     const verifiedItems: any[] = [];
     for (const item of cartItems) {
-      const dbProduct = productMap.get(item.productId);
+      let dbProduct = productMap.get(item.productId);
       if (!dbProduct) {
-        return { error: `A product in your cart is no longer available. Please refresh your cart.` };
+        const rawId = String(item.productId || '');
+        const knownOffer = KNOWN_OFFERS_BY_ID[rawId];
+        const targetSlug = (knownOffer?.slug || item.slug || '').trim();
+        const targetTitle = (knownOffer?.title || item.title || '').trim();
+        if (targetSlug) {
+          dbProduct = (await prisma.product.findFirst({
+            where: { slug: targetSlug, isDeleted: false },
+            select: { id: true, price: true, title: true, images: true, variations: true }
+          })) as any;
+        }
+        if (!dbProduct && targetTitle) {
+          dbProduct = (await prisma.product.findFirst({
+            where: { title: { equals: targetTitle, mode: 'insensitive' }, isDeleted: false },
+            select: { id: true, price: true, title: true, images: true, variations: true }
+          })) as any;
+        }
+      }
+
+      if (!dbProduct) {
+        return { error: "Ein Artikel in Ihrem Warenkorb ist leider nicht mehr verfügbar. Bitte aktualisieren Sie Ihren Warenkorb." };
       }
 
       let itemPrice = dbProduct.price;
@@ -280,7 +368,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     const allSettings = await prisma.setting.findMany();
     const settingsMap = allSettings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
     const storeCurrencyCode = settingsMap.currency || 'EUR';
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://lenhaecarvaosilvadias.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de';
 
     // Helper to determine the best active fallback payment method
     const getFallbackPayment = () => {
@@ -299,9 +387,9 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
         const { sendAdminAlertEmail } = await import('@/lib/mailer');
         const { createNotification } = await import('@/lib/notifications');
         sendAdminAlertEmail({
-          title: "Tentativa de pagamento por Cartão (Stripe não configurado)",
-          message: `Um cliente (${email}) tentou pagar uma encomenda de ${verifiedTotal} € por Cartão de Crédito/Débito, mas o Stripe ainda não está configurado na administração.`,
-          details: { Cliente: email, Montante: `${verifiedTotal} €`, 'País': effectiveCountry }
+          title: "Zahlungsversuch per Karte (Stripe nicht konfiguriert)",
+          message: `Ein Kunde (${email}) hat versucht, eine Bestellung über ${verifiedTotal} € per Kredit-/Debitkarte zu bezahlen, aber Stripe ist im System noch nicht konfiguriert.`,
+          details: { Kunde: email, Betrag: `${verifiedTotal} €`, Land: effectiveCountry }
         }).catch(e => console.error('[Supervision Live] Email alert error:', e));
 
         createNotification({
@@ -309,7 +397,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
           type: 'SYSTEM',
           message: JSON.stringify({
             key: 'gateway_not_configured',
-            gateway: 'Stripe (Carte)',
+            gateway: 'Stripe (Karte)',
             email,
             amount: `${verifiedTotal} €`
           }),
@@ -330,9 +418,9 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
         const { sendAdminAlertEmail } = await import('@/lib/mailer');
         const { createNotification } = await import('@/lib/notifications');
         sendAdminAlertEmail({
-          title: "Tentativa de pagamento PayPal (Não configurado)",
-          message: `Um cliente (${email}) tentou pagar uma encomenda de ${verifiedTotal} € via PayPal, mas o PayPal ainda não está configurado na administração.`,
-          details: { Cliente: email, Montante: `${verifiedTotal} €`, 'País': effectiveCountry }
+          title: "Zahlungsversuch per PayPal (Nicht konfiguriert)",
+          message: `Ein Kunde (${email}) hat versucht, eine Bestellung über ${verifiedTotal} € via PayPal zu bezahlen, aber PayPal ist im System noch nicht konfiguriert.`,
+          details: { Kunde: email, Betrag: `${verifiedTotal} €`, Land: effectiveCountry }
         }).catch(e => console.error('[Supervision Live] Email alert error:', e));
 
         createNotification({
@@ -515,6 +603,6 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
 
   } catch (error: any) {
     console.error("Checkout error:", error);
-    return { error: "Une erreur est survenue lors de la commande." };
+    return { error: "Bei der Bearbeitung Ihrer Bestellung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut." };
   }
 }

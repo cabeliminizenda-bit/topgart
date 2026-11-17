@@ -430,6 +430,7 @@ export default function FeaturedProductTabs({ initialProducts }: FeaturedProduct
     cartStore.addItem({
       id: product.id,
       productId: product.id,
+      slug: product.slug,
       title: product.title,
       price: product.price,
       image: product.images[0] || '',

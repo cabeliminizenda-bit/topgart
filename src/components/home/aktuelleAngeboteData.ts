@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type TabFilterKey = 'ALL' | 'WASCHEN' | 'SAUGEN' | 'KUECHE' | 'KUEHLEN' | 'GAMING';
 
 export interface BestsellerItem {
@@ -930,4 +931,49 @@ export function resolveTabOffers(tabKey: TabFilterKey, config?: any) {
 
   return { spotlight, deals };
 }
+
+export type KnownOfferInfo = {
+  id: string;
+  title: string;
+  rawPrice: number;
+  slug: string;
+  image: string;
+};
+
+export const KNOWN_OFFERS_BY_ID: Record<string, KnownOfferInfo> = (() => {
+  const map: Record<string, KnownOfferInfo> = {};
+  for (const tab of Object.values(DEFAULT_TAB_DATA)) {
+    if (tab.spotlight) {
+      map[tab.spotlight.id] = {
+        id: tab.spotlight.id,
+        title: tab.spotlight.title,
+        rawPrice: tab.spotlight.rawPrice || 0,
+        slug: tab.spotlight.slug,
+        image: tab.spotlight.image,
+      };
+    }
+    if (Array.isArray(tab.deals)) {
+      for (const d of tab.deals) {
+        map[d.id] = {
+          id: d.id,
+          title: d.title,
+          rawPrice: d.rawPrice || 0,
+          slug: d.slug,
+          image: d.image,
+        };
+      }
+    }
+  }
+  for (const b of DEFAULT_BESTSELLERS) {
+    map[b.id] = {
+      id: b.id,
+      title: b.title,
+      rawPrice: b.rawPrice || 0,
+      slug: b.slug,
+      image: b.image,
+    };
+  }
+  return map;
+})();
+
 

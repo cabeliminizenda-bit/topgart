@@ -64,6 +64,7 @@ export default function ProductCard({ product, view = 'grid', cardStyle = 'desig
     cartStore.addItem({
       id: product.id,
       productId: product.id,
+      slug: product.slug,
       title: product.title,
       price: product.price,
       image: image,

@@ -11,6 +11,7 @@ export interface CartItem {
   quantity: number;
   attributes?: Record<string, string>; // e.g. { Couleur: "Rouge", Taille: "M" }
   forcedByItemId?: string; // id of the item that forces this product
+  slug?: string;
 }
 
 export interface CustomShippingInfo {
