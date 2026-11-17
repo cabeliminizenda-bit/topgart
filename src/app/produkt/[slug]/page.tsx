@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from '@/lib/prisma';
 import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
@@ -15,7 +16,7 @@ import Image from "next/image";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  
+
   const product = await getCachedProductBySlug(slug);
   const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
 
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  
+
   const product = await getCachedProductBySlug(slug);
 
   if (!product) {
@@ -94,9 +95,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     sku: product.id.split('-')[0].toUpperCase(),
     offers: {
       '@type': 'Offer',
-      url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://hlg-hausgeraete.de'}/produkt/${product.slug}`,
+      url: `${SITE_URL}/produkt/${product.slug}`,
       priceCurrency: 'EUR',
       price: product.price,
+      priceValidUntil: '2027-12-31',
       itemCondition: 'https://schema.org/NewCondition',
       availability: product.stock && product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       seller: {
@@ -162,12 +164,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     }));
   }
 
-  if ((product as any).brand) {
-    schemaJson.brand = {
-      '@type': 'Brand',
-      name: (product as any).brand.name
-    };
-  }
+  schemaJson.brand = {
+    '@type': 'Brand',
+    name: (product as any).brand?.name || storeName
+  };
 
   if ((product as any).gtin) {
     schemaJson.gtin = (product as any).gtin;
@@ -218,7 +218,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <Link href="/" className="hover:text-[#107b46] transition">Startseite</Link>
             <span className="text-gray-300">/</span>
             {primaryCat ? (
-              <Link 
+              <Link
                 href={primaryCatPath || `/${primaryCat.slug || primaryCat.id}`}
                 className="hover:text-[#107b46] transition"
               >
@@ -254,7 +254,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           {/* Tabs Section (Description & Reviews) */}
-          <ProductReviews 
+          <ProductReviews
             productId={product.id}
             productTitle={product.title}
             reviews={(product as any).reviews || []}
@@ -267,7 +267,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div className="border-b border-gray-200 pb-4 mb-8">
               <h2 className="text-xl font-bold text-gray-900">{t('related_products')}</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.length > 0 ? (
                 relatedProducts.map(rp => (

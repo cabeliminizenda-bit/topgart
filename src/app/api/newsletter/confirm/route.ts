@@ -114,9 +114,9 @@ export async function GET(request: Request) {
     // 4. Send welcome email to client with 25€ voucher
     await sendNewsletterWelcomeEmail(email).catch(console.error);
 
-    // 5. Redirect back to site with success query parameter
+    // 5. Redirect to the Thank You page
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL || 'https://hlghausgeraete.de';
-    return NextResponse.redirect(`${baseUrl}/?newsletter=success`);
+    return NextResponse.redirect(`${baseUrl}/thank-you`);
   } catch (err) {
     console.error('Confirm newsletter error:', err);
     return new NextResponse('Internal server error', { status: 500 });

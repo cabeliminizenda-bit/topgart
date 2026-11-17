@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, prefer-const */
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCachedSettings } from '@/lib/cache';
+import { SITE_URL } from '@/lib/site';
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mystore.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
   
   const settingsMap = await getCachedSettings();
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "My Store";
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
   const rssBeforeContent = settingsMap.RSS_BEFORE_CONTENT || '';
   const rssAfterContent = settingsMap.RSS_AFTER_CONTENT || 'Der Artikel {post_link} erschien zuerst auf {blog_link}.';
 

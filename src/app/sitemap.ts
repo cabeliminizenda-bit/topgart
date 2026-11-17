@@ -98,8 +98,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }))
   );
 
-  // 5. CMS Pages
+  // 5. CMS Pages (published only)
   const pages = await prisma.page.findMany({
+    where: { isPublished: true },
     select: { slug: true, updatedAt: true },
   });
 

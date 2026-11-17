@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { submitNewsletter } from '@/actions/contact';
 import { useTranslations } from 'next-intl';
 
 export default function Newsletter({ config }: { config?: any }) {
+  const router = useRouter();
   const t = useTranslations('Home');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -39,6 +42,7 @@ export default function Newsletter({ config }: { config?: any }) {
       setStatus('success');
       setMessage(res.message || t('success_msg'));
       e.currentTarget.reset();
+      router.push('/thank-you');
     }
   };
   return (

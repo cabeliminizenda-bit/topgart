@@ -38,6 +38,22 @@ export async function generateInvoicePDF(order: any): Promise<Buffer> {
   let companyAddress = 'Borseler Chaussee 123, 22453 Hamburg, Deutschland';
   let companyEmail = 'info@hlg-hausgeraete.de';
   
+  // Robust local logo detection (HLG Hausgeräte logo located in workspace root and public folder)
+  const candidatePaths = [
+    path.join(process.cwd(), 'LOGO-HLG-HAUSGERAETE.png'),
+    path.join(process.cwd(), 'public', 'LOGO-HLG-HAUSGERAETE.png'),
+    path.join(process.cwd(), 'public', 'logo.png'),
+    path.join(process.cwd(), 'public', 'logo.jpg')
+  ];
+  for (const p of candidatePaths) {
+    try {
+      if (fs.existsSync(p)) {
+        logoBuffer = fs.readFileSync(p);
+        break;
+      }
+    } catch {}
+  }
+
   try {
     const settingsDb = await prisma.setting.findMany({
       where: {
@@ -66,38 +82,23 @@ export async function generateInvoicePDF(order: any): Promise<Buffer> {
     if (sMap.CONTACT_EMAIL_DISPLAY) companyEmail = sMap.CONTACT_EMAIL_DISPLAY;
     else if (sMap.FOOTER_SUPPORT_EMAIL) companyEmail = sMap.FOOTER_SUPPORT_EMAIL;
 
-    // Remote logo attempt
-    const logoSetting = sMap['HEADER_LOGO_IMAGE'] || sMap['STYLE2_LOGO'];
-    if (logoSetting && /^https?:\/\//i.test(logoSetting)) {
-      try {
-        const res = await fetch(logoSetting);
-        if (res.ok) {
-          const ab = await res.arrayBuffer();
-          logoBuffer = Buffer.from(ab);
+    // Remote logo attempt only if local logo was not found
+    if (!logoBuffer) {
+      const logoSetting = sMap['HEADER_LOGO_IMAGE'] || sMap['STYLE2_LOGO'];
+      if (logoSetting && /^https?:\/\//i.test(logoSetting)) {
+        try {
+          const res = await fetch(logoSetting);
+          if (res.ok) {
+            const ab = await res.arrayBuffer();
+            logoBuffer = Buffer.from(ab);
+          }
+        } catch (err) {
+          console.warn('Failed to fetch remote logo for PDF invoice:', err);
         }
-      } catch (err) {
-        console.warn('Failed to fetch remote logo for PDF invoice:', err);
       }
     }
   } catch (e) {
     // ignore
-  }
-
-  // Robust local logo fallback (public/logo.png is the primary high-res logo)
-  if (!logoBuffer) {
-    const candidatePaths = [
-      path.join(process.cwd(), 'public', 'logo.png'),
-      path.join(process.cwd(), 'public', 'logo-flame.png'),
-      path.join(process.cwd(), 'public', 'logo.jpg')
-    ];
-    for (const p of candidatePaths) {
-      try {
-        if (fs.existsSync(p)) {
-          logoBuffer = fs.readFileSync(p);
-          break;
-        }
-      } catch {}
-    }
   }
 
   return new Promise((resolve, reject) => {
@@ -179,17 +180,17 @@ function generateHeader(
 
   if (logoBuffer) {
     try {
-      doc.image(logoBuffer, 50, headerTop, { width: 140, height: 45, fit: [140, 45] });
+      doc.image(logoBuffer, 50, headerTop, { fit: [150, 48] });
     } catch (e) {
       doc
-        .fillColor('#ea580c')
+        .fillColor('#107b46')
         .fontSize(18)
         .font('Helvetica-Bold')
         .text(storeName, 50, headerTop + 10);
     }
   } else {
     doc
-      .fillColor('#ea580c')
+      .fillColor('#107b46')
       .fontSize(18)
       .font('Helvetica-Bold')
       .text(storeName, 50, headerTop + 10);
@@ -359,9 +360,14 @@ function generateInvoiceTable(
 
   // Calculate totals & tax
   const subTotal = order.orderItems?.reduce((sum: number, it: any) => sum + (it.price * it.quantity), 0) || order.total;
-  const shippingLabel = shippingCost === 0
-    ? `Kostenlos${shippingMethodName ? ` (${shippingMethodName})` : ''}`
-    : formatPrice(shippingCost);
+  let shippingLabel = formatPrice(shippingCost);
+  if (shippingCost === 0) {
+    if (shippingMethodName && !shippingMethodName.toLowerCase().includes('kostenlos')) {
+      shippingLabel = `Kostenlos (${shippingMethodName})`;
+    } else {
+      shippingLabel = 'Kostenlos';
+    }
+  }
 
   // MwSt (19% standard in Germany)
   const mwstRate = 0.19;

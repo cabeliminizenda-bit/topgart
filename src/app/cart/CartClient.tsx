@@ -148,7 +148,7 @@ export default function CartClient({ zones }: { zones: CartShippingZone[] }) {
                   {t('empty_cart')}
                 </div>
                 <Link
-                  href="/"
+                  href="/shop"
                   className="inline-block bg-[#ff4500] hover:bg-[#e03e00] text-white font-medium px-6 py-2.5 rounded transition"
                 >
                   {t('back_to_shop')}

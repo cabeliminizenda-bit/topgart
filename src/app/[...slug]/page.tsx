@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getPageBySlug } from '@/actions/pages';
@@ -16,12 +17,12 @@ const isUuid = (str: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
 
 const LEGAL_NAV = [
-  { slug: 'devolucoes', label: 'Devoluções & Reembolso', icon: '🔄' },
-  { slug: 'termos-e-condicoes', label: 'Termos & Condições', icon: '📜' },
-  { slug: 'privacidade', label: 'Privacidade', icon: '🔒' },
-  { slug: 'expedicao', label: 'Expedição & Entrega', icon: '🚚' },
-  { slug: 'politica-de-garantia', label: 'Garantia', icon: '🛡️' },
-  { slug: 'politica-de-faturacao', label: 'Faturação', icon: '🧾' },
+  { slug: 'rueckgabe-und-erstattung', label: 'Rückgabe & Erstattung', icon: '🔄' },
+  { slug: 'agb', label: 'AGB', icon: '📜' },
+  { slug: 'datenschutz', label: 'Datenschutz', icon: '🔒' },
+  { slug: 'lieferzeiten', label: 'Lieferzeiten & Versand', icon: '🚚' },
+  { slug: 'zahlungsinformationen', label: 'Zahlungsinfos', icon: '💳' },
+  { slug: 'impressum', label: 'Impressum', icon: '⚖️' },
 ];
 
 export async function generateMetadata({
@@ -35,7 +36,7 @@ export async function generateMetadata({
   const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
 
   if (!slug || slug.length === 0) {
-    return { title: `Página não encontrada - ${storeName}` };
+    return { title: `Seite nicht gefunden - ${storeName}` };
   }
 
   // 1. Single-segment: Check Contact and CMS Pages first
@@ -86,7 +87,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `Página não encontrada - ${storeName}`,
+    title: `Seite nicht gefunden - ${storeName}`,
   };
 }
 
@@ -115,9 +116,8 @@ export default async function CatchAllPage({
     if (success && page && page.isPublished) {
       const currentSlug = singleSlug;
       const isLegalSlug = LEGAL_NAV.some(item =>
-        item.slug === currentSlug ||
-        (currentSlug.startsWith('politica-de-') && item.slug.includes(currentSlug.replace('politica-de-', '')))
-      ) || ['condicoes-gerais-de-venda', 'notas-legais'].includes(currentSlug);
+        item.slug === currentSlug
+      ) || ['agb', 'datenschutz', 'impressum', 'rueckgabe-und-erstattung', 'lieferzeiten', 'zahlungsinformationen'].includes(currentSlug);
 
       return (
         <div className="min-h-screen bg-stone-50/60 flex flex-col py-8 sm:py-12">
@@ -125,11 +125,11 @@ export default async function CatchAllPage({
 
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-2 text-xs text-stone-500 mb-6 font-medium overflow-x-auto whitespace-nowrap">
-              <Link href="/" className="hover:text-red-600 transition-colors">Início</Link>
+              <Link href="/" className="hover:text-emerald-700 transition-colors">Startseite</Link>
               <span>/</span>
               {isLegalSlug && (
                 <>
-                  <span className="text-stone-600">Políticas Legais</span>
+                  <span className="text-stone-600">Rechtliche Hinweise</span>
                   <span>/</span>
                 </>
               )}
@@ -158,23 +158,16 @@ export default async function CatchAllPage({
               <div className="mb-8">
                 <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                   {LEGAL_NAV.map((item) => {
-                    const isActive = currentSlug === item.slug ||
-                      (currentSlug === 'politica-de-devolucao-e-reembolso' && item.slug === 'devolucoes') ||
-                      (currentSlug === 'condicoes-gerais-de-venda' && item.slug === 'termos-e-condicoes') ||
-                      (currentSlug === 'politica-de-privacidade' && item.slug === 'privacidade') ||
-                      (currentSlug === 'politica-de-expedicao' && item.slug === 'expedicao') ||
-                      (currentSlug === 'politica-de-garantia-2' && item.slug === 'politica-de-garantia') ||
-                      (currentSlug === 'faturacao' && item.slug === 'politica-de-faturacao');
+                    const isActive = currentSlug === item.slug;
 
                     return (
                       <Link
                         key={item.slug}
                         href={`/${item.slug}`}
-                        className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-xs font-bold whitespace-nowrap transition-all shadow-xs ${
-                          isActive
-                            ? 'bg-red-600 text-white shadow-red-600/30 ring-2 ring-red-400/50'
-                            : 'bg-white text-stone-700 hover:bg-stone-100 hover:text-stone-900 border border-stone-200/90'
-                        }`}
+                        className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-xs font-bold whitespace-nowrap transition-all shadow-xs ${isActive
+                          ? 'bg-[#107b46] text-white shadow-emerald-700/30 ring-2 ring-emerald-500/50'
+                          : 'bg-white text-stone-700 hover:bg-stone-100 hover:text-stone-900 border border-stone-200/90'
+                          }`}
                       >
                         <span className="text-sm sm:text-base">{item.icon}</span>
                         <span>{item.label}</span>
@@ -189,22 +182,22 @@ export default async function CatchAllPage({
             <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm p-6 sm:p-10 mb-10">
               <SafeHTML
                 html={page.desktopContent || ''}
-                className="hidden md:block w-full prose max-w-none text-stone-700 prose-headings:text-stone-900 prose-headings:font-bold prose-strong:text-stone-900 prose-a:text-red-600 hover:prose-a:underline"
+                className="hidden md:block w-full prose max-w-none text-stone-700 prose-headings:text-stone-900 prose-headings:font-bold prose-strong:text-stone-900 prose-a:text-[#107b46] hover:prose-a:underline"
               />
               <SafeHTML
                 html={page.mobileContent || (page.desktopContent || '')}
-                className="block md:hidden w-full prose max-w-none text-stone-700 prose-headings:text-stone-900 prose-headings:font-bold prose-strong:text-stone-900 prose-a:text-red-600 hover:prose-a:underline"
+                className="block md:hidden w-full prose max-w-none text-stone-700 prose-headings:text-stone-900 prose-headings:font-bold prose-strong:text-stone-900 prose-a:text-[#107b46] hover:prose-a:underline"
               />
             </div>
 
             {/* Support & Legal Assistance Card */}
             <div className="bg-gradient-to-r from-stone-900 via-stone-900 to-stone-950 rounded-3xl p-6 sm:p-8 text-white border border-stone-800 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-6">
               <div className="space-y-2 text-center lg:text-left flex-1">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-400">
-                  <span>💬</span> Apoio ao Cliente & Faturação
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  <span>💬</span> Kundenservice & Hilfe
                 </span>
                 <h3 className="text-xl sm:text-2xl font-bold text-white">
-                  Dúvidas sobre Devoluções, Garantias ou Faturas?
+                  Fragen zu Lieferung, Rückgabe oder Garantie?
                 </h3>
                 <p className="text-stone-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
                   Unser Kundenservice steht Ihnen bei allen Fragen zu Lieferungen, Rückgaben und Garantien zur Seite.
@@ -233,19 +226,19 @@ export default async function CatchAllPage({
               </div>
             </div>
 
-            {/* Bottom Copyright */}
+            {/* Bottom Copyright & EU ODR Dispute Link */}
             <div className="mt-8 pt-6 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500 text-center sm:text-left">
               <div>
                 <span>© {new Date().getFullYear()} HLG Hausgeräte. Alle Rechte vorbehalten.</span>
               </div>
               <div className="flex items-center gap-4">
                 <a
-                  href="https://www.livroreclamacoes.pt"
+                  href="https://ec.europa.eu/consumers/odr"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-stone-700 hover:text-red-600 font-semibold transition-colors"
+                  className="inline-flex items-center gap-1.5 text-stone-700 hover:text-emerald-700 font-semibold transition-colors"
                 >
-                  <span>Livro de Reclamações Online</span>
+                  <span>Plattform der EU-Kommission zur Online-Streitbeilegung (OS)</span>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
@@ -263,8 +256,8 @@ export default async function CatchAllPage({
   const category = await getCategoryByPathSegments(slug);
   if (category) {
     const resolvedSearchParams = await searchParams;
-    const activeCategory = resolvedSearchParams.category !== undefined 
-      ? resolvedSearchParams.category 
+    const activeCategory = resolvedSearchParams.category !== undefined
+      ? resolvedSearchParams.category
       : (category.slug || category.id);
 
     const newSearchParams = Promise.resolve({

@@ -113,7 +113,7 @@ export async function submitNewsletter(formData: FormData) {
             <div style="font-size: 20px; font-weight: bold; color: #107b46; margin-bottom: 20px;">HLG Hausgeräte</div>
             <h1 style="font-size: 22px; color: #0f172a; margin-top: 0; margin-bottom: 15px;">Bitte bestätigen Sie Ihre Anmeldung</h1>
             <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">
-              Vielen Dank für Ihr Interesse am Newsletter von <strong>HLG Hausgeräte</strong>! Bitte klicken Sie auf den untenstehenden Button, um Ihre Anmeldung zu bestätigen und Ihren <strong>25 € Gutschein</strong> zu erhalten:
+              Vielen Dank für Ihr Interesse am Newsletter von <strong>HLG Hausgeräte</strong>! Bitte klicken Sie auf den untenstehenden Button, um Ihre Anmeldung zu bestätigen und Ihren <strong>15 € Gutschein</strong> zu erhalten:
             </p>
             <p style="text-align: center; margin: 30px 0;">
               <a href="${confirmUrl}" style="background-color: #107b46; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">Anmeldung bestätigen</a>

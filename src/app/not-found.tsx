@@ -5,9 +5,9 @@ export default async function NotFound() {
   const settingsDb = await prisma.setting.findMany();
   const settings = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
   
-  const title = settings.NOT_FOUND_TITLE || "Oops! Cette page est introuvable.";
-  const text = settings.NOT_FOUND_TEXT || "It seems we cannot find the page you are looking for. It may have been moved or deleted.";
-  const cta = settings.NOT_FOUND_CTA || "Back to Home";
+  const title = settings.NOT_FOUND_TITLE || "Seite nicht gefunden (404)";
+  const text = settings.NOT_FOUND_TEXT || "Die von Ihnen gesuchte Seite existiert leider nicht oder wurde verschoben.";
+  const cta = settings.NOT_FOUND_CTA || "Zurück zur Startseite";
   const bgImage = settings.NOT_FOUND_BG_IMAGE || '';
   const bgColor = settings.NOT_FOUND_BG_COLOR || '#000000';
 

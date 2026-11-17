@@ -47,6 +47,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(baseUrl),
+    alternates: {
+      canonical: '/',
+    },
     title: title,
     description: description,
     openGraph: {
@@ -285,13 +288,34 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               "url": SITE_URL,
               "telephone": settingsMap.FOOTER_SUPPORT_PHONE ?? settingsMap.HEADER_SUPPORT_PHONE,
               "email": settingsMap.FOOTER_SUPPORT_EMAIL ?? settingsMap.HEADER_SUPPORT_EMAIL,
+              "priceRange": "€€",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": settingsMap.FOOTER_ADDRESS_1 || 'Borseler Chaussee 123',
-                "addressCountry": settingsMap.STORE_COUNTRY || "DE",
-                "addressLocality": "Hamburg"
+                "postalCode": "22453",
+                "addressLocality": "Hamburg",
+                "addressCountry": settingsMap.STORE_COUNTRY || "DE"
               },
               "description": "HLG Hausgeräte - Ihr Fachhändler für Haushaltsgeräte, Küchenmaschinen, Kaffeemaschinen und Unterhaltungselektronik."
+            })
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: safeJsonLd({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": storeName,
+              "url": SITE_URL,
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": `${SITE_URL}/search?q={search_term_string}`
+                },
+                "query-input": "required name=search_term_string"
+              }
             })
           }}
         />

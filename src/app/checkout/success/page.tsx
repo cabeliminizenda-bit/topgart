@@ -1,10 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import { getTranslations, getLocale } from 'next-intl/server';
 import { getSettings } from '@/actions/settings';
 import { formatPriceNumber, defaultCurrencyOptions } from '@/lib/formatPrice';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Bestellbestätigung | HLG Hausgeräte',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function CheckoutSuccessPage({
   searchParams,

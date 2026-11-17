@@ -258,9 +258,11 @@ export async function sendClientOrderConfirmation(order: any, userEmail: string,
 
     const subTotal = metadata?.subTotal || order.orderItems?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || order.total;
     const shippingCostStr = metadata?.shippingCost === 0
-      ? "Kostenlos!"
+      ? "Kostenlos"
       : (metadata?.shippingCost ? formatPrice(metadata.shippingCost) : "0,00 €");
-    const shippingMethod = metadata?.shippingMethodName ? `(${metadata.shippingMethodName})` : "";
+    const shippingMethod = metadata?.shippingMethodName && !metadata.shippingMethodName.toLowerCase().includes('kostenlos')
+      ? `(${metadata.shippingMethodName})`
+      : "";
     
     // Addresses
     const b = metadata?.billing || {};
@@ -471,9 +473,11 @@ export async function sendAdminOrderNotification(order: any, adminEmail: string,
 
     const subTotal = metadata?.subTotal || order.orderItems?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || order.total;
     const shippingCostStr = metadata?.shippingCost === 0
-      ? "Kostenlos!"
+      ? "Kostenlos"
       : (metadata?.shippingCost ? formatPrice(metadata.shippingCost) : "0,00 €");
-    const shippingMethod = metadata?.shippingMethodName ? `(${metadata.shippingMethodName})` : "";
+    const shippingMethod = metadata?.shippingMethodName && !metadata.shippingMethodName.toLowerCase().includes('kostenlos')
+      ? `(${metadata.shippingMethodName})`
+      : "";
     
     // Addresses
     const b = metadata?.billing || {};
@@ -671,9 +675,11 @@ export async function sendOrderStatusUpdate(order: any, userEmail: string, statu
 
     const subTotal = metadata?.subTotal || order.orderItems?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || order.total;
     const shippingCostStr = metadata?.shippingCost === 0
-      ? "Kostenlos!"
+      ? "Kostenlos"
       : (metadata?.shippingCost ? formatPrice(metadata.shippingCost) : "0,00 €");
-    const shippingMethod = metadata?.shippingMethodName ? `(${metadata.shippingMethodName})` : "";
+    const shippingMethod = metadata?.shippingMethodName && !metadata.shippingMethodName.toLowerCase().includes('kostenlos')
+      ? `(${metadata.shippingMethodName})`
+      : "";
     
     const b = metadata?.billing || {};
     const s = metadata?.shipping || b;
@@ -1186,14 +1192,14 @@ export async function sendNewsletterWelcomeEmail(userEmail: string) {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 25px; background: #ffffff;">
         ${logoHtml}
         <h1 style="font-size: 22px; color: #0f172a; margin-top: 0; margin-bottom: 12px;">
-          🎁 Willkommen bei HLG Hausgeräte! Ihr 25 € Willkommens-Gutschein
+          🎁 Willkommen bei HLG Hausgeräte! Ihr 15 € Willkommens-Gutschein
         </h1>
         
         <p style="font-size: 14px; color: #475569; margin-bottom: 16px;">
           Wir freuen uns sehr, Sie in unserem Newsletter begrüßen zu dürfen! 🌿
         </p>
         <p style="font-size: 14px; color: #475569; margin-bottom: 25px;">
-          Als Willkommensgeschenk erhalten Sie <strong>25 € Sofortrabatt</strong> auf Ihre nächste Bestellung hochwertiger Haushaltsgeräte in unserem Shop!
+          Als Willkommensgeschenk erhalten Sie <strong>15 € Sofortrabatt</strong> auf Ihre nächste Bestellung hochwertiger Haushaltsgeräte in unserem Shop!
         </p>
         
         <div style="background-color: #f0fdf4; border: 2px dashed #107b46; padding: 22px; text-align: center; border-radius: 8px; margin-bottom: 25px;">
@@ -1201,7 +1207,10 @@ export async function sendNewsletterWelcomeEmail(userEmail: string) {
             Ihr persönlicher Gutscheincode:
           </p>
           <p style="margin: 10px 0 0 0; font-size: 26px; font-weight: 800; color: #107b46; letter-spacing: 3px; font-family: monospace;">
-            🏷️ BH874XP
+            WELCOME15
+          </p>
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #15803d;">
+            Einfach beim Bestellvorgang eingeben
           </p>
         </div>
         

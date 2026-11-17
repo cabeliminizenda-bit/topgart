@@ -1,8 +1,17 @@
 import prisma from '@/lib/prisma';
 import CartClient from './CartClient';
 import { isGermanyCountryName } from '@/lib/shipping';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Warenkorb | HLG Hausgeräte',
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default async function CartPage() {
   const rawZones = await prisma.shippingZone.findMany({

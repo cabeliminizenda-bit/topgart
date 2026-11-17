@@ -4,8 +4,17 @@ import BlogSidebar from '@/components/blog/BlogSidebar';
 import { getRecentComments } from '@/actions/blog';
 import { getTranslations, getLocale } from 'next-intl/server';
 import Image from "next/image";
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Ratgeber & Blog | HLG Hausgeräte',
+  description: 'Praktische Tipps, Produktvergleiche und Experten-Ratgeber rund um moderne Haushaltsgeräte, Küchenausstattung und Energieeffizienz.',
+  alternates: {
+    canonical: '/blog',
+  },
+};
 
 export default async function BlogIndexPage({
   searchParams,

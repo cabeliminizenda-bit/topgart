@@ -3,8 +3,17 @@ import CheckoutClient from './CheckoutClient';
 import prisma from '@/lib/prisma';
 import { Suspense } from 'react';
 import { isGermanyCountryName } from '@/lib/shipping';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Kasse | HLG Hausgeräte',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function CheckoutPage() {
   const settings = await getSettings();
