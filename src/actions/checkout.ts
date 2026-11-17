@@ -28,28 +28,33 @@ export async function validateCoupon(code: string) {
       where: { code: upperCode }
     });
 
-    if (!coupon && upperCode === 'WELCOME15') {
+    if (!coupon) {
       try {
-        coupon = await prisma.coupon.upsert({
-          where: { code: 'WELCOME15' },
-          update: { isActive: true, value: 15, type: 'FIXED_AMOUNT' },
-          create: {
+        const settings = await prisma.setting.findMany({
+          where: { key: { in: ['THANKYOU_COUPON_CODE', 'THANKYOU_COUPON_AMOUNT'] } }
+        });
+        const sMap = settings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+        const configuredCode = (sMap.THANKYOU_COUPON_CODE || 'WELCOME15').trim().toUpperCase();
+        const configuredAmount = parseFloat(sMap.THANKYOU_COUPON_AMOUNT || '15') || 15;
+        if (upperCode === configuredCode || upperCode === 'WELCOME15') {
+          coupon = {
+            id: 'thankyou-coupon',
+            code: upperCode,
+            type: 'FIXED_AMOUNT' as const,
+            value: upperCode === configuredCode ? configuredAmount : 15,
+            isActive: true,
+          } as any;
+        }
+      } catch {
+        if (upperCode === 'WELCOME15') {
+          coupon = {
+            id: 'welcome15',
             code: 'WELCOME15',
-            type: 'FIXED_AMOUNT',
+            type: 'FIXED_AMOUNT' as const,
             value: 15,
             isActive: true,
-          }
-        });
-      } catch {
-        coupon = {
-          id: 'welcome15',
-          code: 'WELCOME15',
-          type: 'FIXED_AMOUNT' as const,
-          value: 15,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as any;
+          } as any;
+        }
       }
     }
 
@@ -314,21 +319,33 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
       let coupon = await prisma.coupon.findUnique({
         where: { code: upperCoupon },
       });
-      if (!coupon && upperCoupon === 'WELCOME15') {
+      if (!coupon) {
         try {
-          coupon = await prisma.coupon.upsert({
-            where: { code: 'WELCOME15' },
-            update: { isActive: true, value: 15, type: 'FIXED_AMOUNT' },
-            create: { code: 'WELCOME15', type: 'FIXED_AMOUNT', value: 15, isActive: true },
+          const settings = await prisma.setting.findMany({
+            where: { key: { in: ['THANKYOU_COUPON_CODE', 'THANKYOU_COUPON_AMOUNT'] } }
           });
+          const sMap = settings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+          const configuredCode = (sMap.THANKYOU_COUPON_CODE || 'WELCOME15').trim().toUpperCase();
+          const configuredAmount = parseFloat(sMap.THANKYOU_COUPON_AMOUNT || '15') || 15;
+          if (upperCoupon === configuredCode || upperCoupon === 'WELCOME15') {
+            coupon = {
+              id: 'thankyou-coupon',
+              code: upperCoupon,
+              type: 'FIXED_AMOUNT' as const,
+              value: upperCoupon === configuredCode ? configuredAmount : 15,
+              isActive: true,
+            } as any;
+          }
         } catch {
-          coupon = {
-            id: 'welcome15',
-            code: 'WELCOME15',
-            type: 'FIXED_AMOUNT' as const,
-            value: 15,
-            isActive: true,
-          } as any;
+          if (upperCoupon === 'WELCOME15') {
+            coupon = {
+              id: 'welcome15',
+              code: 'WELCOME15',
+              type: 'FIXED_AMOUNT' as const,
+              value: 15,
+              isActive: true,
+            } as any;
+          }
         }
       }
       if (coupon && coupon.isActive) {

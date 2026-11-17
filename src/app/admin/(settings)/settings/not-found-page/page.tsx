@@ -2,7 +2,7 @@ import { getSettings } from '@/actions/settings';
 import NotFoundPageForm from '@/components/admin/settings/NotFoundPageForm';
 
 export const metadata = {
-  title: '404 page Settings | Lenha & Carvao Silva Dias Admin',
+  title: '404-Seite Einstellungen | HLG Hausgeräte Admin',
 };
 
 export default async function NotFoundPageSettingsPage() {

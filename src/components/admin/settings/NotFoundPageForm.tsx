@@ -8,9 +8,9 @@ export default function NotFoundPageForm({ initialSettings }: { initialSettings:
   const tSettings = useTranslations('AdminSettings');
   const router = useRouter();
   
-  const [notFoundTitle, setNotFoundTitle] = useState(initialSettings.NOT_FOUND_TITLE || 'Oops! This page could not be found.');
-  const [notFoundText, setNotFoundText] = useState(initialSettings.NOT_FOUND_TEXT || 'It seems we cannot find the page you are looking for. It may have been moved or deleted.');
-  const [notFoundCta, setNotFoundCta] = useState(initialSettings.NOT_FOUND_CTA || 'Back to Home');
+  const [notFoundTitle, setNotFoundTitle] = useState(initialSettings.NOT_FOUND_TITLE || 'Seite nicht gefunden (404)');
+  const [notFoundText, setNotFoundText] = useState(initialSettings.NOT_FOUND_TEXT || 'Die von Ihnen gesuchte Seite existiert leider nicht oder wurde verschoben.');
+  const [notFoundCta, setNotFoundCta] = useState(initialSettings.NOT_FOUND_CTA || 'Zurück zur Startseite');
   const [notFoundBgColor, setNotFoundBgColor] = useState(initialSettings.NOT_FOUND_BG_COLOR || '#000000');
   
   const [isLoading, setIsLoading] = useState(false);

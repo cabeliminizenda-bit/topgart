@@ -3,9 +3,24 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-export default function ThankYouClient() {
+interface ThankYouClientProps {
+  settings?: Record<string, string>;
+}
+
+export default function ThankYouClient({ settings = {} }: ThankYouClientProps) {
   const [copied, setCopied] = useState(false);
-  const couponCode = 'WELCOME15';
+
+  const couponCode = (settings.THANKYOU_COUPON_CODE || 'WELCOME15').trim().toUpperCase();
+  const couponAmount = settings.THANKYOU_COUPON_AMOUNT || '15';
+  const badgeText = settings.THANKYOU_BADGE || 'Dein Willkommensgeschenk';
+  const discountTitle = settings.THANKYOU_DISCOUNT_TITLE || `${couponAmount} € Rabatt`;
+  const discountDesc = settings.THANKYOU_DISCOUNT_DESC || `Sichere dir als Dankeschön für deine Newsletter-Anmeldung ${couponAmount} € Rabatt auf deine nächste Bestellung!`;
+  const couponSubtitle = settings.THANKYOU_COUPON_SUBTITLE || 'Einfach beim Bestellvorgang eingeben';
+  const infoTitle = settings.THANKYOU_INFO_TITLE || 'Immer bestens informiert!';
+  const infoDesc = settings.THANKYOU_INFO_DESC || 'Entdecke exklusive Angebote, attraktive Aktionen, Produktneuheiten und praktische Tipps rund um moderne Hausgeräte.';
+  const ctaText = settings.THANKYOU_CTA_TEXT || 'Jetzt HLG Hausgeräte entdecken';
+  const ctaLink = settings.THANKYOU_CTA_LINK || '/shop';
+  const footerNote = settings.THANKYOU_FOOTER_NOTE || 'Vielen Dank für dein Vertrauen. Wir freuen uns auf dich!';
 
   const handleCopy = async () => {
     try {
@@ -28,7 +43,7 @@ export default function ThankYouClient() {
   };
 
   return (
-    <div className="min-h-[75vh] bg-slate-50/70 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+    <div className="min-h-[75vh] bg-slate-50/70 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-sans">
       <div className="max-w-xl w-full mx-auto">
         
         {/* Header */}
@@ -62,15 +77,15 @@ export default function ThankYouClient() {
         {/* Gift Card */}
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-9 text-center">
           <span className="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 mb-3">
-            Dein Willkommensgeschenk
+            {badgeText}
           </span>
 
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
-            15 € Rabatt
+            {discountTitle}
           </h2>
 
           <p className="text-sm text-slate-600 max-w-md mx-auto mb-6">
-            Sichere dir als Dankeschön für deine Newsletter-Anmeldung 15 € Rabatt auf deine nächste Bestellung!
+            {discountDesc}
           </p>
 
           {/* Coupon Box */}
@@ -109,28 +124,28 @@ export default function ThankYouClient() {
             </div>
 
             <div className="text-xs text-emerald-700 font-medium">
-              Einfach beim Bestellvorgang eingeben
+              {couponSubtitle}
             </div>
           </div>
 
           {/* Info Section */}
           <div className="pt-2">
             <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1">
-              Immer bestens informiert!
+              {infoTitle}
             </h3>
             <p className="text-sm text-slate-600 max-w-lg mx-auto mb-6">
-              Entdecke exklusive Angebote, attraktive Aktionen, Produktneuheiten und praktische Tipps rund um moderne Hausgeräte.
+              {infoDesc}
             </p>
 
             <Link
-              href="/shop"
+              href={ctaLink}
               className="inline-flex items-center justify-center w-full py-3.5 px-6 rounded-lg text-sm sm:text-base font-bold text-white bg-slate-900 hover:bg-slate-800 transition shadow-sm"
             >
-              Jetzt HLG Hausgeräte entdecken
+              {ctaText}
             </Link>
 
             <p className="text-xs text-slate-500 mt-4">
-              Vielen Dank für dein Vertrauen. Wir freuen uns auf dich!
+              {footerNote}
             </p>
           </div>
         </div>

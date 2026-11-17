@@ -1,13 +1,35 @@
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Seite nicht gefunden (404) | HLG Hausgeräte',
+  description: 'Die von Ihnen gesuchte Seite existiert leider nicht oder wurde verschoben.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function NotFound() {
   const settingsDb = await prisma.setting.findMany();
   const settings = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
   
-  const title = settings.NOT_FOUND_TITLE || "Seite nicht gefunden (404)";
-  const text = settings.NOT_FOUND_TEXT || "Die von Ihnen gesuchte Seite existiert leider nicht oder wurde verschoben.";
-  const cta = settings.NOT_FOUND_CTA || "Zurück zur Startseite";
+  let title = settings.NOT_FOUND_TITLE || "Seite nicht gefunden (404)";
+  if (/p[aá]gina|n[aã]o|encontrad|oops/i.test(title)) {
+    title = "Seite nicht gefunden (404)";
+  }
+
+  let text = settings.NOT_FOUND_TEXT || "Die von Ihnen gesuchte Seite existiert leider nicht oder wurde verschoben.";
+  if (/não|encontrad|moved or deleted|introuvable/i.test(text)) {
+    text = "Die von Ihnen gesuchte Seite existiert leider nicht oder wurde verschoben.";
+  }
+
+  let cta = settings.NOT_FOUND_CTA || "Zurück zur Startseite";
+  if (/voltar|in[ií]cio|back to home|retour/i.test(cta)) {
+    cta = "Zurück zur Startseite";
+  }
+
   const bgImage = settings.NOT_FOUND_BG_IMAGE || '';
   const bgColor = settings.NOT_FOUND_BG_COLOR || '#000000';
 
