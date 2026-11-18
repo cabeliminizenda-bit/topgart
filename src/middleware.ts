@@ -3,9 +3,9 @@ import { updateSession } from '@/utils/supabase/middleware'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
-// Initialize Redis and Ratelimit if env vars are present
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+// Initialize Redis and Ratelimit if env vars are present (supports both Upstash & Vercel KV prefixes)
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
 let ratelimit: Ratelimit | null = null;
 if (redisUrl && redisToken) {
