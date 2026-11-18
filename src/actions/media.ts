@@ -145,7 +145,7 @@ export async function uploadMediaAction(formData: FormData) {
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      return { error: 'Fichier trop volumineux (max 10 Mo).' };
+      return { error: 'Datei ist zu groß (max. 10 MB).' };
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -153,7 +153,7 @@ export async function uploadMediaAction(formData: FormData) {
 
     const secureUrl = await new Promise<string>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
-        { folder: 'topkaminbrennstoffe/media' },
+        { folder: 'topgartengeraete/media' },
         (error, result) => {
           if (error || !result) reject(error);
           else resolve(result.secure_url);
@@ -173,7 +173,7 @@ export async function uploadMediaAction(formData: FormData) {
     return { success: true, url: secureUrl, media };
   } catch (error: any) {
     console.error('Error uploading media:', error);
-    return { error: 'Erreur lors de l\'upload' };
+    return { error: 'Fehler beim Hochladen' };
   }
 }
 
@@ -185,7 +185,7 @@ export async function uploadMultipleMediaAction(formData: FormData) {
     const singleFile = formData.get('file') as File | null;
     const allFiles = files && files.length > 0 ? files : (singleFile ? [singleFile] : []);
 
-    if (allFiles.length === 0) return { error: 'Aucun fichier fourni' };
+    if (allFiles.length === 0) return { error: 'Keine Datei angegeben' };
 
     const ALLOWED_MIME_TYPES = new Set([
       'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml',
@@ -198,12 +198,12 @@ export async function uploadMultipleMediaAction(formData: FormData) {
 
     for (const file of allFiles) {
       if (!ALLOWED_MIME_TYPES.has(file.type)) {
-        errors.push(`${file.name}: Type de fichier non autorisé.`);
+        errors.push(`${file.name}: Dateityp nicht zulässig.`);
         continue;
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        errors.push(`${file.name}: Fichier trop volumineux (> 10 Mo).`);
+        errors.push(`${file.name}: Datei zu groß (> 10 MB).`);
         continue;
       }
 
@@ -213,7 +213,7 @@ export async function uploadMultipleMediaAction(formData: FormData) {
 
         const secureUrl = await new Promise<string>((resolve, reject) => {
           cloudinary.uploader.upload_stream(
-            { folder: 'topkaminbrennstoffe/media' },
+            { folder: 'topgartengeraete/media' },
             (error, result) => {
               if (error || !result) reject(error);
               else resolve(result.secure_url);

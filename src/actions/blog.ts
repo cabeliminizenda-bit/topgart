@@ -171,7 +171,7 @@ export async function quickEditArticle(id: string, data: { title: string, slug: 
     return { success: true };
   } catch (error: any) {
     console.error(error);
-    return { error: "Erreur lors de la modification rapide. Vérifiez que le slug est unique." };
+    return { error: "Fehler bei der Schnellbearbeitung. Bitte prüfen Sie, ob der Slug eindeutig ist." };
   }
 }
 
@@ -179,13 +179,13 @@ export async function quickEditArticle(id: string, data: { title: string, slug: 
 export async function addComment(articleId: string, data: any) {
   try {
     if (!articleId || !UUID_REGEX.test(articleId)) {
-      return { error: 'Identifiant d’article invalide.' };
+      return { error: 'Ungültige Artikel-ID.' };
     }
 
     const ip = await getClientIp();
     const rateLimit = await checkRateLimit(`comment_${ip}`, 5, 600); // 5 comments per 10 mins
     if (!rateLimit.success) {
-      return { error: 'Trop de commentaires envoyés. Veuillez patienter quelques minutes.' };
+      return { error: 'Zu viele Kommentare gesendet. Bitte warten Sie einige Minuten.' };
     }
 
     const author = String(data?.author || '').trim();
@@ -193,15 +193,15 @@ export async function addComment(articleId: string, data: any) {
     const content = String(data?.content || '').trim();
 
     if (!author || author.length < 2 || author.length > 80) {
-      return { error: 'Le nom doit comporter entre 2 et 80 caractères.' };
+      return { error: 'Der Name muss zwischen 2 und 80 Zeichen lang sein.' };
     }
 
     if (!email || !EMAIL_REGEX.test(email) || email.length > 254) {
-      return { error: 'Adresse e-mail invalide.' };
+      return { error: 'Ungültige E-Mail-Adresse.' };
     }
 
     if (!content || content.length < 3 || content.length > 2000) {
-      return { error: 'Le commentaire doit comporter entre 3 et 2000 caractères.' };
+      return { error: 'Der Kommentar muss zwischen 3 und 2000 Zeichen lang sein.' };
     }
 
     // Verify article exists and is published
@@ -211,7 +211,7 @@ export async function addComment(articleId: string, data: any) {
     });
 
     if (!article || !article.isPublished) {
-      return { error: 'Article introuvable.' };
+      return { error: 'Artikel nicht gefunden.' };
     }
 
     await prisma.articleComment.create({
@@ -228,7 +228,7 @@ export async function addComment(articleId: string, data: any) {
     return { success: true };
   } catch (error: any) {
     console.error('Comment submission error:', error);
-    return { error: 'Une erreur est survenue lors de l’envoi de votre commentaire.' };
+    return { error: 'Beim Senden Ihres Kommentars ist ein Fehler aufgetreten.' };
   }
 }
 

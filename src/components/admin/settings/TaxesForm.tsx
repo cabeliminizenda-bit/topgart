@@ -8,9 +8,9 @@ export default function TaxesForm({ initialSettings }: { initialSettings: Record
   const tSettings = useTranslations('AdminSettings');
   const router = useRouter();
   
-  const [taxIncludedInPrice, setTaxIncludedInPrice] = useState(initialSettings.TAX_INCLUDED_IN_PRICE === 'true');
+  const [taxIncludedInPrice, setTaxIncludedInPrice] = useState(initialSettings.TAX_INCLUDED_IN_PRICE !== 'false');
   const [enableEuVat, setEnableEuVat] = useState(initialSettings.ENABLE_EU_VAT === 'true');
-  const [defaultVatRate, setDefaultVatRate] = useState(initialSettings.DEFAULT_VAT_RATE || '20');
+  const [defaultVatRate, setDefaultVatRate] = useState(initialSettings.DEFAULT_VAT_RATE || '19');
   
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');

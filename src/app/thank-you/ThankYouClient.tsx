@@ -17,8 +17,8 @@ export default function ThankYouClient({ settings = {} }: ThankYouClientProps) {
   const discountDesc = settings.THANKYOU_DISCOUNT_DESC || `Sichere dir als Dankeschön für deine Newsletter-Anmeldung ${couponAmount} € Rabatt auf deine nächste Bestellung!`;
   const couponSubtitle = settings.THANKYOU_COUPON_SUBTITLE || 'Einfach beim Bestellvorgang eingeben';
   const infoTitle = settings.THANKYOU_INFO_TITLE || 'Immer bestens informiert!';
-  const infoDesc = settings.THANKYOU_INFO_DESC || 'Entdecke exklusive Angebote, attraktive Aktionen, Produktneuheiten und praktische Tipps rund um moderne Hausgeräte.';
-  const ctaText = settings.THANKYOU_CTA_TEXT || 'Jetzt HLG Hausgeräte entdecken';
+  const infoDesc = settings.THANKYOU_INFO_DESC || 'Entdecke exklusive Angebote, attraktive Aktionen, Produktneuheiten und praktische Tipps rund um moderne Gartengeräte.';
+  const ctaText = settings.THANKYOU_CTA_TEXT || 'Jetzt Top Gartengeräte entdecken';
   const ctaLink = settings.THANKYOU_CTA_LINK || '/shop';
   const footerNote = settings.THANKYOU_FOOTER_NOTE || 'Vielen Dank für dein Vertrauen. Wir freuen uns auf dich!';
 
@@ -49,7 +49,7 @@ export default function ThankYouClient({ settings = {} }: ThankYouClientProps) {
         {/* Header */}
         <div className="text-center mb-6">
           <div className="text-xs sm:text-sm font-extrabold tracking-[0.25em] text-slate-800 uppercase mb-3">
-            HLG HAUSGERÄTE
+            TOP GARTENGERÄTE
           </div>
 
           <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-emerald-50 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-600">
@@ -68,7 +68,7 @@ export default function ThankYouClient({ settings = {} }: ThankYouClientProps) {
             Vielen Dank für deine Anmeldung!
           </h1>
           <p className="text-sm text-slate-600 max-w-md mx-auto">
-            Willkommen bei HLG Hausgeräte! Schön, dass du Teil unserer Community bist.
+            Willkommen bei Top Gartengeräte! Schön, dass du Teil unserer Community bist.
           </p>
         </div>
 

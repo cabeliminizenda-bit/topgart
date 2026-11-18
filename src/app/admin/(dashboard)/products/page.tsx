@@ -24,11 +24,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     isDeleted: false,
     ...(query
       ? {
-          OR: [
-            { title: { contains: query, mode: 'insensitive' as const } },
-            { slug: { contains: query, mode: 'insensitive' as const } },
-          ],
-        }
+        OR: [
+          { title: { contains: query, mode: 'insensitive' as const } },
+          { slug: { contains: query, mode: 'insensitive' as const } },
+        ],
+      }
       : {}),
   };
 
@@ -72,8 +72,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       {query && (
         <p className="text-sm text-gray-500">
           {total === 0
-            ? `Aucun produit trouvé pour « ${query} »`
-            : `${total} produit${total > 1 ? 's' : ''} trouvé${total > 1 ? 's' : ''} pour « ${query} »`}
+            ? `Kein Produkt gefunden für „${query}“`
+            : `${total} Produkt${total > 1 ? 'e' : ''} gefunden für „${query}“`}
         </p>
       )}
 

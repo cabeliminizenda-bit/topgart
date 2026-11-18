@@ -246,8 +246,8 @@ export default function CartDrawer({
               {coupon && (
                 <div className="flex justify-between items-center mb-2 text-green-600">
                   <span className="font-medium flex items-center gap-1">
-                    Coupon ({coupon.code})
-                    <button onClick={() => setCoupon(null)} className="text-red-500 hover:text-red-700 ml-2 text-xs">Remove</button>
+                    Gutschein ({coupon.code})
+                    <button onClick={() => setCoupon(null)} className="text-red-500 hover:text-red-700 ml-2 text-xs">Entfernen</button>
                   </span>
                   <Price amount={-discountAmount} />
                 </div>

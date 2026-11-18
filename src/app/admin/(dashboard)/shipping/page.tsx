@@ -4,7 +4,7 @@ import ShippingManager from './ShippingManager';
 import { getTranslations } from 'next-intl/server';
 
 export const metadata = {
-  title: 'Shipping Settings | Lenha & Carvao Silva Dias Admin',
+  title: 'Versandeinstellungen | Top Gartengeräte Admin',
 };
 
 export default async function ShippingPage() {

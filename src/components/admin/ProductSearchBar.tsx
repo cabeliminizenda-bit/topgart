@@ -80,7 +80,7 @@ export default function ProductSearchBar({ defaultValue = '' }: { defaultValue?:
         type="search"
         value={query}
         onChange={(e) => handleChange(e.target.value)}
-        placeholder="Rechercher un produit…"
+        placeholder="Produkt suchen…"
         className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-8 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition"
         autoComplete="off"
       />
@@ -91,7 +91,7 @@ export default function ProductSearchBar({ defaultValue = '' }: { defaultValue?:
           type="button"
           onClick={handleClear}
           className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-gray-500 hover:text-gray-600 transition"
-          aria-label="Effacer la recherche"
+          aria-label="Suche löschen"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

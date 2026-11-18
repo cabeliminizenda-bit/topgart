@@ -3,7 +3,7 @@ import { getSettings } from '@/actions/settings';
 import ThankYouPageForm from '@/components/admin/settings/ThankYouPageForm';
 
 export const metadata = {
-  title: 'Thank-You-Seite & Gutschein | HLG Hausgeräte Admin',
+  title: 'Dankesseite & Gutschein | Top Gartengeräte Admin',
 };
 
 export default async function ThankYouSettingsPage() {

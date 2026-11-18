@@ -70,7 +70,7 @@ async function uploadImageFromUrlToCloudinary(
     return new Promise<string>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
-          folder: 'hlg/woocommerce-import',
+          folder: 'topgartengeraete/woocommerce-import',
           public_id: publicId,
           use_filename: true,
           unique_filename: false,
@@ -114,7 +114,7 @@ function extractRankMathSEO(
     meta?: any;
     meta_data?: any[];
   },
-  storeName: string = 'HLG Hausgeräte'
+  storeName: string = 'Top Gartengeräte'
 ) {
   let rawTitle: string | null = null;
   let rawDesc: string | null = null;
@@ -1208,7 +1208,7 @@ export async function importWooCommerceOrders(
       }
 
       for (const wcOrder of orders) {
-        const customerEmail = wcOrder.billing?.email || `customer-${wcOrder.customer_id || wcOrder.id}@hlg-hausgeraete.de`;
+        const customerEmail = wcOrder.billing?.email || `customer-${wcOrder.customer_id || wcOrder.id}@topgartengeraete.de`;
 
         let user = await prisma.user.findUnique({
           where: { email: customerEmail }
@@ -1387,7 +1387,7 @@ export async function importWordPressPages(
         const seo = extractRankMathSEO(
           wpPage.meta_data || wpPage.meta,
           wpPage,
-          'HLG Hausgeräte'
+          'Top Gartengeräte'
         );
 
         await prisma.page.upsert({
@@ -1397,7 +1397,7 @@ export async function importWordPressPages(
             desktopContent: content,
             mobileContent: content,
             isPublished: wpPage.status === 'publish',
-            metaTitle: seo.metaTitle || (title ? `${title} | HLG Hausgeräte` : null),
+            metaTitle: seo.metaTitle || (title ? `${title} | Top Gartengeräte` : null),
             metaDescription: seo.metaDescription || (excerpt ? excerpt.slice(0, 160) : null),
             metaKeywords: seo.metaKeywords || null
           },
@@ -1407,7 +1407,7 @@ export async function importWordPressPages(
             desktopContent: content,
             mobileContent: content,
             isPublished: wpPage.status === 'publish',
-            metaTitle: seo.metaTitle || (title ? `${title} | HLG Hausgeräte` : null),
+            metaTitle: seo.metaTitle || (title ? `${title} | Top Gartengeräte` : null),
             metaDescription: seo.metaDescription || (excerpt ? excerpt.slice(0, 160) : null),
             metaKeywords: seo.metaKeywords || null
           }
@@ -1520,7 +1520,7 @@ export async function importWordPressArticles(
         const seo = extractRankMathSEO(
           wpPost.meta_data || wpPost.meta,
           wpPost,
-          'HLG Hausgeräte'
+          'Top Gartengeräte'
         );
 
         await prisma.article.upsert({
@@ -1532,9 +1532,9 @@ export async function importWordPressArticles(
             image: imageUrl,
             category: categoryName || 'Ratgeber',
             tags: tags,
-            authorName: authorName || 'HLG Redaktion',
+            authorName: authorName || 'Top Gartengeräte Redaktion',
             isPublished: wpPost.status === 'publish',
-            metaTitle: seo.metaTitle || (title ? `${title} | HLG Hausgeräte` : null),
+            metaTitle: seo.metaTitle || (title ? `${title} | Top Gartengeräte` : null),
             metaDescription: seo.metaDescription || (excerpt ? excerpt.slice(0, 160) : null),
             metaKeywords: seo.metaKeywords || null
           },
@@ -1546,9 +1546,9 @@ export async function importWordPressArticles(
             image: imageUrl,
             category: categoryName || 'Ratgeber',
             tags: tags,
-            authorName: authorName || 'HLG Redaktion',
+            authorName: authorName || 'Top Gartengeräte Redaktion',
             isPublished: wpPost.status === 'publish',
-            metaTitle: seo.metaTitle || (title ? `${title} | HLG Hausgeräte` : null),
+            metaTitle: seo.metaTitle || (title ? `${title} | Top Gartengeräte` : null),
             metaDescription: seo.metaDescription || (excerpt ? excerpt.slice(0, 160) : null),
             metaKeywords: seo.metaKeywords || null
           }
@@ -1846,7 +1846,7 @@ export async function syncWooCommerceRankMathSEO(
         const remotePages = await pageResponse.json();
         if (Array.isArray(remotePages)) {
           for (const wpPage of remotePages) {
-            const pageSeo = extractRankMathSEO(wpPage.meta_data || wpPage.meta, wpPage, 'HLG Hausgeräte');
+            const pageSeo = extractRankMathSEO(wpPage.meta_data || wpPage.meta, wpPage, 'Top Gartengeräte');
             const cleanSlug = wpPage.slug;
             const existingPage = await prisma.page.findUnique({ where: { slug: cleanSlug } });
             if (existingPage && (pageSeo.metaTitle || pageSeo.metaDescription || pageSeo.metaKeywords)) {
@@ -1878,7 +1878,7 @@ export async function syncWooCommerceRankMathSEO(
         const remotePosts = await postResponse.json();
         if (Array.isArray(remotePosts)) {
           for (const wpPost of remotePosts) {
-            const postSeo = extractRankMathSEO(wpPost.meta_data || wpPost.meta, wpPost, 'HLG Hausgeräte');
+            const postSeo = extractRankMathSEO(wpPost.meta_data || wpPost.meta, wpPost, 'Top Gartengeräte');
             const cleanSlug = wpPost.slug;
             const existingArticle = await prisma.article.findUnique({ where: { slug: cleanSlug } });
             if (existingArticle && (postSeo.metaTitle || postSeo.metaDescription || postSeo.metaKeywords)) {

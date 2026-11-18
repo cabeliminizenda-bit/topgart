@@ -3,7 +3,7 @@ import { getSettings } from '@/actions/settings';
 import LanguageForm from '@/components/admin/settings/LanguageForm';
 
 export const metadata = {
-  title: 'Language Settings | Lenha & Carvao Silva Dias Admin',
+  title: 'Spracheinstellungen | Top Gartengeräte Admin',
 };
 
 export default async function LanguageSettingsPage() {

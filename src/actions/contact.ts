@@ -43,7 +43,7 @@ export async function submitContactMessage(formData: FormData) {
       where: { key: { in: ['CONTACT_FORM_RECIPIENT', 'CONTACT_RECEIVER_EMAIL'] } },
     });
     const rMap = receiverRows.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-    const receiverEmail = rMap.CONTACT_FORM_RECIPIENT || rMap.CONTACT_RECEIVER_EMAIL || process.env.ADMIN_EMAIL || 'info@hlghausgeraete.de';
+    const receiverEmail = rMap.CONTACT_FORM_RECIPIENT || rMap.CONTACT_RECEIVER_EMAIL || process.env.ADMIN_EMAIL || 'kontakt@topgartengeraete.de';
 
     // Send email to the configured admin/receiver
     try {
@@ -116,13 +116,13 @@ export async function submitNewsletter(formData: FormData) {
 
       await sendEmail({
         to: email,
-        subject: `Bitte bestätigen Sie Ihre Newsletter-Anmeldung - HLG Hausgeräte`,
+        subject: `Bitte bestätigen Sie Ihre Newsletter-Anmeldung - Top Gartengeräte`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 25px; background: #ffffff;">
-            <div style="font-size: 20px; font-weight: bold; color: #107b46; margin-bottom: 20px;">HLG Hausgeräte</div>
+            <div style="font-size: 20px; font-weight: bold; color: #107b46; margin-bottom: 20px;">Top Gartengeräte</div>
             <h1 style="font-size: 22px; color: #0f172a; margin-top: 0; margin-bottom: 15px;">Bitte bestätigen Sie Ihre Anmeldung</h1>
             <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">
-              Vielen Dank für Ihr Interesse am Newsletter von <strong>HLG Hausgeräte</strong>! Bitte klicken Sie auf den untenstehenden Button, um Ihre Anmeldung zu bestätigen und Ihren <strong>${escapeHtml(voucherAmount)} € Gutschein</strong> zu erhalten:
+              Vielen Dank für Ihr Interesse am Newsletter von <strong>Top Gartengeräte</strong>! Bitte klicken Sie auf den untenstehenden Button, um Ihre Anmeldung zu bestätigen und Ihren <strong>${escapeHtml(voucherAmount)} € Gutschein</strong> zu erhalten:
             </p>
             <p style="text-align: center; margin: 30px 0;">
               <a href="${confirmUrl}" style="background-color: #107b46; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">Anmeldung bestätigen</a>

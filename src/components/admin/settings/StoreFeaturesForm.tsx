@@ -9,8 +9,8 @@ export default function StoreFeaturesForm({ initialSettings }: { initialSettings
   const router = useRouter();
 
   const [enableBuyNow, setEnableBuyNow] = useState(initialSettings.ENABLE_BUY_NOW_BUTTON === 'true');
-  const [contactReceiverEmail, setContactReceiverEmail] = useState(initialSettings.CONTACT_RECEIVER_EMAIL || 'info@hlghausgeraete.de');
-  const [newsletterSuccessMessage, setNewsletterSuccessMessage] = useState(initialSettings.NEWSLETTER_SUCCESS_MESSAGE || 'Thank you for subscribing to our newsletter!');
+  const [contactReceiverEmail, setContactReceiverEmail] = useState(initialSettings.CONTACT_RECEIVER_EMAIL || 'kontakt@topgartengeraete.de');
+  const [newsletterSuccessMessage, setNewsletterSuccessMessage] = useState(initialSettings.NEWSLETTER_SUCCESS_MESSAGE || 'Vielen Dank für Ihre Anmeldung zu unserem Newsletter!');
 
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');

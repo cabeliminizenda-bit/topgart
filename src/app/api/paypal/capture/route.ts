@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 
     if (order.status !== 'PENDING') {
       // Already processed (idempotency)
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de';
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://topgartengeraete.de';
       return NextResponse.redirect(
         new URL(`/checkout/success?orderId=${orderId}`, baseUrl)
       );
@@ -172,7 +172,7 @@ export async function GET(request: Request) {
         await finalizeOrder(orderId);
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de';
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://topgartengeraete.de';
       return NextResponse.redirect(
         new URL(`/checkout/success?orderId=${orderId}`, baseUrl)
       );

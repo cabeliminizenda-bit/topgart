@@ -9,7 +9,7 @@ export default function ChatForm({ initialSettings }: { initialSettings: Record<
   const router = useRouter();
   
   const [chatEnabled, setChatEnabled] = useState(initialSettings.CHAT_ENABLED === 'true');
-  const [chatStoreName, setChatStoreName] = useState(initialSettings.CHAT_STORE_NAME || 'My Store');
+  const [chatStoreName, setChatStoreName] = useState(initialSettings.CHAT_STORE_NAME || 'Top Gartengeräte');
   const [chatStoreIcon, setChatStoreIcon] = useState(initialSettings.CHAT_STORE_ICON || '');
   
   const [isLoading, setIsLoading] = useState(false);

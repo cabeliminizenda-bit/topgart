@@ -571,7 +571,7 @@ export const CATEGORY_PRESET_DEFAULTS: Record<CategorySectionPreset, CategorySec
     showBanner: false,
     bannerPosition: 'left',
     bannerImage: '/images/hero-appliances.jpg',
-    bannerBadge: 'HLG Auswahl',
+    bannerBadge: 'Top Auswahl',
     bannerTitle: 'Top Marken zum Bestpreis',
     bannerCtaText: 'Jetzt entdecken',
     bannerCtaUrl: '/shop',
@@ -683,14 +683,14 @@ export const DEFAULT_HLG_SECTIONS: SectionConfig[] = [
   { id: 'sec_hero', type: 'Hero', name: 'Hero Banner & Kategorien', enabled: true, settings: {} },
   { id: 'sec_deals', type: 'AktuelleAngebote', name: 'Aktuelle Angebote & Bestseller', enabled: true, settings: {} },
   ...createSplitCategorySections(true),
-  { id: 'sec_brands', type: 'BrandShowcase', name: 'Marken & HLG Garantien', enabled: true, settings: {} },
+  { id: 'sec_brands', type: 'BrandShowcase', name: 'Marken & Garantien', enabled: true, settings: {} },
   { id: 'sec_trust', type: 'TrustBar', name: 'Vertrauensgarantien (TrustBar)', enabled: true, settings: {} },
   {
     id: 'sec_blogs',
     type: 'HeatingGuideBlogs',
-    name: 'HLG Magazin & Ratgeber',
+    name: 'Top Gartengeräte Magazin & Ratgeber',
     enabled: true,
-    settings: { title: 'HLG Magazin & Ratgeber' },
+    settings: { title: 'Top Gartengeräte Magazin & Ratgeber' },
   },
   { id: 'sec_newsletter', type: 'Newsletter', name: 'Newsletter Registrierung', enabled: true, settings: {} },
 ];
@@ -847,39 +847,39 @@ export const DEFAULT_BRAND_SERVICE_PERKS: ServicePerkItem[] = [
   {
     id: 'perk-disposal',
     iconKey: 'trash',
-    title: 'Altgeräte-Entsorgung',
-    desc: 'Kostenlose und fachgerechte Mitnahme Ihres alten Haushaltsgeräts bei Lieferung.',
+    title: 'Fachberatung & Service',
+    desc: 'Kompetente Beratung rund um die Auswahl, Wartung und Pflege Ihrer Gartengeräte.',
   },
   {
     id: 'perk-install',
     iconKey: 'wrench',
-    title: 'Anschluss & Montage',
-    desc: 'Auf Wunsch professioneller Aufbau- und Anschlussservice direkt bei Ihnen zu Hause.',
+    title: 'Ersatzteile & Zubehör',
+    desc: 'Großes Sortiment an originalen Ersatzteilen, Akkus, Ladegeräten und Zubehör.',
   },
   {
     id: 'perk-warranty',
     iconKey: 'shield',
     title: '2 Jahre Herstellergarantie',
-    desc: 'Voller Schutz auf alle Neu- und Markengeräte mit schnellem Reparaturservice.',
+    desc: 'Voller Schutz auf alle Neu- und Markengeräte mit schnellem Kundenservice.',
   },
   {
     id: 'perk-payment',
     iconKey: 'card',
-    title: 'Bequemer Ratenkauf',
-    desc: 'Flexible Zahlungsoptionen: PayPal, Klarna Ratenkauf, Rechnung und Sofortüberweisung.',
+    title: 'Sichere Zahlungsarten',
+    desc: 'Flexible Zahlungsoptionen: Überweisung, PayPal, Kreditkarte und weitere sichere Methoden.',
   },
 ];
 
 export const DEFAULT_BRAND_SHOWCASE_SETTINGS = {
   eyebrow: 'Geprüfte Markenqualität',
-  title: 'Führende Hersteller bei HLG Hausgeräte',
+  title: 'Führende Hersteller bei Top Gartengeräte',
   description:
-    'Entdecken Sie innovative Spitzengeräte weltbekannter Qualitätshersteller mit voller Herstellergarantie.',
+    'Entdecken Sie leistungsstarke Gartengeräte renommierter Qualitätshersteller mit voller Herstellergarantie.',
   sourceMode: 'AUTO' as const,
   maxBrands: 12,
   brands: DEFAULT_BRAND_SHOWCASE_ITEMS.slice(0, 12),
-  serviceEyebrow: 'Der HLG Vorteil',
-  serviceTitle: 'Unser Rundum-Sorglos-Service für Großgeräte',
+  serviceEyebrow: 'Der Top Gartengeräte Vorteil',
+  serviceTitle: 'Unser Rundum-Sorglos-Service für Ihre Gartentechnik',
   servicePerks: DEFAULT_BRAND_SERVICE_PERKS,
 };
 

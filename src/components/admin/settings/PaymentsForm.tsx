@@ -19,8 +19,8 @@ export default function PaymentsForm({ initialSettings }: { initialSettings: Rec
   const [bankTransferBic, setBankTransferBic] = useState(initialSettings.BANK_TRANSFER_BIC || '');
   const [bankTransferAccountHolder, setBankTransferAccountHolder] = useState(initialSettings.BANK_TRANSFER_ACCOUNT_HOLDER || '');
   const [bankTransferBankName, setBankTransferBankName] = useState(initialSettings.BANK_TRANSFER_BANK_NAME || '');
-  const [bankTransferCheckoutMessage, setBankTransferCheckoutMessage] = useState(initialSettings.BANK_TRANSFER_CHECKOUT_MESSAGE || 'Veuillez effectuer le virement sur le compte ci-dessous.');
-  const [bankTransferInstructions, setBankTransferInstructions] = useState(initialSettings.BANK_TRANSFER_INSTRUCTIONS || 'Your order will be processed upon payment receipt.');
+  const [bankTransferCheckoutMessage, setBankTransferCheckoutMessage] = useState(initialSettings.BANK_TRANSFER_CHECKOUT_MESSAGE || 'Bitte überweisen Sie den Rechnungsbetrag auf das unten angegebene Konto.');
+  const [bankTransferInstructions, setBankTransferInstructions] = useState(initialSettings.BANK_TRANSFER_INSTRUCTIONS || 'Ihre Bestellung wird unmittelbar nach Zahlungseingang bearbeitet und versendet.');
 
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');

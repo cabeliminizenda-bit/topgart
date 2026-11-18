@@ -13,21 +13,21 @@ export async function submitReview(productId: string, rating: number, comment: s
   try {
     user = await requireAuth();
   } catch {
-    return { error: "You must be logged in to leave a review." };
+    return { error: "Sie müssen angemeldet sein, um eine Bewertung abzugeben." };
   }
 
   if (!productId || !UUID_REGEX.test(productId)) {
-    return { error: "Identifiant de produit invalide." };
+    return { error: "Ungültige Produkt-ID." };
   }
 
   const intRating = Number(rating);
   if (!Number.isInteger(intRating) || intRating < 1 || intRating > 5) {
-    return { error: "La note doit être un entier entre 1 et 5." };
+    return { error: "Die Bewertung muss eine ganze Zahl zwischen 1 und 5 sein." };
   }
 
   const cleanComment = String(comment || '').trim();
   if (cleanComment.length < 3 || cleanComment.length > 2000) {
-    return { error: "Votre avis doit comporter entre 3 et 2000 caractères." };
+    return { error: "Ihre Bewertung muss zwischen 3 und 2000 Zeichen lang sein." };
   }
 
   // Check product existence
@@ -36,7 +36,7 @@ export async function submitReview(productId: string, rating: number, comment: s
     select: { id: true, slug: true },
   });
   if (!product) {
-    return { error: "Produit introuvable." };
+    return { error: "Produkt nicht gefunden." };
   }
 
   // Prevent spamming multiple reviews on the same product within 1 hour
@@ -48,11 +48,11 @@ export async function submitReview(productId: string, rating: number, comment: s
     },
   });
   if (recentReview) {
-    return { error: "Vous avez déjà soumis un avis récemment pour ce produit." };
+    return { error: "Sie haben kürzlich bereits eine Bewertung für dieses Produkt abgegeben." };
   }
 
   try {
-    const reviewerName = user.email ? user.email.split('@')[0] : 'Client';
+    const reviewerName = user.email ? user.email.split('@')[0] : 'Kunde';
 
     await prisma.review.create({
       data: {
@@ -66,14 +66,13 @@ export async function submitReview(productId: string, rating: number, comment: s
     });
 
     revalidatePath(`/produkt/[slug]`, 'page');
-    revalidatePath(`/produkt/[slug]`, 'page');
     revalidatePath(`/product/[slug]`, 'page');
     revalidatePath(`/account/reviews`);
 
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de l'ajout de l'avis:", error);
-    return { error: "Une erreur s'est produite lors de l'enregistrement de votre avis." };
+    console.error("Fehler beim Speichern der Bewertung:", error);
+    return { error: "Beim Speichern Ihrer Bewertung ist ein Fehler aufgetreten." };
   }
 }
 

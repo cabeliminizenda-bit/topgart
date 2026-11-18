@@ -38,7 +38,7 @@ export default function TagCreateForm() {
         type="text" 
         value={name}
         onChange={handleNameChange}
-        placeholder="Nom du tag"
+        placeholder="Schlagwortname"
         className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
         required
       />
@@ -55,7 +55,7 @@ export default function TagCreateForm() {
         disabled={loading}
         className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-md transition disabled:opacity-50"
       >
-        Ajouter
+        Hinzufügen
       </button>
     </form>
   );

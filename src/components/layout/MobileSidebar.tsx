@@ -37,16 +37,16 @@ type MobileSidebarProps = {
 
 const fallbackSearchCategories: SearchCategoryOption[] = [
   { name: 'Alle Kategorien', value: 'all', isChild: false },
-  { name: 'Gaming', value: 'gaming', isChild: false },
-  { name: 'Geschirrspüler', value: 'geschirrspueler', isChild: false },
-  { name: 'Herde', value: 'herde', isChild: false },
-  { name: 'Kaffeemaschinen', value: 'kaffeemaschinen', isChild: false },
-  { name: 'Küchenmaschinen', value: 'kuechenmaschinen', isChild: false },
-  { name: 'Kühlen & Gefrieren', value: 'kuehlen-gefrieren', isChild: false },
-  { name: 'Staubsauger & Reiniger', value: 'staubsauger-reiniger', isChild: false },
-  { name: 'Waschmaschinen', value: 'waschmaschinen', isChild: false },
-  { name: 'Trockner', value: 'trockner', isChild: false },
-  { name: 'Mikrowellen', value: 'mikrowellen', isChild: false },
+  { name: 'Rasenmäher', value: 'rasenmaeher', isChild: false },
+  { name: 'Mähroboter', value: 'maehroboter', isChild: false },
+  { name: 'Aufsitzmäher', value: 'aufsitzmaeher', isChild: false },
+  { name: 'Motorsägen', value: 'motorsagen', isChild: false },
+  { name: 'Heckenscheren', value: 'heckenscheren', isChild: false },
+  { name: 'Rasentrimmer & Motorsensen', value: 'rasentrimmer-motorsensen', isChild: false },
+  { name: 'Laubbläser & Laubsauger', value: 'laubblaeser-laubsauger', isChild: false },
+  { name: 'Hochdruckreiniger', value: 'hochdruckreiniger', isChild: false },
+  { name: 'Vertikutierer', value: 'vertikutierer', isChild: false },
+  { name: 'Gartenhäcksler', value: 'gartenhaecksler', isChild: false },
 ];
 
 const isPlaceholderOrGenericAddress = (str?: string) => {
@@ -219,8 +219,8 @@ const emptySubscribe = () => () => { };
 export default function MobileSidebar({
   isOpen,
   onClose,
-  logoImage = '/LOGO-HLG-HAUSGERAETE.png',
-  darkLogoImage = '/LOGO-HLG-HAUSGERAETE-DARK.png',
+  logoImage = '/logo-top-gartengeraete.svg',
+  darkLogoImage = '/logo-top-gartengeraete-dark.svg',
   menuLinks = [],
   contactAddress = '',
   contactEmail = '',
@@ -241,7 +241,7 @@ export default function MobileSidebar({
     () => false
   );
   const formattedDate = isClient
-    ? new Date().toLocaleDateString('en-US', {
+    ? new Date().toLocaleDateString('de-DE', {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
@@ -284,11 +284,11 @@ export default function MobileSidebar({
 
   const displayAddress = !isPlaceholderOrGenericAddress(contactAddress)
     ? contactAddress.trim()
-    : 'Borsteler Chaussee 151, 22453 Hamburg, DEUTSCHLAND';
+    : 'Rosenstraße 19, 26529 Marienhafe, Deutschland';
 
   const displayEmail = !isPlaceholderEmail(contactEmail)
     ? contactEmail.trim()
-    : 'info@hlg-hausgeraete.de';
+    : 'kontakt@topgartengeraete.de';
 
   const triggerCart = () => {
     onClose();
@@ -383,7 +383,7 @@ export default function MobileSidebar({
             <div className="w-14 h-28 flex items-center justify-center overflow-hidden pb-2">
               <Image
                 src={logoImage}
-                alt="HLG HAUSGERÄTE"
+                alt="Top Gartengeräte"
                 width={140}
                 height={39}
                 className="-rotate-90 max-w-none w-24 h-auto object-contain select-none"

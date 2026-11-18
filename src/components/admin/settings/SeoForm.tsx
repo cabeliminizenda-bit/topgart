@@ -33,9 +33,9 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
   const [bingSiteVerification, setBingSiteVerification] = useState(initialSettings.BING_SITE_VERIFICATION || '');
   const [googleAnalyticsId, setGoogleAnalyticsId] = useState(initialSettings.GOOGLE_ANALYTICS_ID || '');
   
-  const [storeCountry, setStoreCountry] = useState(initialSettings.STORE_COUNTRY || 'FR');
+  const [storeCountry, setStoreCountry] = useState(initialSettings.STORE_COUNTRY || 'DE');
   const [rssBeforeContent, setRssBeforeContent] = useState(initialSettings.RSS_BEFORE_CONTENT || '');
-  const [rssAfterContent, setRssAfterContent] = useState(initialSettings.RSS_AFTER_CONTENT || 'L\'article {post_link} est apparu en premier sur {blog_link}.');
+  const [rssAfterContent, setRssAfterContent] = useState(initialSettings.RSS_AFTER_CONTENT || 'Der Artikel {post_link} erschien zuerst auf {blog_link}.');
 
   const [showMediaModal, setShowMediaModal] = useState(false);
   
@@ -61,7 +61,7 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
 
     await updateSettingsBatch(settingsMap);
 
-    setMessage('Paramètres SEO mis à jour avec succès');
+    setMessage('SEO-Einstellungen erfolgreich aktualisiert');
     setIsLoading(false);
     router.refresh();
   };
@@ -70,7 +70,7 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
     <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">{tSeo('seo_section_title') || 'SEO & OpenGraph'}</h2>
-        <p className="text-gray-500 mt-1">{tSeo('home_seo_desc') || 'Paramètres de référencement globaux (appliqués à la page d\'accueil et par défaut).'}</p>
+        <p className="text-gray-500 mt-1">{tSeo('home_seo_desc') || 'Globale SEO-Einstellungen (für die Startseite und als Standardwert).'}</p>
       </div>
 
       {message && (
@@ -82,38 +82,38 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
       <div className="grid grid-cols-1 gap-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 pb-6">
           <div className="mb-4 md:mb-0 md:w-1/3">
-            <label className="block text-sm font-medium text-gray-700">{tSeo('home_meta_title_label') || 'Meta Titre (Page d\'accueil)'}</label>
-            <p className="text-xs text-gray-500 mt-1">{tSeo('home_meta_title_help') || 'L\'inspecteur recommande 50 à 60 caractères.'}</p>
+            <label className="block text-sm font-medium text-gray-700">{tSeo('home_meta_title_label') || 'Meta-Titel (Startseite)'}</label>
+            <p className="text-xs text-gray-500 mt-1">{tSeo('home_meta_title_help') || 'Empfohlen werden 50 bis 60 Zeichen.'}</p>
           </div>
           <div className="md:w-2/3">
             <input
               type="text"
               value={metaTitle}
               onChange={(e) => setMetaTitle(e.target.value)}
-              placeholder="Nom de la boutique | Slogan percutant"
+              placeholder="Top Gartengeräte | Hochwertige Gartentechnik"
               className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             />
             <div className={`text-xs mt-1 ${metaTitle.length < 50 ? 'text-red-500' : metaTitle.length > 60 ? 'text-orange-600' : 'text-green-600'}`}>
-              {metaTitle.length} {tSeo('chars') || 'caractères'} {metaTitle.length > 0 && (metaTitle.length < 50 ? tSeo('too_short') : metaTitle.length > 60 ? tSeo('too_long') : tSeo('perfect'))}
+              {metaTitle.length} {tSeo('chars') || 'Zeichen'} {metaTitle.length > 0 && (metaTitle.length < 50 ? tSeo('too_short') : metaTitle.length > 60 ? tSeo('too_long') : tSeo('perfect'))}
             </div>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-gray-100 pb-6">
           <div className="mb-4 md:mb-0 md:w-1/3">
-            <label className="block text-sm font-medium text-gray-700">{tSeo('home_meta_desc_label') || 'Meta Description'}</label>
-            <p className="text-xs text-gray-500 mt-1">{tSeo('home_meta_desc_help') || 'L\'inspecteur recommande 80 à 125 caractères pour un meilleur taux de clic (CTR).'}</p>
+            <label className="block text-sm font-medium text-gray-700">{tSeo('home_meta_desc_label') || 'Meta-Beschreibung'}</label>
+            <p className="text-xs text-gray-500 mt-1">{tSeo('home_meta_desc_help') || 'Empfohlen werden 80 bis 125 Zeichen für eine optimale Klickrate (CTR).'}</p>
           </div>
           <div className="md:w-2/3">
             <textarea
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
               rows={3}
-              placeholder="Découvrez notre boutique..."
+              placeholder="Entdecken Sie unseren Online-Shop..."
               className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             />
             <div className={`text-xs mt-1 ${metaDescription.length < 80 ? 'text-red-500' : metaDescription.length > 125 ? 'text-orange-600' : 'text-green-600'}`}>
-              {metaDescription.length} {tSeo('chars') || 'caractères'} {metaDescription.length > 0 && (metaDescription.length < 80 ? tSeo('too_short') : metaDescription.length > 125 ? tSeo('too_long') : tSeo('perfect'))}
+              {metaDescription.length} {tSeo('chars') || 'Zeichen'} {metaDescription.length > 0 && (metaDescription.length < 80 ? tSeo('too_short') : metaDescription.length > 125 ? tSeo('too_long') : tSeo('perfect'))}
             </div>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
         <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-gray-100 pb-6">
           <div className="mb-4 md:mb-0 md:w-1/3">
             <label className="block text-sm font-medium text-gray-700">{tSeo('gsc_label') || 'Google Search Console'}</label>
-            <p className="text-xs text-gray-500 mt-1">{tSeo('gsc_help') || 'Jeton de vérification ou balise HTML complète copiée depuis Search Console ou Rank Math.'}</p>
+            <p className="text-xs text-gray-500 mt-1">{tSeo('gsc_help') || 'Bestätigungscode oder vollständiges HTML-Meta-Tag aus der Search Console.'}</p>
           </div>
           <div className="md:w-2/3">
             <input
@@ -136,17 +136,17 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
                 }
               }}
               onBlur={() => setGoogleSiteVerification(cleanVerificationToken(googleSiteVerification))}
-              placeholder="Ex: abcdef12345 ou <meta name='google-site-verification' content='...' />"
+              placeholder="z. B. abcdef12345 oder <meta name='google-site-verification' content='...' />"
               className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
             />
-            <p className="text-xs text-gray-400 mt-1">Collez votre jeton ou balise HTML complète — le jeton est extrait automatiquement.</p>
+            <p className="text-xs text-gray-400 mt-1">Fügen Sie Ihren Code oder das vollständige HTML-Tag ein — der Code wird automatisch extrahiert.</p>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-gray-100 pb-6">
           <div className="mb-4 md:mb-0 md:w-1/3">
             <label className="block text-sm font-medium text-gray-700">Bing Webmaster Tools</label>
-            <p className="text-xs text-gray-500 mt-1">Code de vérification Bing / Yahoo / DuckDuckGo (balise <code>msvalidate.01</code> ou jeton brut).</p>
+            <p className="text-xs text-gray-500 mt-1">Bestätigungscode für Bing / Yahoo / DuckDuckGo (<code>msvalidate.01</code>-Tag oder reiner Code).</p>
           </div>
           <div className="md:w-2/3">
             <input
@@ -161,7 +161,7 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
                 }
               }}
               onBlur={() => setBingSiteVerification(cleanVerificationToken(bingSiteVerification))}
-              placeholder="Ex: 1234567890ABCDEF..."
+              placeholder="z. B. 1234567890ABCDEF..."
               className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
             />
           </div>
@@ -170,7 +170,7 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
         <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-gray-100 pb-6">
           <div className="mb-4 md:mb-0 md:w-1/3">
             <label className="block text-sm font-medium text-gray-700">{tSeo('ga_label') || 'Google Analytics (G-XXXXX)'}</label>
-            <p className="text-xs text-gray-500 mt-1">{tSeo('ga_help') || 'ID de mesure GA4. Le script s\'activera automatiquement dès l\'acceptation des cookies.'}</p>
+            <p className="text-xs text-gray-500 mt-1">{tSeo('ga_help') || 'GA4-Mess-ID. Das Skript wird automatisch nach Cookie-Zustimmung aktiviert.'}</p>
           </div>
           <div className="md:w-2/3">
             <input
@@ -188,14 +188,14 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
               placeholder="G-XXXXXXXXXX"
               className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono"
             />
-            <p className="text-xs text-gray-400 mt-1">Collez votre ID (G-XXXXXXXXXX) ou le snippet complet — l&apos;ID est extrait automatiquement.</p>
+            <p className="text-xs text-gray-400 mt-1">Fügen Sie Ihre ID (G-XXXXXXXXXX) oder das vollständige Snippet ein — die ID wird automatisch extrahiert.</p>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-start justify-between pb-2">
           <div className="mb-4 md:mb-0 md:w-1/3">
-            <label className="block text-sm font-medium text-gray-700">{tSeo('og_image_label') || 'Image OpenGraph (og:image)'}</label>
-            <p className="text-xs text-gray-500 mt-1">{tSeo('og_image_help') || 'Image utilisée lors du partage sur les réseaux sociaux. L\'inspecteur recommande un ratio de 1.91:1 (idéalement 1200x630 pixels).'}</p>
+            <label className="block text-sm font-medium text-gray-700">{tSeo('og_image_label') || 'OpenGraph-Bild (og:image)'}</label>
+            <p className="text-xs text-gray-500 mt-1">{tSeo('og_image_help') || 'Bild beim Teilen in sozialen Netzwerken (empfohlenes Format: 1200×630 Pixel).'}</p>
           </div>
           <div className="md:w-2/3">
             {ogImage && (
@@ -209,7 +209,7 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
                 onClick={() => setShowMediaModal(true)}
                 className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                {ogImage ? (tSeo('change_image') || 'Modifier l\'image') : (tSeo('choose_image') || 'Sélectionner une image')}
+                {ogImage ? (tSeo('change_image') || 'Bild ändern') : (tSeo('choose_image') || 'Bild auswählen')}
               </button>
               {ogImage && (
                 <button
@@ -217,7 +217,7 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
                   onClick={() => setOgImage('')}
                   className="px-3 py-2 bg-white border border-red-200 text-red-600 rounded-md text-sm font-medium hover:bg-red-50 focus:outline-none"
                 >
-                  Supprimer
+                  Entfernen
                 </button>
               )}
             </div>
@@ -235,19 +235,19 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-200">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">{tSeo('local_seo_title') || 'Local SEO & Données Structurées'}</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">{tSeo('local_seo_title') || 'Lokales SEO & Strukturierte Daten'}</h3>
           
           <div className="flex flex-col md:flex-row md:items-center justify-between pb-6">
             <div className="mb-4 md:mb-0 md:w-1/3">
-              <label className="block text-sm font-medium text-gray-700">{tSeo('store_country_label') || 'Pays de la Boutique (Code ISO)'}</label>
-              <p className="text-xs text-gray-500 mt-1">{tSeo('store_country_help') || 'Ex: FR, DE, CH, CA. Utilisé pour indiquer à Google la localisation principale.'}</p>
+              <label className="block text-sm font-medium text-gray-700">{tSeo('store_country_label') || 'Land des Shops (ISO-Code)'}</label>
+              <p className="text-xs text-gray-500 mt-1">{tSeo('store_country_help') || 'z. B. DE, AT, CH. Wird für strukturierte Daten verwendet.'}</p>
             </div>
             <div className="md:w-2/3">
               <input
                 type="text"
                 value={storeCountry}
                 onChange={(e) => setStoreCountry(e.target.value.toUpperCase())}
-                placeholder="FR"
+                placeholder="DE"
                 maxLength={2}
                 className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono"
               />
@@ -256,19 +256,19 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
         </div>
 
         <div className="mt-4 pt-8 border-t border-gray-200">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">{tSeo('rss_protection_title') || 'Flux RSS & Protection de Contenu'}</h3>
-          <p className="text-sm text-gray-500 mb-6" dangerouslySetInnerHTML={{ __html: tSeo.raw ? tSeo.raw('rss_protection_desc') : tSeo('rss_protection_desc') || "Ajoutez du contenu personnalisé avant ou après chaque article dans votre flux RSS. Utilisez les variables <code>{post_link}</code>, <code>{blog_link}</code>, <code>{author}</code> et <code>{featuredimage}</code>." }}></p>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">{tSeo('rss_protection_title') || 'RSS-Feed & Inhaltsschutz'}</h3>
+          <p className="text-sm text-gray-500 mb-6" dangerouslySetInnerHTML={{ __html: tSeo.raw ? tSeo.raw('rss_protection_desc') : tSeo('rss_protection_desc') || "Fügen Sie benutzerdefinierten Inhalt vor oder nach jedem Artikel in Ihrem RSS-Feed hinzu. Verwenden Sie die Variablen <code>{post_link}</code>, <code>{blog_link}</code>, <code>{author}</code> und <code>{featuredimage}</code>." }}></p>
           
           <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-gray-100 pb-6 mb-6">
             <div className="mb-4 md:mb-0 md:w-1/3">
-              <label className="block text-sm font-medium text-gray-700">{tSeo('rss_before_label') || 'Contenu avant l\'article (RSS)'}</label>
+              <label className="block text-sm font-medium text-gray-700">{tSeo('rss_before_label') || 'Inhalt vor dem Artikel (RSS)'}</label>
             </div>
             <div className="md:w-2/3">
               <textarea
                 value={rssBeforeContent}
                 onChange={(e) => setRssBeforeContent(e.target.value)}
                 rows={2}
-                placeholder={tSeo('rss_before_placeholder') || "Ex: Bienvenue sur notre blog..."}
+                placeholder={tSeo('rss_before_placeholder') || "z. B. Willkommen auf unserem Ratgeber-Blog..."}
                 className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -276,15 +276,15 @@ export default function SeoForm({ initialSettings }: { initialSettings: Record<s
 
           <div className="flex flex-col md:flex-row md:items-start justify-between pb-2">
             <div className="mb-4 md:mb-0 md:w-1/3">
-              <label className="block text-sm font-medium text-gray-700">{tSeo('rss_after_label') || 'Contenu après l\'article (RSS)'}</label>
-              <p className="text-xs text-gray-500 mt-1">{tSeo('rss_after_help') || 'Recommandé pour l\'attribution SEO (RankMath style).'}</p>
+              <label className="block text-sm font-medium text-gray-700">{tSeo('rss_after_label') || 'Inhalt nach dem Artikel (RSS)'}</label>
+              <p className="text-xs text-gray-500 mt-1">{tSeo('rss_after_help') || 'Empfohlen für die SEO-Quellenangabe.'}</p>
             </div>
             <div className="md:w-2/3">
               <textarea
                 value={rssAfterContent}
                 onChange={(e) => setRssAfterContent(e.target.value)}
                 rows={3}
-                placeholder={tSeo('rss_after_placeholder') || "L'article {post_link} est apparu en premier sur {blog_link}."}
+                placeholder={tSeo('rss_after_placeholder') || "Der Artikel {post_link} erschien zuerst auf {blog_link}."}
                 className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

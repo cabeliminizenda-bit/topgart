@@ -230,7 +230,7 @@ export default function BlogForm({ article, existingCategories = [], existingAut
               />
               {existingCategories.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs text-gray-500 mb-1.5">Catégories existantes :</p>
+                  <p className="text-xs text-gray-500 mb-1.5">Vorhandene Kategorien:</p>
                   <div className="flex flex-wrap gap-1.5">
                     {existingCategories.map((cat) => (
                       <button

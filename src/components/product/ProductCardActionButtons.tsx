@@ -61,7 +61,7 @@ export default function ProductCardActionButtons({
         onClick={onQuickView}
         className={`${buttonSizeClassName} rounded-full bg-white/95 text-stone-600 hover:bg-[#107b46] hover:text-white border border-stone-200/80 hover:border-[#107b46] flex items-center justify-center transition-all shadow-sm cursor-pointer`}
         title={quickViewTitle}
-        aria-label="Quick View"
+        aria-label="Schnellansicht"
       >
         <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

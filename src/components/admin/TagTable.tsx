@@ -31,7 +31,7 @@ export default function TagTable({ tags }: { tags: any[] }) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Voulez-vous vraiment supprimer ce tag ?")) return;
+    if (!confirm("Möchten Sie dieses Schlagwort wirklich löschen?")) return;
     setIsDeleting(id);
     const res = await deleteTag(id);
     if (res.error) alert(res.error);
@@ -40,7 +40,7 @@ export default function TagTable({ tags }: { tags: any[] }) {
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (confirm(`Voulez-vous supprimer ces ${selectedIds.length} tags ?`)) {
+    if (confirm(`Möchten Sie diese ${selectedIds.length} Schlagworte wirklich löschen?`)) {
       setIsBulkDeleting(true);
       const res = await bulkDeleteTags(selectedIds);
       if (res.error) alert(res.error);
@@ -59,10 +59,10 @@ export default function TagTable({ tags }: { tags: any[] }) {
       {selectedIds.length > 0 && (
         <div className="bg-orange-50 px-6 py-3 border-b border-gray-200 flex items-center justify-between">
           <span className="text-sm font-medium text-orange-800">
-            {selectedIds.length} sélectionné(s)
+            {selectedIds.length} ausgewählt
           </span>
           <button onClick={handleBulkDelete} disabled={isBulkDeleting} className="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition disabled:opacity-50">
-            Supprimer la sélection
+            Auswahl löschen
           </button>
         </div>
       )}
@@ -70,14 +70,14 @@ export default function TagTable({ tags }: { tags: any[] }) {
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-left w-12"><input type="checkbox" onChange={(e) => setSelectedIds(e.target.checked ? tags.map(t => t.id) : [])} checked={tags.length > 0 && selectedIds.length === tags.length} className="rounded border-gray-300 text-orange-700 focus:ring-orange-500"/></th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {tags.length === 0 ? (
-            <tr><td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">Aucun tag trouvé.</td></tr>
+            <tr><td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">Kein Schlagwort gefunden.</td></tr>
           ) : (
             tags.map((t) => (
               <tr key={t.id} className="hover:bg-gray-50">
@@ -95,13 +95,13 @@ export default function TagTable({ tags }: { tags: any[] }) {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {editingId === t.id ? (
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => setEditingId(null)} className="text-gray-500 hover:text-gray-700">Annuler</button>
-                      <button onClick={() => handleSaveEdit(t.id)} className="text-blue-600 hover:text-blue-800">Enregistrer</button>
+                      <button onClick={() => setEditingId(null)} className="text-gray-500 hover:text-gray-700">Abbrechen</button>
+                      <button onClick={() => handleSaveEdit(t.id)} className="text-blue-600 hover:text-blue-800">Speichern</button>
                     </div>
                   ) : (
                     <div className="flex justify-end gap-3">
-                      <button onClick={() => handleEditClick(t)} className="text-blue-600 hover:text-blue-800 transition">Modifier</button>
-                      <button onClick={() => handleDelete(t.id)} disabled={isDeleting === t.id} className="text-red-600 hover:text-red-800 transition disabled:opacity-50">Supprimer</button>
+                      <button onClick={() => handleEditClick(t)} className="text-blue-600 hover:text-blue-800 transition">Bearbeiten</button>
+                      <button onClick={() => handleDelete(t.id)} disabled={isDeleting === t.id} className="text-red-600 hover:text-red-800 transition disabled:opacity-50">Löschen</button>
                     </div>
                   )}
                 </td>

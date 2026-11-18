@@ -40,14 +40,14 @@ type FooterProps = {
 };
 
 export default function Footer({
-  supportEmail = 'info@hlg-hausgeraete.de',
-  footerAddress1 = 'Borseler Chaussee 123, 22453 Hamburg, Deutschland',
+  supportEmail = 'kontakt@topgartengeraete.de',
+  footerAddress1 = 'Rosenstraße 19, 26529 Marienhafe, Deutschland',
   footerNewsletterTitle = 'Unser Newsletter',
   footerNewsletterText = 'Erhalten Sie 10 € Rabatt, wenn Sie sich für unseren Newsletter anmelden!',
   footerNewsletterPlaceholder = 'Geben Sie Ihre E-Mail ein',
-  footerCopyright = '© 2026 HLG HAUSGERÄTE. Alle Rechte vorbehalten!',
-  footerLogoImage = '/LOGO-HLG-HAUSGERAETE.png',
-  footerDescription = 'Unsere Verpflichtungen: Schnelle, korrekte Lieferung und ein Kundenservice, der Ihnen zur Seite steht. Mehr als ein Team, das auf Ihre Bedürfnisse hört und bereit ist, Sie bei Ihren Projekten zu beraten und zu begleiten.',
+  footerCopyright = '© 2026 Top Gartengeräte. Alle Rechte vorbehalten!',
+  footerLogoImage = '/logo-top-gartengeraete-dark.svg',
+  footerDescription = 'Unsere Verpflichtungen: Schnelle, korrekte Lieferung und ein Kundenservice, der Ihnen zur Seite steht. Mehr als ein Team, das auf Ihre Bedürfnisse hört und bereit ist, Sie bei Ihren Gartenprojekten zu beraten und zu begleiten.',
 }: FooterProps) {
   const [openSection, setOpenSection] = useState<string | null>(null);
 
@@ -77,14 +77,14 @@ export default function Footer({
   ];
 
   const categoryLinks = [
-    { label: 'Gaming', url: '/shop?category=gaming' },
-    { label: 'Geschirrspüler', url: '/shop?category=geschirrspueler' },
-    { label: 'Herde', url: '/shop?category=herde' },
-    { label: 'Kaffeemaschinen', url: '/shop?category=kaffeemaschinen' },
-    { label: 'Küchenmaschinen', url: '/shop?category=kuechenmaschinen' },
-    { label: 'Staubsauger & Reiniger', url: '/shop?category=staubsauger-reiniger' },
-    { label: 'Waschmaschinen', url: '/shop?category=waschmaschinen' },
-    { label: 'Waschtrockner', url: '/shop?category=waschtrockner' },
+    { label: 'Rasenmäher', url: '/shop?category=rasenmaeher' },
+    { label: 'Mähroboter', url: '/shop?category=maehroboter' },
+    { label: 'Aufsitzmäher', url: '/shop?category=aufsitzmaeher' },
+    { label: 'Motorsägen', url: '/shop?category=motorsagen' },
+    { label: 'Heckenscheren', url: '/shop?category=heckenscheren' },
+    { label: 'Rasentrimmer & Motorsensen', url: '/shop?category=rasentrimmer-motorsensen' },
+    { label: 'Laubbläser & Laubsauger', url: '/shop?category=laubblaeser-laubsauger' },
+    { label: 'Hochdruckreiniger', url: '/shop?category=hochdruckreiniger' },
   ];
 
   return (
@@ -98,7 +98,7 @@ export default function Footer({
             <Link href="/" className="inline-block">
               <Image
                 src={footerLogoImage}
-                alt="HLG HAUSGERÄTE"
+                alt="Top Gartengeräte"
                 width={190}
                 height={50}
                 className="h-10 w-auto object-contain"

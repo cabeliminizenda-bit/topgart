@@ -106,7 +106,7 @@ export async function finalizeOrder(orderId: string) {
       settingsMap['CONTACT_RECEIVER_EMAIL'] ||
       settingsMap['CONTACT_FORM_RECIPIENT'] ||
       process.env.ADMIN_EMAIL ||
-      'info@hlghausgeraete.de';
+      'kontakt@topgartengeraete.de';
 
     // 3. Send emails (awaited to ensure serverless completion)
     try {
@@ -130,7 +130,7 @@ export async function finalizeOrder(orderId: string) {
     // 4. Stock decrement inside a Prisma interactive transaction (race-condition safe)
     try {
       const threshold = parseInt(settingsMap['LOW_STOCK_THRESHOLD'] || '5', 10);
-      const storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de';
+      const storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://topgartengeraete.de';
       const { sendLowStockAlertEmail } = await import('@/lib/mailer');
 
       await prisma.$transaction(async (tx) => {
@@ -216,8 +216,8 @@ export async function finalizeOrder(orderId: string) {
         decimalSeparator:
           settingsMap.decimalSeparator ||
           defaultCurrencyOptions.decimalSeparator,
-        taxIncludedInPrice: settingsMap.TAX_INCLUDED_IN_PRICE === 'true',
-        defaultVatRate: Number(settingsMap.DEFAULT_VAT_RATE) || 20,
+        taxIncludedInPrice: settingsMap.TAX_INCLUDED_IN_PRICE !== 'false',
+        defaultVatRate: Number(settingsMap.DEFAULT_VAT_RATE) || 19,
       };
 
       createNotification({

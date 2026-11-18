@@ -36,15 +36,15 @@ export async function getContactSettings() {
     isAdmin = false;
   }
 
-  const defaultEmail = process.env.ADMIN_EMAIL || 'info@hlghausgeraete.de';
+  const defaultEmail = process.env.ADMIN_EMAIL || 'kontakt@topgartengeraete.de';
 
   return {
     title: settingsMap.CONTACT_TITLE !== undefined ? settingsMap.CONTACT_TITLE : 'Kontakt & Impressum',
     slug: settingsMap.CONTACT_SLUG !== undefined ? settingsMap.CONTACT_SLUG : 'kontakt',
     text: settingsMap.CONTACT_TEXT !== undefined ? settingsMap.CONTACT_TEXT : '',
-    address: settingsMap.CONTACT_ADDRESS !== undefined ? settingsMap.CONTACT_ADDRESS : 'Borseler Chaussee 123, 22453 Hamburg, Deutschland',
+    address: settingsMap.CONTACT_ADDRESS !== undefined ? settingsMap.CONTACT_ADDRESS : 'Rosenstraße 19, 26529 Marienhafe, Deutschland',
     phone: settingsMap.CONTACT_PHONE !== undefined ? settingsMap.CONTACT_PHONE : '',
-    emailDisplay: settingsMap.CONTACT_EMAIL_DISPLAY !== undefined ? settingsMap.CONTACT_EMAIL_DISPLAY : 'info@hlghausgeraete.de',
+    emailDisplay: settingsMap.CONTACT_EMAIL_DISPLAY !== undefined ? settingsMap.CONTACT_EMAIL_DISPLAY : 'kontakt@topgartengeraete.de',
     formRecipient: isAdmin ? (settingsMap.CONTACT_FORM_RECIPIENT || defaultEmail) : '',
     bottomText: settingsMap.CONTACT_BOTTOM_TEXT !== undefined ? settingsMap.CONTACT_BOTTOM_TEXT : '',
     phonePlaceholder: settingsMap.CONTACT_PHONE_PLACEHOLDER !== undefined ? settingsMap.CONTACT_PHONE_PLACEHOLDER : '+49 ...'
@@ -91,6 +91,6 @@ export async function updateContactSettings(data: {
     return { success: true };
   } catch (error: any) {
     console.error('Error updating contact settings:', error);
-    return { error: 'Failed to update contact settings' };
+    return { error: 'Kontakteinstellungen konnten nicht aktualisiert werden.' };
   }
 }

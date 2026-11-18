@@ -272,7 +272,7 @@ export default function CheckoutClient({ settings, zones }: CheckoutClientProps)
 
           <p className="text-stone-600 text-base max-w-lg mx-auto leading-relaxed mb-8">
             Um zur Kasse zu gelangen, legen Sie bitte mindestens einen Artikel in Ihren Warenkorb. 
-            Entdecken Sie unsere große Auswahl an hochwertigen Haushaltsgeräten.
+            Entdecken Sie unsere große Auswahl an hochwertigen Gartengeräten.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
@@ -337,7 +337,7 @@ export default function CheckoutClient({ settings, zones }: CheckoutClientProps)
                 onClick={() => setFallbackModal(null)}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-xl text-sm transition"
               >
-                {t('remove_btn') || 'Annuler'}
+                {t('remove_btn') || 'Abbrechen'}
               </button>
             </div>
           </div>

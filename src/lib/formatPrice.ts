@@ -8,12 +8,12 @@ export type CurrencyOptions = {
 };
 
 export const defaultCurrencyOptions: CurrencyOptions = {
-  currencySymbol: '$',
-  currencyPosition: 'left',
-  thousandSeparator: ',',
-  decimalSeparator: '.',
+  currencySymbol: '€',
+  currencyPosition: 'right-space',
+  thousandSeparator: '.',
+  decimalSeparator: ',',
   taxIncludedInPrice: true,
-  defaultVatRate: 20,
+  defaultVatRate: 19,
 };
 
 export function formatPriceNumber(
@@ -55,7 +55,7 @@ export function formatPriceWithTax(
   options: CurrencyOptions = defaultCurrencyOptions
 ): string {
   const isIncluded = options.taxIncludedInPrice !== false;
-  const vatRate = options.defaultVatRate || 20;
+  const vatRate = options.defaultVatRate || 19;
 
   if (isIncluded) {
     return formatPriceNumber(amount, options);
@@ -63,6 +63,6 @@ export function formatPriceWithTax(
     const amountTTC = amount * (1 + vatRate / 100);
     const formattedHT = formatPriceNumber(amount, options);
     const formattedTTC = formatPriceNumber(amountTTC, options);
-    return `${formattedHT} excl. tax (${formattedTTC} incl. tax)`;
+    return `${formattedHT} zzgl. MwSt. (${formattedTTC} inkl. MwSt.)`;
   }
 }

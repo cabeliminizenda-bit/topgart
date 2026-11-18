@@ -33,17 +33,15 @@ const formatPaymentMethod = (method: string) => {
 
 export async function generateInvoicePDF(order: any): Promise<Buffer> {
   let logoBuffer: Buffer | null = null;
-  let storeName = 'HLG Hausgeräte';
-  const companyName = 'HLG Hausgeräte GmbH';
-  let companyAddress = 'Borseler Chaussee 123, 22453 Hamburg, Deutschland';
-  let companyEmail = 'info@hlg-hausgeraete.de';
-  
-  // Robust local logo detection (HLG Hausgeräte logo located in workspace root and public folder)
+  let storeName = 'Top Gartengeräte';
+  const companyName = 'Top Gartengeräte';
+  let companyAddress = 'Rosenstraße 19, 26529 Marienhafe, Deutschland';
+  let companyEmail = 'kontakt@topgartengeraete.de';
+
+  // Robust local logo detection (PNG/JPG only for PDFKit)
   const candidatePaths = [
-    path.join(process.cwd(), 'LOGO-HLG-HAUSGERAETE.png'),
-    path.join(process.cwd(), 'public', 'LOGO-HLG-HAUSGERAETE.png'),
-    path.join(process.cwd(), 'public', 'logo.png'),
-    path.join(process.cwd(), 'public', 'logo.jpg')
+    path.join(process.cwd(), 'LOGO-TOP-GARTENGERAETE.png'),
+    path.join(process.cwd(), 'public', 'LOGO-TOP-GARTENGERAETE.png'),
   ];
   for (const p of candidatePaths) {
     try {
@@ -51,7 +49,7 @@ export async function generateInvoicePDF(order: any): Promise<Buffer> {
         logoBuffer = fs.readFileSync(p);
         break;
       }
-    } catch {}
+    } catch { }
   }
 
   try {
@@ -72,7 +70,7 @@ export async function generateInvoicePDF(order: any): Promise<Buffer> {
       }
     });
     const sMap = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-    
+
     if (sMap.STORE_NAME) storeName = sMap.STORE_NAME;
     else if (sMap.NEXT_PUBLIC_STORE_NAME) storeName = sMap.NEXT_PUBLIC_STORE_NAME;
 
@@ -209,7 +207,7 @@ function generateHeader(
     .fontSize(8.5)
     .fillColor('#64748b')
     .text(companyAddress, 200, headerTop + 38, { align: 'right' })
-    .text(`E-Mail: ${companyEmail} | hlghausgeraete.de`, 200, headerTop + 50, { align: 'right' })
+    .text(`E-Mail: ${companyEmail} | topgartengeraete.de`, 200, headerTop + 50, { align: 'right' })
     .moveDown();
 }
 
@@ -253,7 +251,7 @@ function generateCustomerInformation(
     .text('Rechnung Nr.:', 50, customerInformationTop)
     .font('Helvetica-Bold')
     .fillColor('#1e293b')
-    .text(`HLG-${order.id.slice(-6).toUpperCase()}`, 150, customerInformationTop)
+    .text(`TG-${order.id.slice(-6).toUpperCase()}`, 150, customerInformationTop)
 
     .font('Helvetica')
     .fillColor('#64748b')
@@ -335,7 +333,7 @@ function generateInvoiceTable(
   doc.font('Helvetica').fontSize(9).fillColor('#334155');
 
   let position = invoiceTableTop + 26;
-  
+
   if (order.orderItems && order.orderItems.length > 0) {
     for (let i = 0; i < order.orderItems.length; i++) {
       const item = order.orderItems[i];
@@ -402,7 +400,7 @@ function generateFooter(doc: typeof PDFDocument, companyEmail: string) {
     .font('Helvetica-Bold')
     .fillColor('#1e293b')
     .text(
-      'Vielen Dank für Ihren Einkauf und Ihr Vertrauen in HLG Hausgeräte!',
+      'Vielen Dank für Ihren Einkauf und Ihr Vertrauen in Top Gartengeräte!',
       50,
       695,
       { align: 'center', width: 500 }

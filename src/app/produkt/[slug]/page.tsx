@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
 
   const product = await getCachedProductBySlug(slug);
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
 
   if (!product) {
     return {
@@ -56,7 +56,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     settingsMap.SHIPPING_INFO_1 || '2-3 Werktage Lieferzeit (deutschlandweit)',
     settingsMap.SHIPPING_INFO_2 || 'Lieferung bis zum gewünschten Verwendungsort',
     settingsMap.SHIPPING_INFO_3 || 'Kostenlose Rückgabe innerhalb von 14 Tagen',
-    settingsMap.SHIPPING_INFO_4 || '2 Jahre gesetzliche Gewährleistung & HLG Garantie',
+    settingsMap.SHIPPING_INFO_4 || '2 Jahre gesetzliche Gewährleistung & Top Gartengeräte Garantie',
   ];
 
   // Related products (same category)
@@ -79,7 +79,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { data: { user } } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
 
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'HLG Hausgeräte';
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Top Gartengeräte';
 
   const reviews = (product as any).reviews || [];
   const avgRating = reviews.length > 0

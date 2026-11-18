@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Preview',
+  title: 'Vorschau | Top Gartengeräte',
   robots: {
     index: false,
     follow: false,

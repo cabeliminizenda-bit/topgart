@@ -44,13 +44,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true, message: 'No eligible orders found' });
     }
 
-    const storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de';
+    const storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://topgartengeraete.de';
     let processedCount = 0;
 
     for (const order of eligibleOrders) {
       if (order.user?.email) {
         // Resolve customer name
-        let userName = 'Estimado(a) Cliente';
+        let userName = 'Geschätzter Kunde';
         if (order.destinationAddress) {
           try {
             const addr = typeof order.destinationAddress === 'string' ? JSON.parse(order.destinationAddress) : order.destinationAddress;

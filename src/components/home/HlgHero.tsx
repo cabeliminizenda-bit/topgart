@@ -14,14 +14,14 @@ interface CategoryItem {
 }
 
 const defaultApplianceCategories: CategoryItem[] = [
-  { name: 'Gaming', slug: 'gaming' },
-  { name: 'Geschirrspüler', slug: 'geschirrspueler' },
-  { name: 'Herde', slug: 'herde' },
-  { name: 'Kaffeemaschinen', slug: 'kaffeemaschinen' },
-  { name: 'Küchenmaschinen', slug: 'kuechenmaschinen' },
-  { name: 'Kühlen & Gefrieren', slug: 'kuehlen-gefrieren' },
-  { name: 'Staubsauger & Reiniger', slug: 'staubsauger-reiniger' },
-  { name: 'Waschmaschinen', slug: 'waschmaschinen' },
+  { name: 'Rasenmäher', slug: 'rasenmaeher' },
+  { name: 'Mähroboter', slug: 'maehroboter' },
+  { name: 'Aufsitzmäher', slug: 'aufsitzmaeher' },
+  { name: 'Motorsägen', slug: 'motorsagen' },
+  { name: 'Heckenscheren', slug: 'heckenscheren' },
+  { name: 'Rasentrimmer & Motorsensen', slug: 'rasentrimmer-motorsensen' },
+  { name: 'Laubbläser & Laubsauger', slug: 'laubblaeser-laubsauger' },
+  { name: 'Hochdruckreiniger', slug: 'hochdruckreiniger' },
 ];
 
 export interface HlgHeroProps {
@@ -135,11 +135,11 @@ export default function HlgHero({
   const block2Title =
     config?.title ??
     config?.titleGradient ??
-    'Ihre hochwertigen Haushaltsgeräte zu den besten Preisen!';
+    'Ihre hochwertigen Gartengeräte zu den besten Preisen!';
   const block2Subtitle =
     config?.subtitle ??
     config?.description ??
-    'Premium-Marken für Küche & Haushalt. Bis zu 40% sparen • Sofort versandbereit • 2 Jahre Garantie.';
+    'Premium-Marken für Garten & Forst. Bis zu 40% sparen • Sofort versandbereit • 2 Jahre Garantie.';
   const block2Trust1 = config?.trustBadge1 ?? 'Kostenloser Versand ab 200 €';
   const block2Trust2 = config?.trustBadge2 ?? '2 Jahre Garantie';
   const block2CtaText = config?.ctaText ?? config?.buttonText ?? 'Angebote anzeigen';
@@ -173,13 +173,13 @@ export default function HlgHero({
         ? config.showcaseBgImage
         : '/images/hero-coffee-machine.jpg';
   const block3Badge = config?.sideCardBadge ?? '★ Bestseller der Woche';
-  const block3Category = config?.sideCardCategory ?? 'Genuss auf Knopfdruck';
-  const block3Title = config?.sideCardTitle ?? 'Kaffeevollautomaten';
+  const block3Category = config?.sideCardCategory ?? 'Perfekter Rasen';
+  const block3Title = config?.sideCardTitle ?? 'Mähroboter & Rasenmäher';
   const block3Subtitle =
     config?.sideCardSubtitle ??
-    'Perfekter Barista-Kaffee für Ihr Zuhause mit intuitiver Touch-Bedienung.';
+    'Leistungsstarke Gartentechnik für mühelose Rasenpflege das ganze Jahr.';
   const block3CtaText = config?.sideCardCtaText ?? 'Geräte entdecken';
-  const block3Url = config?.sideCardUrl ?? '/shop?category=kaffeemaschinen';
+  const block3Url = config?.sideCardUrl ?? '/shop?category=maehroboter';
 
   const block3BgColor = parseColorSetting(config?.block3BgColor, '#1c1917');
   const block3BorderRadius = parseNumberSetting(config?.block3BorderRadius, 16, 0, 48);
@@ -530,7 +530,7 @@ export default function HlgHero({
               )}
               {block3CtaText && (
                 <Link
-                  href={block3Url || '/shop?category=kaffeemaschinen'}
+                  href={block3Url || '/shop?category=maehroboter'}
                   className="mt-3 inline-flex items-center gap-1.5 font-bold hover:opacity-80 transition-opacity"
                   style={{ color: block3LinkColor, fontSize: `${block3LinkSize}px` }}
                 >

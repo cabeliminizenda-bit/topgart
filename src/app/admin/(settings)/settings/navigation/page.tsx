@@ -3,7 +3,7 @@ import { getSettings } from '@/actions/settings';
 import NavigationForm from '@/components/admin/settings/NavigationForm';
 
 export const metadata = {
-  title: 'Navigation menu Settings | Lenha & Carvao Silva Dias Admin',
+  title: 'Navigationsmenü | Top Gartengeräte Admin',
 };
 
 export default async function NavigationSettingsPage() {

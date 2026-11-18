@@ -5,7 +5,7 @@ import ThankYouClient from './ThankYouClient';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
   return {
     title: `Vielen Dank für deine Anmeldung | ${storeName}`,
     description: `Willkommen bei ${storeName}! Hier ist dein Willkommens-Gutschein für deine nächste Bestellung.`,

@@ -17,15 +17,15 @@ const MAX_EMAIL_LENGTH = 254;
 export async function getOrCreateSession(guestId: string, guestName?: string, guestEmail?: string) {
   // Validate guestId format
   if (!guestId || !UUID_REGEX.test(guestId)) {
-    throw new Error('Invalid guest identifier.');
+    throw new Error('Ungültige Gast-Kennung.');
   }
 
   // Validate optional fields
   if (guestName && guestName.length > MAX_NAME_LENGTH) {
-    throw new Error('Name is too long.');
+    throw new Error('Der Name ist zu lang.');
   }
   if (guestEmail && (guestEmail.length > MAX_EMAIL_LENGTH || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail))) {
-    throw new Error('Invalid email format.');
+    throw new Error('Ungültiges E-Mail-Format.');
   }
 
   let session = await prisma.chatSession.findFirst({
@@ -47,7 +47,7 @@ export async function getOrCreateSession(guestId: string, guestName?: string, gu
       await createNotification({
         isAdmin: true,
         type: 'CHAT',
-        message: JSON.stringify({ key: 'new_chat_from', name: session.guestName || 'Visiteur' }),
+        message: JSON.stringify({ key: 'new_chat_from', name: session.guestName || 'Besucher' }),
         link: '/admin/chat',
       });
     } catch (e) {
@@ -64,10 +64,10 @@ export async function getOrCreateSession(guestId: string, guestName?: string, gu
 async function createChatMessage(sessionId: string, sender: ChatSender, content: string) {
   // Validate content
   if (!content || content.trim().length === 0) {
-    throw new Error('Message cannot be empty.');
+    throw new Error('Die Nachricht darf nicht leer sein.');
   }
   if (content.length > MAX_MESSAGE_LENGTH) {
-    throw new Error(`Message is too long (max ${MAX_MESSAGE_LENGTH} characters).`);
+    throw new Error(`Die Nachricht ist zu lang (max. ${MAX_MESSAGE_LENGTH} Zeichen).`);
   }
 
   const message = await prisma.chatMessage.create({
@@ -93,12 +93,12 @@ async function createChatMessage(sessionId: string, sender: ChatSender, content:
         where: { key: { in: ['CONTACT_RECEIVER_EMAIL'] } }
       });
       const settingsMap = allSettings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-      const adminEmail = settingsMap['CONTACT_RECEIVER_EMAIL'] || process.env.ADMIN_EMAIL || 'info@hlghausgeraete.de';
-      const storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de';
+      const adminEmail = settingsMap['CONTACT_RECEIVER_EMAIL'] || process.env.ADMIN_EMAIL || 'kontakt@topgartengeraete.de';
+      const storeUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://topgartengeraete.de';
 
       const { sendAdminNewChatMessageEmail } = await import('@/lib/mailer');
       sendAdminNewChatMessageEmail(
-        updatedSession.guestName || 'Visitante',
+        updatedSession.guestName || 'Besucher',
         updatedSession.guestEmail,
         content.trim(),
         adminEmail,
@@ -112,7 +112,7 @@ async function createChatMessage(sessionId: string, sender: ChatSender, content:
     await createNotification({
       isAdmin: true,
       type: 'CHAT',
-      message: JSON.stringify({ key: 'new_chat_from', name: updatedSession.guestName || 'Visitante' }),
+      message: JSON.stringify({ key: 'new_chat_from', name: updatedSession.guestName || 'Besucher' }),
       link: '/admin/chat',
     });
   } else {
@@ -134,14 +134,14 @@ async function createChatMessage(sessionId: string, sender: ChatSender, content:
  */
 async function getOwnedSession(sessionId: string, guestId: string) {
   if (!sessionId || !UUID_REGEX.test(sessionId)) {
-    throw new Error('Invalid session identifier.');
+    throw new Error('Ungültige Sitzungs-ID.');
   }
   if (!guestId || !UUID_REGEX.test(guestId)) {
-    throw new Error('Invalid guest identifier.');
+    throw new Error('Ungültige Gast-Kennung.');
   }
   const session = await prisma.chatSession.findUnique({ where: { id: sessionId } });
   if (!session || session.guestId !== guestId) {
-    throw new Error('Chat session not found.');
+    throw new Error('Chat-Sitzung nicht gefunden.');
   }
   return session;
 }
@@ -153,7 +153,7 @@ async function getOwnedSession(sessionId: string, guestId: string) {
 export async function sendMessage(sessionId: string, guestId: string, content: string) {
   const rl = await checkRateLimit(`chat_${guestId}`, 10, 60); // 10 messages per min
   if (!rl.success) {
-    throw new Error('Too many messages sent. Please wait a moment.');
+    throw new Error('Zu viele Nachrichten gesendet. Bitte warten Sie einen Moment.');
   }
 
   await getOwnedSession(sessionId, guestId);

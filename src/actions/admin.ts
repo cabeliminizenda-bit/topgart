@@ -33,7 +33,7 @@ export async function uploadImage(formData: FormData) {
     throw new Error('Type de fichier non autorisé. Seules les images sont acceptées.');
   }
   if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
-    throw new Error('Fichier trop volumineux (max 10 Mo).');
+    throw new Error('Datei ist zu groß (max. 10 MB).');
   }
 
   const arrayBuffer = await file.arrayBuffer();
@@ -41,7 +41,7 @@ export async function uploadImage(formData: FormData) {
 
   return new Promise<string>((resolve, reject) => {
     cloudinary.uploader.upload_stream(
-      { folder: 'topkaminbrennstoffe' },
+      { folder: 'topgartengeraete' },
       (error, result) => {
         if (error || !result) {
           console.error("Erreur d'upload Cloudinary:", error);
@@ -92,7 +92,7 @@ export async function updateBrand(id: string, formData: FormData, logoUrl?: stri
   let slug = formData.get('slug') as string;
   if (!name) return { error: "Nom requis" };
   slug = slug ? slug.toLowerCase().replace(/[^a-z0-9]+/g, '-') : name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  
+
   try {
     const data: any = { name, slug };
     if (logoUrl !== undefined) data.logo = logoUrl;
@@ -195,7 +195,7 @@ export async function getCategories() {
   const formatHierarchical = (cats: any[], parentId: string | null = null, depth = 0): any[] => {
     let result: any[] = [];
     const children = cats.filter(c => (c.parentId || null) === parentId);
-    
+
     for (const child of children) {
       result.push({
         ...child,
@@ -228,15 +228,15 @@ export async function createCategory(formData: FormData) {
   const metaKeywords = formData.get('metaKeywords') as string || null;
 
   try {
-    await prisma.category.create({ 
-      data: { 
-        name, 
-        slug, 
+    await prisma.category.create({
+      data: {
+        name,
+        slug,
         parentId,
         metaTitle,
         metaDescription,
-        metaKeywords 
-      } 
+        metaKeywords
+      }
     });
     revalidatePath('/admin/categories');
     refreshCacheTag('categories');
@@ -258,9 +258,9 @@ export async function updateCategory(id: string, name: string, slug?: string, pa
     }
     await prisma.category.update({
       where: { id },
-      data: { 
-        name, 
-        slug: finalSlug, 
+      data: {
+        name,
+        slug: finalSlug,
         parentId: parentId || null,
         metaTitle: metaTitle || null,
         metaDescription: metaDescription || null,
@@ -349,7 +349,7 @@ export async function createProduct(formData: FormData, imageUrls: string[]) {
   const shortDescription = formData.get('shortDescription') as string;
   const price = parseFloat(formData.get('price') as string);
   const compareAtPrice = formData.get('compareAtPrice') ? parseFloat(formData.get('compareAtPrice') as string) : undefined;
-  
+
   const stockRaw = formData.get('stock') as string;
   const stock = stockRaw ? parseInt(stockRaw, 10) : null; // Si vide -> null (En stock)
 
@@ -361,13 +361,13 @@ export async function createProduct(formData: FormData, imageUrls: string[]) {
   const isDealOfTheDay = formData.get('isDealOfTheDay') === 'on';
   const discountLabel = formData.get('discountLabel') as string || undefined;
   const gtin = formData.get('gtin') as string || null;
-  
+
   const forceSalesRaw = formData.get('forceSalesIds') as string;
   const forceSalesIds = forceSalesRaw ? JSON.parse(forceSalesRaw) : [];
-  
+
   const saleTogetherRaw = formData.get('saleTogetherIds') as string;
   const saleTogetherIds = saleTogetherRaw ? JSON.parse(saleTogetherRaw) : [];
-  
+
   const tagsRaw = formData.get('tags') as string;
   const tags = tagsRaw ? JSON.parse(tagsRaw) : [];
 
@@ -448,7 +448,7 @@ export async function updateProduct(id: string, formData: FormData, imageUrls: s
   const description = formData.get('description') as string;
   const price = parseFloat(formData.get('price') as string);
   const compareAtPrice = formData.get('compareAtPrice') ? parseFloat(formData.get('compareAtPrice') as string) : undefined;
-  
+
   const stockRaw = formData.get('stock') as string;
   const stock = stockRaw ? parseInt(stockRaw, 10) : null;
 
@@ -463,7 +463,7 @@ export async function updateProduct(id: string, formData: FormData, imageUrls: s
 
   const forceSalesRaw = formData.get('forceSalesIds') as string;
   const forceSalesIds = forceSalesRaw ? JSON.parse(forceSalesRaw) : [];
-  
+
   const saleTogetherRaw = formData.get('saleTogetherIds') as string;
   const saleTogetherIds = saleTogetherRaw ? JSON.parse(saleTogetherRaw) : [];
 
@@ -537,26 +537,26 @@ export async function deleteProduct(id: string) {
     if (!product) return { error: "Product not found" };
 
     // Soft delete the product
-    await prisma.product.update({ 
+    await prisma.product.update({
       where: { id },
       data: { isDeleted: true, deletedAt: new Date() }
     });
 
     // Handle exclusive media
     for (const imageUrl of product.images) {
-       const isUsedElsewhere = await prisma.product.findFirst({
-         where: {
-           isDeleted: false,
-           id: { not: id },
-           images: { has: imageUrl }
-         }
-       });
-       if (!isUsedElsewhere) {
-         await prisma.media.updateMany({
-           where: { url: imageUrl, isDeleted: false },
-           data: { isDeleted: true, deletedAt: new Date() }
-         });
-       }
+      const isUsedElsewhere = await prisma.product.findFirst({
+        where: {
+          isDeleted: false,
+          id: { not: id },
+          images: { has: imageUrl }
+        }
+      });
+      if (!isUsedElsewhere) {
+        await prisma.media.updateMany({
+          where: { url: imageUrl, isDeleted: false },
+          data: { isDeleted: true, deletedAt: new Date() }
+        });
+      }
     }
 
     revalidatePath('/admin/products');
@@ -576,7 +576,7 @@ export async function bulkDeleteProducts(ids: string[]) {
   await requireAdmin();
   try {
     const products = await prisma.product.findMany({ where: { id: { in: ids } } });
-    
+
     // Soft delete the products
     await prisma.product.updateMany({
       where: { id: { in: ids } },
@@ -812,7 +812,7 @@ export async function updateOrderCustomerDetails(
         await prisma.user.update({
           where: { id: order.userId },
           data: { email: newEmail }
-        }).catch(() => {});
+        }).catch(() => { });
       }
     }
 
@@ -854,7 +854,7 @@ export async function resendOrderConfirmationEmail(orderId: string) {
           customerName = `${billing.firstName || ''} ${billing.lastName || ''}`.trim() || customerName;
           customerEmail = billing.email || customerEmail;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (!customerEmail) {
@@ -961,24 +961,24 @@ export async function testSmtpConnection(targetEmail: string) {
     const { sendEmail } = await import('@/lib/mailer');
     const result = await sendEmail({
       to: targetEmail,
-      subject: 'Teste de Configuração SMTP - Lenha & Carvão Silva Dias',
+      subject: 'SMTP-Konfigurationstest - Top Gartengeräte',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 25px; color: #1e293b; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #ea580c; margin-top: 0;">Teste de transmissão SMTP com sucesso!</h2>
-          <p>Esta mensagem confirma que o seu servidor SMTP e o envio de e-mails transacionais para a <strong>Lenha & Carvão Silva Dias</strong> estão a funcionar perfeitamente.</p>
+          <h2 style="color: #107b46; margin-top: 0;">SMTP-Testübertragung erfolgreich!</h2>
+          <p>Diese Nachricht bestätigt, dass Ihr SMTP-Server und der Versand von Transaktions-E-Mails für <strong>Top Gartengeräte</strong> einwandfrei funktionieren.</p>
           <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-          <small style="color: #64748b;">Enviado a partir da administração Lenha & Carvão Silva Dias a ${new Date().toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' })}</small>
+          <small style="color: #64748b;">Gesendet aus dem Admin-Bereich von Top Gartengeräte am ${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}</small>
         </div>
       `
     });
 
     if (!result.success) {
-      return { success: false, error: (result.error as any)?.message || 'Falha no envio da mensagem de teste.' };
+      return { success: false, error: (result.error as any)?.message || 'Fehler beim Senden der Testnachricht.' };
     }
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Erro inesperado durante o teste SMTP.' };
+    return { success: false, error: error.message || 'Unerwarteter Fehler beim SMTP-Test.' };
   }
 }
 
@@ -986,17 +986,17 @@ export async function sendRecoveryEmail(id: string) {
   await requireAdmin();
   try {
     const cart = await prisma.abandonedCart.findUnique({ where: { id } });
-    if (!cart) return { error: "Carrinho não encontrado." };
-    if (!cart.email) return { error: "E-mail não indicado para este carrinho." };
+    if (!cart) return { error: "Warenkorb nicht gefunden." };
+    if (!cart.email) return { error: "Keine E-Mail-Adresse für diesen Warenkorb angegeben." };
 
     const { sendAbandonedCartRecoveryEmail } = await import('@/lib/mailer');
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hlghausgeraete.de';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://topgartengeraete.de';
     const checkoutUrl = `${baseUrl}/checkout`;
 
     const name = cart.firstName ? `${cart.firstName} ${cart.lastName || ''}`.trim() : '';
-    
+
     await sendAbandonedCartRecoveryEmail(cart, cart.email, name, checkoutUrl);
-    
+
     // We update the lastActive to prevent spamming too fast
     await prisma.abandonedCart.update({
       where: { id },
@@ -1007,6 +1007,6 @@ export async function sendRecoveryEmail(id: string) {
     return { success: true };
   } catch (error) {
     console.error(error);
-    return { error: "Erro ao enviar o e-mail de recuperação de carrinho." };
+    return { error: "Fehler beim Senden der Warenkorb-Erinnerungs-E-Mail." };
   }
 }

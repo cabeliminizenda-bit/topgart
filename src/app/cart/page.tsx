@@ -6,7 +6,7 @@ import { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Warenkorb | HLG Hausgeräte',
+  title: 'Warenkorb | Top Gartengeräte',
   robots: {
     index: false,
     follow: true,

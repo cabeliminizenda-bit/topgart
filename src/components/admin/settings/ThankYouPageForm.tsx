@@ -29,9 +29,9 @@ export default function ThankYouPageForm({ initialSettings }: ThankYouPageFormPr
   const [infoTitle, setInfoTitle] = useState(initialSettings.THANKYOU_INFO_TITLE || 'Immer bestens informiert!');
   const [infoDesc, setInfoDesc] = useState(
     initialSettings.THANKYOU_INFO_DESC ||
-    'Entdecke exklusive Angebote, attraktive Aktionen, Produktneuheiten und praktische Tipps rund um moderne Hausgeräte.'
+    'Entdecke exklusive Angebote, attraktive Aktionen, Produktneuheiten und praktische Tipps rund um moderne Gartengeräte.'
   );
-  const [ctaText, setCtaText] = useState(initialSettings.THANKYOU_CTA_TEXT || 'Jetzt HLG Hausgeräte entdecken');
+  const [ctaText, setCtaText] = useState(initialSettings.THANKYOU_CTA_TEXT || 'Jetzt Top Gartengeräte entdecken');
   const [ctaLink, setCtaLink] = useState(initialSettings.THANKYOU_CTA_LINK || '/shop');
   const [footerNote, setFooterNote] = useState(initialSettings.THANKYOU_FOOTER_NOTE || 'Vielen Dank für dein Vertrauen. Wir freuen uns auf dich!');
 
@@ -139,7 +139,7 @@ export default function ThankYouPageForm({ initialSettings }: ThankYouPageFormPr
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Form settings */}
         <form onSubmit={handleSubmit} className="lg:col-span-7 bg-white p-6 rounded-xl border border-gray-200 shadow-xs space-y-6">
-          
+
           {/* Section 1: Gutschein-Einstellungen */}
           <div>
             <h2 className="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">
@@ -344,7 +344,7 @@ export default function ThankYouPageForm({ initialSettings }: ThankYouPageFormPr
 
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center shadow-xs">
               <div className="text-xs font-extrabold tracking-[0.2em] text-slate-800 uppercase mb-2">
-                HLG HAUSGERÄTE
+                TOP GARTENGERÄTE
               </div>
 
               <div className="w-9 h-9 mx-auto mb-2 rounded-full bg-emerald-50 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-600">
@@ -357,7 +357,7 @@ export default function ThankYouPageForm({ initialSettings }: ThankYouPageFormPr
                 Vielen Dank für deine Anmeldung!
               </div>
               <p className="text-xs text-slate-500 mb-4">
-                Willkommen bei HLG Hausgeräte!
+                Willkommen bei Top Gartengeräte!
               </p>
 
               {/* Card */}

@@ -9,8 +9,8 @@ export default function MaintenanceForm({ initialSettings }: { initialSettings: 
   const router = useRouter();
   
   const [maintenanceMode, setMaintenanceMode] = useState(initialSettings.MAINTENANCE_MODE === 'true');
-  const [maintenanceTitle, setMaintenanceTitle] = useState(initialSettings.MAINTENANCE_TITLE || 'Site under maintenance');
-  const [maintenanceMessage, setMaintenanceMessage] = useState(initialSettings.MAINTENANCE_MESSAGE || 'We are currently updating our store. Come back very soon!');
+  const [maintenanceTitle, setMaintenanceTitle] = useState(initialSettings.MAINTENANCE_TITLE || 'Geschäft in Wartung');
+  const [maintenanceMessage, setMaintenanceMessage] = useState(initialSettings.MAINTENANCE_MESSAGE || 'Wir aktualisieren derzeit unseren Shop. Bitte schauen Sie in Kürze wieder vorbei!');
   const [maintenanceImage, setMaintenanceImage] = useState(initialSettings.MAINTENANCE_IMAGE || '');
   
   const [isLoading, setIsLoading] = useState(false);

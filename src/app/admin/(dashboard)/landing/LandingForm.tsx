@@ -194,7 +194,7 @@ export default function LandingForm({
           : type === 'CategoryOverview'
             ? 'Sortiment im Überblick'
             : type === 'BrandShowcase'
-              ? 'Marken & HLG Garantien'
+              ? 'Marken & Garantien'
               : `Neue Sektion (${type})`,
       enabled: true,
       settings: {}
@@ -202,12 +202,12 @@ export default function LandingForm({
     if (type === 'CategoryShowcaseSection') {
       newSec.settings = { preset: 'custom' };
     } else if (type === 'BestDeals') {
-      newSec.settings = { title: "New Deals", countdown: '2026-12-31T23:59:59', filterType: 'ON_SALE', categoryId: '' };
+      newSec.settings = { title: "Aktuelle Angebote", countdown: '2026-12-31T23:59:59', filterType: 'ON_SALE', categoryId: '' };
     } else if (type === 'BestSeller') {
-      newSec.settings = { title: "New Selection", filterType: 'POPULAR', categoryId: '' };
+      newSec.settings = { title: "Neue Auswahl", filterType: 'POPULAR', categoryId: '' };
     } else if (type === 'ProductGrid') {
       newSec.settings = {
-        title: "Ride-on Mowers",
+        title: "Aufsitzmäher",
         filterType: 'LATEST',
         categoryId: '',
         variant: '1',
@@ -356,7 +356,7 @@ export default function LandingForm({
             <span>{section.name}</span>
           </div>
           <p className="leading-relaxed text-stone-600">
-            Diese HLG Hausgeräte Sektion ist live geschaltet und synchronisiert sich automatisch mit Ihrem Katalog und Ihren Angeboten.
+            Diese Top Gartengeräte Sektion ist live geschaltet und synchronisiert sich automatisch mit Ihrem Katalog und Ihren Angeboten.
           </p>
           <div className="p-3 bg-white border border-stone-200 rounded-lg space-y-2">
             <div className="flex items-center justify-between">
@@ -440,9 +440,9 @@ export default function LandingForm({
                   type="button"
                   onClick={() => setSections(DEFAULT_SECTIONS)}
                   className="text-[10px] text-[#107b46] hover:underline font-bold cursor-pointer"
-                  title="HLG Standard-Sektionen wiederherstellen"
+                  title="Standard-Sektionen wiederherstellen"
                 >
-                  🔄 HLG Layout laden
+                  🔄 Standard-Layout laden
                 </button>
               </div>
 

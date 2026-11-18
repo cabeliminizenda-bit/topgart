@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Suche | HLG Hausgeräte',
+  title: 'Suche | Top Gartengeräte',
   robots: {
     index: false,
     follow: true,
@@ -53,21 +53,21 @@ export default async function SearchPage({
     categoryNotFound
       ? Promise.resolve([])
       : prisma.product.findMany({
-          where,
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            price: true,
-            compareAtPrice: true,
-            images: true,
-            discountLabel: true,
-            type: true,
-            categories: { select: { name: true, slug: true } },
-            reviews: { where: { isApproved: true }, select: { rating: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-        }),
+        where,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          price: true,
+          compareAtPrice: true,
+          images: true,
+          discountLabel: true,
+          type: true,
+          categories: { select: { name: true, slug: true } },
+          reviews: { where: { isApproved: true }, select: { rating: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
     prisma.setting.findMany({
       where: { key: { in: ['SHOP_CARD_STYLE', 'SHOP_CARD_BORDER_COLOR'] } },
     }),

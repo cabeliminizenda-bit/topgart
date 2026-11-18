@@ -64,7 +64,7 @@ export default function CategoryTable({ categories }: { categories: Category[] }
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (confirm(`Êtes-vous sûr de vouloir supprimer ces ${selectedIds.length} catégories ?`)) {
+    if (confirm(`Möchten Sie diese ${selectedIds.length} Kategorien wirklich löschen?`)) {
       setIsBulkDeleting(true);
       const res = await bulkDeleteCategories(selectedIds);
       if (res.error) alert(res.error);

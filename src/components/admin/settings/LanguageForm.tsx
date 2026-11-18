@@ -8,8 +8,8 @@ export default function LanguageForm({ initialSettings }: { initialSettings: Rec
   const tSettings = useTranslations('AdminSettings');
   const router = useRouter();
 
-  const [activeLanguage, setActiveLanguage] = useState(initialSettings.active_language || 'en');
-  const [translationScope, setTranslationScope] = useState(initialSettings.translation_scope || 'all');
+  const [activeLanguage, setActiveLanguage] = useState('de');
+  const [translationScope, setTranslationScope] = useState('all');
 
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -20,8 +20,8 @@ export default function LanguageForm({ initialSettings }: { initialSettings: Rec
     setMessage('');
 
     const settingsMap: Record<string, string> = {
-      active_language: activeLanguage,
-      translation_scope: translationScope
+      active_language: 'de',
+      translation_scope: 'all'
     };
 
     await updateSettingsBatch(settingsMap);
@@ -34,8 +34,8 @@ export default function LanguageForm({ initialSettings }: { initialSettings: Rec
   return (
     <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">{tSettings('nav_language') || 'Language and translation'}</h2>
-        <p className="text-gray-500 mt-1">{tSettings('settings_category_only') || 'Settings for this category only.'}</p>
+        <h2 className="text-2xl font-bold text-gray-900">{tSettings('nav_language') || 'Sprache & Übersetzung'}</h2>
+        <p className="text-gray-500 mt-1">{tSettings('settings_category_only') || 'Dieser Shop ist fest auf 100 % Deutsch konfiguriert.'}</p>
       </div>
 
       {message && (
@@ -55,11 +55,7 @@ export default function LanguageForm({ initialSettings }: { initialSettings: Rec
               onChange={(e) => setActiveLanguage(e.target.value)}
               className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="pt">Português (Portuguese)</option>
-              <option value="fr">Français (French)</option>
-              <option value="en">English</option>
-              <option value="es">Español (Spanish)</option>
-              <option value="de">Deutsch (German)</option>
+              <option value="de">Deutsch (100 % Deutsch)</option>
             </select>
           </div>
         </div>

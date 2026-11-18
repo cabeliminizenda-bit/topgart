@@ -18,24 +18,24 @@ export default function FooterForm({ initialSettings }: { initialSettings: Recor
   const [footerShowEmail, setFooterShowEmail] = useState(initialSettings.FOOTER_SHOW_EMAIL !== 'false');
   const [footerShowPhone, setFooterShowPhone] = useState(initialSettings.FOOTER_SHOW_PHONE !== 'false');
   
-  const [footerAddress, setFooterAddress] = useState(initialSettings.FOOTER_ADDRESS_1 ?? '2972 Westheimer Rd. Illinois 85486');
-  const [footerSupportEmail, setFooterSupportEmail] = useState(initialSettings.FOOTER_SUPPORT_EMAIL ?? initialSettings.HEADER_SUPPORT_EMAIL ?? 'support@mystore.com');
-  const [footerSupportPhone, setFooterSupportPhone] = useState(initialSettings.FOOTER_SUPPORT_PHONE ?? initialSettings.HEADER_SUPPORT_PHONE ?? '+08 9229 8228');
+  const [footerAddress, setFooterAddress] = useState(initialSettings.FOOTER_ADDRESS_1 ?? 'Rosenstraße 19, 26529 Marienhafe, Deutschland');
+  const [footerSupportEmail, setFooterSupportEmail] = useState(initialSettings.FOOTER_SUPPORT_EMAIL ?? initialSettings.HEADER_SUPPORT_EMAIL ?? 'kontakt@topgartengeraete.de');
+  const [footerSupportPhone, setFooterSupportPhone] = useState(initialSettings.FOOTER_SUPPORT_PHONE ?? initialSettings.HEADER_SUPPORT_PHONE ?? '');
 
-  const [footerCopyright, setFooterCopyright] = useState(initialSettings.FOOTER_COPYRIGHT || '© 2026 Lenha & Carvão Silva Dias. Todos os direitos reservados.');
+  const [footerCopyright, setFooterCopyright] = useState(initialSettings.FOOTER_COPYRIGHT || '© 2026 Top Gartengeräte. Alle Rechte vorbehalten.');
   
   const [footerLogoImage, setFooterLogoImage] = useState(initialSettings.FOOTER_LOGO_IMAGE || '');
   const [footerNewsletterTitle, setFooterNewsletterTitle] = useState(initialSettings.FOOTER_NEWSLETTER_TITLE || 'Newsletter');
-  const [footerNewsletterText, setFooterNewsletterText] = useState(initialSettings.FOOTER_NEWSLETTER_TEXT || 'Subscribe to our newsletter!');
-  const [footerNewsletterPlaceholder, setFooterNewsletterPlaceholder] = useState(initialSettings.FOOTER_NEWSLETTER_PLACEHOLDER || 'Enter your email');
+  const [footerNewsletterText, setFooterNewsletterText] = useState(initialSettings.FOOTER_NEWSLETTER_TEXT || 'Abonnieren Sie unseren Newsletter!');
+  const [footerNewsletterPlaceholder, setFooterNewsletterPlaceholder] = useState(initialSettings.FOOTER_NEWSLETTER_PLACEHOLDER || 'Ihre E-Mail-Adresse eingeben');
   
   const [showMediaModal, setShowMediaModal] = useState(false);
   
   const [footerColumns, setFooterColumns] = useState<{title: string, links: {label: string, url: string}[]}[]>(() => {
     try {
       return initialSettings.FOOTER_COLUMNS ? JSON.parse(initialSettings.FOOTER_COLUMNS) : [
-        { title: 'Contact Us', links: [{ label: 'About Us', url: '/about' }, { label: 'Contact Us', url: '/contact' }] },
-        { title: 'Account', links: [{ label: 'Shop', url: '/shop' }, { label: 'Checkout', url: '/checkout' }] }
+        { title: 'Kundenservice', links: [{ label: 'Über uns', url: '/ueber-uns' }, { label: 'Kontakt', url: '/kontakt' }] },
+        { title: 'Mein Konto', links: [{ label: 'Shop', url: '/shop' }, { label: 'Kasse', url: '/checkout' }] }
       ];
     } catch {
       return [];
@@ -241,21 +241,21 @@ export default function FooterForm({ initialSettings }: { initialSettings: Recor
         {/* Section Copyright */}
         <div className="pt-6 border-t border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {tSettings('copyright_section') || 'Texto de Copyright & Barra Inferior'}
+            {tSettings('copyright_section') || 'Copyright-Text & untere Leiste'}
           </h3>
           <div className="space-y-2 max-w-2xl">
             <label className="block text-sm font-medium text-gray-700">
-              {tSettings('copyright_label') || 'Texto de Copyright'}
+              {tSettings('copyright_label') || 'Copyright-Text'}
             </label>
             <input 
               type="text" 
               value={footerCopyright} 
               onChange={(e) => setFooterCopyright(e.target.value)} 
-              placeholder="© 2026 Lenha & Carvão Silva Dias. Todos os direitos reservados."
+              placeholder="© 2026 Top Gartengeräte. Alle Rechte vorbehalten."
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium text-gray-800 shadow-sm"
             />
             <p className="text-xs text-gray-500">
-              Este texto é apresentado na barra inferior do rodapé em todas as páginas públicas da loja.
+              Dieser Text wird in der unteren Fußzeile auf allen öffentlichen Seiten des Shops angezeigt.
             </p>
           </div>
         </div>

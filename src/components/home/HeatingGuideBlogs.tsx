@@ -18,30 +18,30 @@ export default async function HeatingGuideBlogs() {
   const fallbackArticles = [
     {
       id: 'a1',
-      title: 'Waschmaschine kaufen: Darauf sollten Sie 2026 achten',
-      slug: 'waschmaschine-kaufen-ratgeber',
+      title: 'Rasenmäher kaufen: Darauf sollten Sie 2026 achten',
+      slug: 'rasenmaeher-kaufen-ratgeber',
       category: 'Kaufberater',
-      excerpt: 'Von Schleuderwirkungsklassen über sparsame Eco-Programme bis hin zur optimalen Füllmenge – unser Guide für den perfekten Waschmaschinenkauf.',
+      excerpt: 'Akku, Elektro oder Benzin? Schnittbreite, Fangkorbvolumen und Mulchfunktion – unser Guide für den perfekten Rasenmäher.',
       image: '/images/hero-appliances.jpg',
-      icon: '🧺'
+      icon: '🌿'
     },
     {
       id: 'a2',
-      title: 'Kaffeevollautomat oder Siebträger: Der große Vergleich',
-      slug: 'kaffeevollautomat-vs-siebtraeger',
-      category: 'Kaffee-Guide',
-      excerpt: 'Mahlwerk-Einstellung, Milchschaum-Qualität und Reinigungsaufwand: Erfahren Sie, welches Gerät am besten zu Ihrem täglichen Kaffeegenuss passt.',
+      title: 'Mähroboter ohne Begrenzungskabel: Der große Vergleich',
+      slug: 'maehroboter-vergleich',
+      category: 'Rasenpflege-Guide',
+      excerpt: 'GPS-Navigation, Steigungsleistung und Regensensoren: Erfahren Sie, welcher Mähroboter optimal zu Ihrer Gartenfläche passt.',
       image: '/images/hero-coffee-machine.jpg',
-      icon: '☕'
+      icon: '🤖'
     },
     {
       id: 'a3',
-      title: 'Strom & Energie sparen: Clevere Tipps für Ihre Haushaltsgeräte',
-      slug: 'energie-sparen-haushaltsgeraete',
-      category: 'Energiespartipps',
-      excerpt: 'Die richtige Temperatureinstellung bei Kühl-Gefrierkombis, No-Frost-Technik und Eco-Modi senken die Stromrechnung spürbar um bis zu 30%.',
+      title: 'Gartengeräte richtig warten & überwintern: Profi-Tipps',
+      slug: 'gartengeraete-warten-ueberwintern',
+      category: 'Pflegetipps',
+      excerpt: 'Mit der richtigen Messerpflege, Akku-Lagerung und Reinigung verlängern Sie die Lebensdauer Ihrer Gartengeräte um viele Jahre.',
       image: '/images/hero-appliances.jpg',
-      icon: '⚡'
+      icon: '🛠️'
     }
   ];
 
@@ -55,10 +55,10 @@ export default async function HeatingGuideBlogs() {
         <div className="flex items-end justify-between gap-3 mb-6 sm:mb-8">
           <div className="min-w-0">
             <span className="text-[#107b46] font-bold text-xs uppercase tracking-wider block">
-              HLG Magazin &amp; Ratgeber
+              Top Gartengeräte Magazin &amp; Ratgeber
             </span>
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-stone-900 tracking-tight leading-tight">
-              Tipps &amp; Kaufberatung für Ihr Zuhause
+              Tipps &amp; Kaufberatung für Ihren Garten
             </h2>
           </div>
           <Link 

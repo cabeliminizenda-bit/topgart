@@ -25,23 +25,23 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     <div className="min-h-screen flex flex-col font-sans bg-stone-50">
       <AutoLogout redirectUrl="/login" timeoutMs={15 * 60 * 1000} />
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-12 pb-24 sm:pb-12">
-        
+
         {/* Header Breadcrumb / Welcome on Mobile */}
         <div className="mb-4 sm:mb-6">
           <span className="text-[11px] font-bold text-[#107b46] uppercase tracking-wider block">Kundenbereich</span>
-          <h1 className="text-xl sm:text-3xl font-extrabold text-stone-900">Mein Konto - HLG Hausgeräte</h1>
+          <h1 className="text-xl sm:text-3xl font-extrabold text-stone-900">Mein Konto - Top Gartengeräte</h1>
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-          
+
           {/* Responsive Navigation: Horizontal Pill-Bar on Mobile, Sidebar on Desktop */}
           <aside className="w-full md:w-1/4 shrink-0">
-            <nav 
+            <nav
               aria-label="Kontonavigation"
               className="flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0"
             >
               {navItems.map((item) => {
-                const isActive = item.href === '/account' 
+                const isActive = item.href === '/account'
                   ? pathname === '/account'
                   : pathname.startsWith(item.href);
                 return (
@@ -55,11 +55,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                         router.push('/login');
                       }
                     }}
-                    className={`flex items-center px-3.5 py-2.5 md:py-3 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-                      isActive 
-                        ? 'bg-[#107b46] text-white shadow-md shadow-[#107b46]/20' 
+                    className={`flex items-center px-3.5 py-2.5 md:py-3 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${isActive
+                        ? 'bg-[#107b46] text-white shadow-md shadow-[#107b46]/20'
                         : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200'
-                    }`}
+                      }`}
                   >
                     <svg className={`w-4 h-4 mr-2 shrink-0 ${isActive ? 'text-white' : 'text-stone-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />

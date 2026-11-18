@@ -8,40 +8,40 @@ interface CategoryExplorerProps {
 
 const defaultCategories = [
   {
-    name: 'Waschmaschinen',
-    href: '/shop?category=waschmaschinen',
+    name: 'Rasenmäher',
+    href: '/shop?category=rasenmaeher',
     image: '/images/hero-appliances.jpg',
-    desc: 'Frontlader & Toplader',
+    desc: 'Akku, Elektro & Benzin',
   },
   {
-    name: 'Geschirrspüler',
-    href: '/shop?category=geschirrspueler',
+    name: 'Mähroboter',
+    href: '/shop?category=maehroboter',
     image: '/images/hero-appliances.jpg',
-    desc: 'Einbau & Standgeräte',
+    desc: 'Vollautomatische Rasenpflege',
   },
   {
-    name: 'Kühlen & Gefrieren',
-    href: '/shop?category=kuehlen-gefrieren',
+    name: 'Motorsägen',
+    href: '/shop?category=motorsagen',
     image: '/images/hero-appliances.jpg',
-    desc: 'Kühl-Gefrierkombis',
+    desc: 'Forst & Brennholz',
   },
   {
-    name: 'Kaffeemaschinen',
-    href: '/shop?category=kaffeemaschinen',
+    name: 'Heckenscheren',
+    href: '/shop?category=heckenscheren',
     image: '/images/hero-coffee-machine.jpg',
-    desc: 'Vollautomaten & Siebträger',
+    desc: 'Präziser Heckenschnitt',
   },
   {
-    name: 'Herde & Backöfen',
-    href: '/shop?category=herde',
+    name: 'Aufsitzmäher',
+    href: '/shop?category=aufsitzmaeher',
     image: '/images/hero-appliances.jpg',
-    desc: 'Induktion & Pyrolyse',
+    desc: 'Für große Rasenflächen',
   },
   {
-    name: 'Staubsauger',
-    href: '/shop?category=staubsauger-reiniger',
+    name: 'Hochdruckreiniger',
+    href: '/shop?category=hochdruckreiniger',
     image: '/images/hero-appliances.jpg',
-    desc: 'Akku & Saugroboter',
+    desc: 'Terrasse, Wege & Hof',
   },
 ];
 
@@ -50,7 +50,7 @@ export default function CategoryExplorer({ categories }: CategoryExplorerProps) 
     <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-end justify-between gap-3 mb-6 sm:mb-8">
         <div className="min-w-0">
-          <span className="text-[#107b46] font-bold text-[11px] sm:text-xs uppercase tracking-wider block">HLG Sortiment</span>
+          <span className="text-[#107b46] font-bold text-[11px] sm:text-xs uppercase tracking-wider block">Top Gartengeräte Sortiment</span>
           <h2 className="text-[17px] sm:text-2xl lg:text-3xl font-extrabold text-stone-900 tracking-tight leading-tight">Beliebte Kategorien entdecken</h2>
         </div>
         <Link 

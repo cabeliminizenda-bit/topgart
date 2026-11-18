@@ -46,15 +46,15 @@ async function getTransporter() {
 
   const settings = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
 
-  const storeName = settings.STORE_NAME || settings.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
-  const storeEmail = settings.CONTACT_EMAIL_DISPLAY || settings.FOOTER_SUPPORT_EMAIL || 'info@hlghausgeraete.de';
-  const storeAddress = settings.CONTACT_ADDRESS || settings.FOOTER_ADDRESS_1 || 'Borseler Chaussee 123, 22453 Hamburg, Deutschland';
+  const storeName = settings.STORE_NAME || settings.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
+  const storeEmail = settings.CONTACT_EMAIL_DISPLAY || settings.FOOTER_SUPPORT_EMAIL || 'kontakt@topgartengeraete.de';
+  const storeAddress = settings.CONTACT_ADDRESS || settings.FOOTER_ADDRESS_1 || 'Rosenstraße 19, 26529 Marienhafe, Deutschland';
   const logo = settings.HEADER_LOGO_IMAGE || settings.STYLE2_LOGO || '';
 
-  // Clean from address: avoid gamingbm.com or bare 'resend' username
-  let from = process.env.SMTP_FROM || settings.SMTP_FROM || `"${storeName}" <info@hlghausgeraete.de>`;
-  if (from.includes('gamingbm.com') || from.includes('<resend>')) {
-    from = `"${storeName}" <info@hlghausgeraete.de>`;
+  // Clean from address: avoid legacy domains or bare 'resend' username
+  let from = process.env.SMTP_FROM || settings.SMTP_FROM || `"${storeName}" <kontakt@topgartengeraete.de>`;
+  if (from.includes('gamingbm.com') || from.includes('<resend>') || from.includes('hlghausgeraete.de') || from.includes('hlg-hausgeraete.de')) {
+    from = `"${storeName}" <kontakt@topgartengeraete.de>`;
   }
 
   // SECURITY (M4): Prefer environment variables over plaintext DB settings
@@ -242,16 +242,16 @@ const formatPaymentMethodDE = (method: string) => {
   }
 };
 
-// --- EMAIL TEMPLATES (100% PORTUGUÊS DE PORTUGAL) ---
+// --- EMAIL TEMPLATES (100% DEUTSCH) ---
 
 // 1. Client Order Confirmation (mit Rechnung im Anhang)
 export async function sendClientOrderConfirmation(order: any, userEmail: string, userName: string) {
   try {
     const { logo, storeName, storeEmail, storeAddress } = await getTransporter().catch(() => ({
       logo: '',
-      storeName: 'HLG Hausgeräte',
-      storeEmail: 'info@hlg-hausgeraete.de',
-      storeAddress: 'Borseler Chaussee 123, 22453 Hamburg'
+      storeName: 'Top Gartengeräte',
+      storeEmail: 'kontakt@topgartengeraete.de',
+      storeAddress: 'Rosenstraße 19, 26529 Marienhafe, Deutschland'
     }));
     
     const logoHtml = logo
@@ -425,7 +425,7 @@ export async function sendClientOrderConfirmation(order: any, userEmail: string,
         </div>
         
         <div style="text-align: center; margin-top: 35px; margin-bottom: 30px; font-size: 13px; color: #475569;">
-          <p style="margin-bottom: 8px;">Vielen Dank für Ihren Einkauf und Ihr Vertrauen in HLG Hausgeräte!</p>
+          <p style="margin-bottom: 8px;">Vielen Dank für Ihren Einkauf und Ihr Vertrauen in Top Gartengeräte!</p>
           <p style="margin-top: 0;">Bei Fragen zu Ihrer Lieferung erreichen Sie unseren Kundenservice unter <a href="mailto:${storeEmail}" style="color: #107b46; font-weight: bold; text-decoration: none;">${storeEmail}</a>.</p>
         </div>
         
@@ -466,7 +466,7 @@ export async function sendAdminOrderNotification(order: any, adminEmail: string,
   try {
     const { logo, storeName } = await getTransporter().catch(() => ({
       logo: '',
-      storeName: 'HLG Hausgeräte'
+      storeName: 'Top Gartengeräte'
     }));
     
     const logoHtml = logo
@@ -609,7 +609,7 @@ export async function sendAdminOrderNotification(order: any, adminEmail: string,
         </div>
         
         <div style="text-align: center; margin-top: 35px; margin-bottom: 25px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de'}/admin/orders/${order.id}" style="background-color: #107b46; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://topgartengeraete.de'}/admin/orders/${order.id}" style="background-color: #107b46; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block;">
             Bestellung im Admin-Panel anzeigen
           </a>
         </div>
@@ -625,7 +625,7 @@ export async function sendAdminOrderNotification(order: any, adminEmail: string,
     return sendEmail({
       to: adminEmail,
       replyTo,
-      subject: `[HLG HAUSGERÄTE]: Du hast eine neue Bestellung: Nr. #${orderId}`,
+      subject: `[TOP GARTENGERÄTE]: Du hast eine neue Bestellung: Nr. #${orderId}`,
       html
     });
   } catch (e) {
@@ -638,9 +638,9 @@ export async function sendOrderStatusUpdate(order: any, userEmail: string, statu
   try {
     const { logo, storeName, storeEmail, storeAddress } = await getTransporter().catch(() => ({
       logo: '',
-      storeName: 'HLG Hausgeräte',
-      storeEmail: 'info@hlg-hausgeraete.de',
-      storeAddress: 'Borseler Chaussee 123, 22453 Hamburg'
+      storeName: 'Top Gartengeräte',
+      storeEmail: 'kontakt@topgartengeraete.de',
+      storeAddress: 'Rosenstraße 19, 26529 Marienhafe, Deutschland'
     }));
     
     const logoHtml = logo
@@ -832,9 +832,9 @@ export async function sendAbandonedCartRecoveryEmail(cart: any, userEmail: strin
   try {
     const { logo, storeName, storeEmail, storeAddress } = await getTransporter().catch(() => ({
       logo: '',
-      storeName: 'HLG Hausgeräte',
-      storeEmail: 'info@hlg-hausgeraete.de',
-      storeAddress: 'Borseler Chaussee 123, 22453 Hamburg'
+      storeName: 'Top Gartengeräte',
+      storeEmail: 'kontakt@topgartengeraete.de',
+      storeAddress: 'Rosenstraße 19, 26529 Marienhafe, Deutschland'
     }));
     
     const logoHtml = logo
@@ -960,8 +960,8 @@ export async function sendReviewRequestEmail(order: any, userEmail: string, user
   try {
     const { logo, storeName, storeAddress } = await getTransporter().catch(() => ({
       logo: '',
-      storeName: 'HLG Hausgeräte',
-      storeAddress: 'Borseler Chaussee 123, 22453 Hamburg'
+      storeName: 'Top Gartengeräte',
+      storeAddress: 'Rosenstraße 19, 26529 Marienhafe, Deutschland'
     }));
     
     const logoHtml = logo
@@ -1013,14 +1013,14 @@ export async function sendReviewRequestEmail(order: any, userEmail: string, user
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 25px; background: #ffffff;">
         ${logoHtml}
         <h1 style="font-size: 22px; color: #0f172a; margin-top: 0; margin-bottom: 12px;">
-          Wie war Ihre Erfahrung mit HLG Hausgeräte?
+          Wie war Ihre Erfahrung mit Top Gartengeräte?
         </h1>
         <p style="font-size: 14px; color: #475569;">Hallo ${escapeHtml(userName) || 'geschätzter Kunde'},</p>
         <p style="font-size: 14px; color: #475569;">
           wir hoffen, dass Sie mit Ihren Geräten aus der Bestellung #${orderId} bei <strong>${escapeHtml(storeName)}</strong> rundum zufrieden sind!
         </p>
         <p style="font-size: 14px; color: #475569;">
-          Ihre Meinung ist uns sehr wichtig und hilft anderen Kunden bei der Auswahl der besten Haushaltsgeräte für ihr Zuhause.
+          Ihre Meinung ist uns sehr wichtig und hilft anderen Kunden bei der Auswahl der besten Gartengeräte für ihren Garten.
         </p>
         
         <h3 style="font-size: 15px; font-weight: bold; margin-top: 30px; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #107b46; padding-bottom: 6px;">
@@ -1067,8 +1067,8 @@ export async function sendLowStockAlertEmail(
   try {
     const { logo, storeName, storeAddress } = await getTransporter().catch(() => ({
       logo: '',
-      storeName: 'HLG Hausgeräte',
-      storeAddress: 'Borseler Chaussee 123, 22453 Hamburg'
+      storeName: 'Top Gartengeräte',
+      storeAddress: 'Rosenstraße 19, 26529 Marienhafe, Deutschland'
     }));
     
     const logoHtml = logo
@@ -1125,8 +1125,8 @@ export async function sendAdminNewChatMessageEmail(
   try {
     const { logo, storeName, storeAddress } = await getTransporter().catch(() => ({
       logo: '',
-      storeName: 'HLG Hausgeräte',
-      storeAddress: 'Borseler Chaussee 123, 22453 Hamburg'
+      storeName: 'Top Gartengeräte',
+      storeAddress: 'Rosenstraße 19, 26529 Marienhafe, Deutschland'
     }));
     
     const logoHtml = logo
@@ -1188,9 +1188,9 @@ export async function sendNewsletterWelcomeEmail(userEmail: string) {
   try {
     const { logo, storeName, storeEmail, storeAddress } = await getTransporter().catch(() => ({
       logo: '',
-      storeName: 'HLG Hausgeräte',
-      storeEmail: 'info@hlg-hausgeraete.de',
-      storeAddress: 'Borseler Chaussee 123, 22453 Hamburg'
+      storeName: 'Top Gartengeräte',
+      storeEmail: 'kontakt@topgartengeraete.de',
+      storeAddress: 'Rosenstraße 19, 26529 Marienhafe, Deutschland'
     }));
 
     // Read dynamic Thank-You coupon code & amount from settings
@@ -1213,14 +1213,14 @@ export async function sendNewsletterWelcomeEmail(userEmail: string) {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 25px; background: #ffffff;">
         ${logoHtml}
         <h1 style="font-size: 22px; color: #0f172a; margin-top: 0; margin-bottom: 12px;">
-          🎁 Willkommen bei HLG Hausgeräte! Ihr ${escapeHtml(couponAmount)} € Willkommens-Gutschein
+          🎁 Willkommen bei Top Gartengeräte! Ihr ${escapeHtml(couponAmount)} € Willkommens-Gutschein
         </h1>
         
         <p style="font-size: 14px; color: #475569; margin-bottom: 16px;">
           Wir freuen uns sehr, Sie in unserem Newsletter begrüßen zu dürfen! 🌿
         </p>
         <p style="font-size: 14px; color: #475569; margin-bottom: 25px;">
-          Als Willkommensgeschenk erhalten Sie <strong>${escapeHtml(couponAmount)} € Sofortrabatt</strong> auf Ihre nächste Bestellung hochwertiger Haushaltsgeräte in unserem Shop!
+          Als Willkommensgeschenk erhalten Sie <strong>${escapeHtml(couponAmount)} € Sofortrabatt</strong> auf Ihre nächste Bestellung hochwertiger Gartengeräte in unserem Shop!
         </p>
         
         <div style="background-color: #f0fdf4; border: 2px dashed #107b46; padding: 22px; text-align: center; border-radius: 8px; margin-bottom: 25px;">
@@ -1240,22 +1240,22 @@ export async function sendNewsletterWelcomeEmail(userEmail: string) {
         </p>
         
         <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #107b46; padding-bottom: 6px;">
-          Ihre exklusiven HLG Hausgeräte Vorteile:
+          Ihre exklusiven Top Gartengeräte Vorteile:
         </h3>
         <ul style="font-size: 13px; color: #475569; padding-left: 20px; margin-bottom: 25px; line-height: 1.8;">
           <li>✨ Exklusive Rabatte und Vorabzugang zu Sonderaktionen</li>
-          <li>⚡ 2 Jahre Garantie auf alle Großgeräte</li>
+          <li>⚡ 2 Jahre Garantie auf alle Gartengeräte</li>
           <li>📦 Schneller und versicherter Versand direkt nach Hause</li>
         </ul>
         
         <div style="text-align: center; margin: 35px 0;">
-          <a href="https://hlghausgeraete.de/shop" style="background-color: #107b46; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://topgartengeraete.de'}/shop" style="background-color: #107b46; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">
             Produkte im Shop ansehen
           </a>
         </div>
         
         <div style="text-align: center; margin-top: 35px; margin-bottom: 25px; font-size: 13px; color: #475569;">
-          <p style="font-weight: bold; color: #107b46; margin-bottom: 4px;">HLG Hausgeräte Kundenservice</p>
+          <p style="font-weight: bold; color: #107b46; margin-bottom: 4px;">Top Gartengeräte Kundenservice</p>
           <p style="margin-top: 0; font-size: 12px; color: #64748b;">Kontakt: ${storeEmail}</p>
         </div>
         
@@ -1268,7 +1268,7 @@ export async function sendNewsletterWelcomeEmail(userEmail: string) {
 
     return sendEmail({
       to: userEmail,
-      subject: `Willkommen bei HLG Hausgeräte! Ihr ${couponAmount} € Gutschein 🎁`,
+      subject: `Willkommen bei Top Gartengeräte! Ihr ${couponAmount} € Gutschein 🎁`,
       html
     });
   } catch (e) {
@@ -1291,7 +1291,7 @@ export async function sendAdminAlertEmail({
       where: { key: { in: ['CONTACT_RECEIVER_EMAIL', 'SMTP_USER'] } }
     });
     const sMap = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-    const recipient = sMap['CONTACT_RECEIVER_EMAIL'] || sMap['SMTP_USER'] || 'info@hlg-hausgeraete.de';
+    const recipient = sMap['CONTACT_RECEIVER_EMAIL'] || sMap['SMTP_USER'] || 'kontakt@topgartengeraete.de';
 
     let detailsHtml = '';
     if (details && Object.keys(details).length > 0) {

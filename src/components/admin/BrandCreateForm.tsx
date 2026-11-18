@@ -47,7 +47,7 @@ export default function BrandCreateForm() {
         type="text"
         value={name}
         onChange={handleNameChange}
-        placeholder="Nom de la marque"
+        placeholder="Markenname"
         className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
         required
       />
@@ -67,14 +67,14 @@ export default function BrandCreateForm() {
           <div className="relative w-10 h-10 flex-shrink-0">
             <img
               src={logoUrl}
-              alt="Logo prévisualisation"
+              alt="Logo-Vorschau"
               className="w-10 h-10 object-contain rounded border border-gray-200"
             />
             <button
               type="button"
               onClick={handleRemoveLogo}
               className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none hover:bg-red-600"
-              title="Supprimer le logo"
+              title="Logo entfernen"
             >
               ×
             </button>
@@ -96,7 +96,7 @@ export default function BrandCreateForm() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-          {logoUrl ? 'Changer le logo' : 'Logo (optionnel)'}
+          {logoUrl ? 'Logo ändern' : 'Logo (optional)'}
         </button>
 
         {showMediaPicker && (
@@ -115,7 +115,7 @@ export default function BrandCreateForm() {
         disabled={loading}
         className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-md transition disabled:opacity-50"
       >
-        {loading ? 'Ajout...' : 'Ajouter'}
+        {loading ? 'Wird hinzugefügt...' : 'Hinzufügen'}
       </button>
     </form>
   );

@@ -184,7 +184,7 @@ export default async function PreviewPage() {
       return {
         id: p.id,
         title: p.title,
-        subtitle: p.categoryName ? `${p.categoryName} • Hohe Energieeffizienz` : 'Geprüfte HLG Qualität',
+        subtitle: p.categoryName ? `${p.categoryName} • Geprüfte Top-Qualität` : 'Geprüfte Top Gartengeräte Qualität',
         price: p.price,
         compareAtPrice: p.compareAtPrice,
         image: p.images[0],

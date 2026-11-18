@@ -23,7 +23,7 @@ export default function SmtpForm({ initialSettings }: { initialSettings: Record<
 
   const handleTestEmail = async () => {
     if (!testEmail) {
-      setTestResult({ success: false, message: 'Veuillez saisir une adresse email de test.' });
+      setTestResult({ success: false, message: 'Bitte geben Sie eine Test-E-Mail-Adresse ein.' });
       return;
     }
     setIsTesting(true);
@@ -40,9 +40,9 @@ export default function SmtpForm({ initialSettings }: { initialSettings: Record<
 
     const res = await testSmtpConnection(testEmail);
     if (res.success) {
-      setTestResult({ success: true, message: `Email de test envoyé avec succès à ${testEmail} !` });
+      setTestResult({ success: true, message: `Test-E-Mail erfolgreich an ${testEmail} gesendet!` });
     } else {
-      setTestResult({ success: false, message: res.error || 'Erreur lors de l\'envoi du test.' });
+      setTestResult({ success: false, message: res.error || 'Fehler beim Senden der Test-E-Mail.' });
     }
     setIsTesting(false);
   };
@@ -103,9 +103,9 @@ export default function SmtpForm({ initialSettings }: { initialSettings: Record<
 
       {/* Test Email Section */}
       <div className="mt-8 pt-6 border-t border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Tester la configuration SMTP</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-2">SMTP-Konfiguration testen</h3>
         <p className="text-sm text-gray-500 mb-4">
-          Envoyez un email de test pour vérifier la connexion avec votre serveur de messagerie et diagnostiquer immédiatement toute erreur.
+          Senden Sie eine Test-E-Mail, um die Verbindung zu Ihrem Mailserver zu überprüfen und mögliche Fehler sofort zu erkennen.
         </p>
 
         {testResult && (
@@ -119,7 +119,7 @@ export default function SmtpForm({ initialSettings }: { initialSettings: Record<
             type="email"
             value={testEmail}
             onChange={(e) => setTestEmail(e.target.value)}
-            placeholder="votre-email@exemple.com"
+            placeholder="kontakt@topgartengeraete.de"
             className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
           />
           <button
@@ -134,7 +134,7 @@ export default function SmtpForm({ initialSettings }: { initialSettings: Record<
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
               </svg>
             )}
-            <span>{isTesting ? 'Envoi en cours...' : 'Envoyer un email de test'}</span>
+            <span>{isTesting ? 'Wird gesendet...' : 'Test-E-Mail senden'}</span>
           </button>
         </div>
       </div>

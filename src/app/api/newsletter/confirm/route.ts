@@ -13,30 +13,30 @@ export async function GET(request: Request) {
   const token = searchParams.get('token');
 
   if (!token || token.length > 1024) {
-    return new NextResponse('Missing token', { status: 400 });
+    return new NextResponse('Fehlender Bestätigungstoken', { status: 400 });
   }
 
   try {
     const decoded = Buffer.from(token, 'base64').toString('utf-8');
     const parts = decoded.split('|');
     if (parts.length !== 3) {
-      return new NextResponse('Invalid token', { status: 400 });
+      return new NextResponse('Ungültiger Bestätigungstoken', { status: 400 });
     }
     const [rawEmail, expiry, signature] = parts;
     const email = rawEmail.trim().toLowerCase();
 
     if (!email || !expiry || !signature || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return new NextResponse('Invalid token', { status: 400 });
+      return new NextResponse('Ungültiger Bestätigungstoken', { status: 400 });
     }
 
     // SECURITY (M5): Reject non-numeric / NaN expiry values
     const expiryMs = Number(expiry);
     if (!Number.isFinite(expiryMs) || Date.now() > expiryMs) {
-      return new NextResponse('Token expired', { status: 400 });
+      return new NextResponse('Bestätigungslink abgelaufen', { status: 400 });
     }
 
     if (!/^[0-9a-f]{64}$/i.test(signature)) {
-      return new NextResponse('Invalid signature', { status: 400 });
+      return new NextResponse('Ungültige Signatur', { status: 400 });
     }
 
     const secret = getNewsletterHmacSecret();
@@ -47,15 +47,15 @@ export async function GET(request: Request) {
     const signatureBuffer = Buffer.from(signature, 'hex');
 
     if (expectedBuffer.length !== signatureBuffer.length || !crypto.timingSafeEqual(expectedBuffer, signatureBuffer)) {
-      return new NextResponse('Invalid signature', { status: 400 });
+      return new NextResponse('Ungültige Signatur', { status: 400 });
     }
 
     const receiverSettings = await prisma.setting.findMany({
       where: { key: { in: ['CONTACT_RECEIVER_EMAIL', 'CONTACT_FORM_RECIPIENT'] } }
     });
     const rMap = receiverSettings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-    const receiverEmail = rMap.CONTACT_RECEIVER_EMAIL || rMap.CONTACT_FORM_RECIPIENT || process.env.ADMIN_EMAIL || 'info@hlghausgeraete.de';
-    const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'HLG Hausgeräte';
+    const receiverEmail = rMap.CONTACT_RECEIVER_EMAIL || rMap.CONTACT_FORM_RECIPIENT || process.env.ADMIN_EMAIL || 'kontakt@topgartengeraete.de';
+    const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Top Gartengeräte';
 
     // 1. Persist confirmed subscriber in Setting table (idempotent check)
     let isNewSubscriber = true;
@@ -103,7 +103,7 @@ export async function GET(request: Request) {
       // 3. Send notification to admin email in German
       await sendEmail({
         to: receiverEmail,
-        subject: sanitizeEmailHeader(`[HLG HAUSGERÄTE]: Newsletter-Anmeldung bestätigt: ${email}`),
+        subject: sanitizeEmailHeader(`[TOP GARTENGERÄTE]: Newsletter-Anmeldung bestätigt: ${email}`),
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.5; padding: 20px;">
             <h1 style="font-size: 20px; color: #107b46; margin-top: 0; margin-bottom: 15px;">📬 Neue Newsletter-Anmeldung</h1>
@@ -134,10 +134,10 @@ export async function GET(request: Request) {
     }
 
     // 5. Redirect to the Thank You page
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL || 'https://hlghausgeraete.de';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL || 'https://topgartengeraete.de';
     return NextResponse.redirect(`${baseUrl}/thank-you`);
   } catch (err) {
     console.error('Confirm newsletter error:', err);
-    return new NextResponse('Internal server error', { status: 500 });
+    return new NextResponse('Interner Serverfehler', { status: 500 });
   }
 }

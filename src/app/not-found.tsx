@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Seite nicht gefunden (404) | HLG Hausgeräte',
+  title: 'Seite nicht gefunden (404) | Top Gartengeräte',
   description: 'Die von Ihnen gesuchte Seite existiert leider nicht oder wurde verschoben.',
   robots: {
     index: false,
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function NotFound() {
   const settingsDb = await prisma.setting.findMany();
   const settings = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-  
+
   let title = settings.NOT_FOUND_TITLE || "Seite nicht gefunden (404)";
   if (/p[aá]gina|n[aã]o|encontrad|oops/i.test(title)) {
     title = "Seite nicht gefunden (404)";
@@ -35,15 +35,15 @@ export default async function NotFound() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <main 
+      <main
         className="flex-grow flex items-center justify-center bg-cover bg-center relative"
-        style={{ 
+        style={{
           backgroundImage: bgImage ? `url('${bgImage}')` : 'none',
           backgroundColor: bgImage ? 'transparent' : bgColor
         }}
       >
         {bgImage && <div className="absolute inset-0 bg-black/50 z-0"></div>}
-        
+
         <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
           <h1 className="text-9xl font-bold text-white mb-4 drop-shadow-lg">404</h1>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 drop-shadow-md">
@@ -52,9 +52,9 @@ export default async function NotFound() {
           <p className="text-lg text-gray-200 mb-8 max-w-lg mx-auto drop-shadow">
             {text}
           </p>
-          
-          <Link 
-            href="/" 
+
+          <Link
+            href="/"
             className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-8 rounded-full transition-transform transform hover:scale-105 shadow-lg"
           >
             {cta}

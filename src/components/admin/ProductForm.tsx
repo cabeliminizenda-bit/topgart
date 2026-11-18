@@ -69,7 +69,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
       }
     } catch (err: any) {
       console.error('Direct gallery upload error:', err);
-      alert("Erreur lors du téléversement");
+      alert("Fehler beim Hochladen");
     } finally {
       setIsDirectUploading(false);
       e.target.value = '';
@@ -607,23 +607,23 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
 
         {/* SEO */}
         <div className="bg-gray-50 p-4 rounded-md border border-gray-200 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">SEO (Référencement)</h3>
+          <h3 className="text-lg font-semibold text-gray-900">SEO (Suchmaschinenoptimierung)</h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Titre SEO (Title)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">SEO-Titel (Title)</label>
             <input 
               type="text" 
               value={metaTitle}
               onChange={(e) => setMetaTitle(e.target.value)}
-              placeholder="ex: Kaminholz kaufen | Kammergetrocknet"
+              placeholder="z. B. Akku-Rasenmäher kaufen | Top Gartengeräte"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Méta Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Meta-Beschreibung</label>
             <textarea 
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
-              placeholder="ex: Günstig Kaminholz kaufen..."
+              placeholder="z. B. Hochwertige Gartengeräte günstig online kaufen..."
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 text-sm"
             ></textarea>

@@ -21,7 +21,7 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
+const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settingsDb = await prisma.setting.findMany({
@@ -29,10 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 
   const settingsMap = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-  const faviconUrl = settingsMap['FAVICON_IMAGE'] || '/LOGO-HLG-HAUSGERAETE.png';
-  const title = settingsMap['HOME_META_TITLE'] || `${storeName} | Hochwertige Haushaltsgeräte zu besten Preisen`;
-  const description = settingsMap['HOME_META_DESCRIPTION'] || "Entdecken Sie hochwertige Haushaltsgeräte zu den besten Preisen bei HLG Hausgeräte. Waschmaschinen, Geschirrspüler, Kaffeemaschinen, Kühlschränke und mehr.";
-  const ogImage = settingsMap['OG_IMAGE'] || settingsMap['HEADER_LOGO_IMAGE'] || '/LOGO-HLG-HAUSGERAETE.png';
+  const faviconUrl = settingsMap['FAVICON_IMAGE'] || '/logo-top-gartengeraete-dark.svg';
+  const title = settingsMap['HOME_META_TITLE'] || `${storeName} | Hochwertige Gartengeräte zu besten Preisen`;
+  const description = settingsMap['HOME_META_DESCRIPTION'] || "Entdecken Sie hochwertige Gartengeräte zu den besten Preisen bei Top Gartengeräte. Rasenmäher, Mähroboter, Motorsägen, Heckenscheren, Hochdruckreiniger und mehr.";
+  const ogImage = settingsMap['OG_IMAGE'] || settingsMap['HEADER_LOGO_IMAGE'] || '/logo-top-gartengeraete-dark.svg';
 
   const rawGsc = (settingsMap['GOOGLE_SITE_VERIFICATION'] || '').trim();
   const gscToken = rawGsc.match(/content=["']([^"']+)["']/i)?.[1]?.trim()
@@ -104,8 +104,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     currencyPosition: (settingsMap.currencyPosition as CurrencyOptions['currencyPosition']) || defaultCurrencyOptions.currencyPosition,
     thousandSeparator: settingsMap.thousandSeparator !== undefined ? settingsMap.thousandSeparator : defaultCurrencyOptions.thousandSeparator,
     decimalSeparator: settingsMap.decimalSeparator || defaultCurrencyOptions.decimalSeparator,
-    taxIncludedInPrice: settingsMap.TAX_INCLUDED_IN_PRICE === 'true',
-    defaultVatRate: Number(settingsMap.DEFAULT_VAT_RATE) || 20,
+    taxIncludedInPrice: settingsMap.TAX_INCLUDED_IN_PRICE !== 'false',
+    defaultVatRate: Number(settingsMap.DEFAULT_VAT_RATE) || 19,
   };
   const contactSlug = settingsMap.CONTACT_SLUG || 'kontakt';
   const defaultMenuLinks = [
@@ -158,10 +158,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { newCount: newProductsCount, hotCount: hotProductsCount, saleCount: saleProductsCount } = await getCachedProductCounts();
 
   const storeSettings = {
-    announcement: settingsMap.HEADER_ANNOUNCEMENT_TEXT || settingsMap.HEADER_ANNOUNCEMENT || 'Willkommen bei HLG Hausgeräte • Kostenloser Versand ab 200 € • 2 Jahre Garantie',
-    logoImage: settingsMap.HEADER_LOGO_IMAGE && settingsMap.HEADER_LOGO_IMAGE !== '/logo.png' && settingsMap.HEADER_LOGO_IMAGE !== '/logo.jpg' ? settingsMap.HEADER_LOGO_IMAGE : '/LOGO-HLG-HAUSGERAETE.png',
-    supportPhone: settingsMap.FOOTER_SUPPORT_PHONE ?? settingsMap.HEADER_SUPPORT_PHONE ?? '0800 123 4567',
-    supportEmail: settingsMap.FOOTER_SUPPORT_EMAIL ?? settingsMap.HEADER_SUPPORT_EMAIL ?? 'info@hlg-hausgeraete.de',
+    announcement: settingsMap.HEADER_ANNOUNCEMENT_TEXT || settingsMap.HEADER_ANNOUNCEMENT || 'Willkommen bei Top Gartengeräte • Kostenloser Versand ab 200 € • 2 Jahre Garantie',
+    logoImage: settingsMap.HEADER_LOGO_IMAGE && settingsMap.HEADER_LOGO_IMAGE !== '/logo.png' && settingsMap.HEADER_LOGO_IMAGE !== '/logo.jpg' && settingsMap.HEADER_LOGO_IMAGE !== '/LOGO-HLG-HAUSGERAETE.png' ? settingsMap.HEADER_LOGO_IMAGE : '/logo-top-gartengeraete.svg',
+    supportPhone: settingsMap.FOOTER_SUPPORT_PHONE ?? settingsMap.HEADER_SUPPORT_PHONE ?? '',
+    supportEmail: settingsMap.FOOTER_SUPPORT_EMAIL ?? settingsMap.HEADER_SUPPORT_EMAIL ?? 'kontakt@topgartengeraete.de',
     menuLinks: menuLinks,
     topBarLinks: topBarLinks,
     loginText: settingsMap.LOGIN_TEXT || 'Anmelden',
@@ -172,10 +172,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     footerBgColor: settingsMap.FOOTER_BG_COLOR || '#0f172a',
     footerTextColor: settingsMap.FOOTER_TEXT_COLOR || '#d1d5db',
     footerHeadingColor: settingsMap.FOOTER_HEADING_COLOR || '#ffffff',
-    footerAddress1: settingsMap.FOOTER_ADDRESS_1 ?? 'Deutschland',
+    footerAddress1: settingsMap.FOOTER_ADDRESS_1 ?? 'Rosenstraße 19, 26529 Marienhafe, Deutschland',
     footerAddress2: settingsMap.FOOTER_ADDRESS_2 ?? 'Zuverlässige Lieferung direkt zu Ihnen nach Hause',
-    footerLocationsTitle: settingsMap.FOOTER_LOCATIONS_TITLE || 'Liefergebiet',
-    footerNewsletterTitle: settingsMap.FOOTER_NEWSLETTER_TITLE || 'HLG Hausgeräte Newsletter',
+    footerLocationsTitle: settingsMap.FOOTER_LOCATIONS_TITLE || 'Standort & Liefergebiet',
+    footerNewsletterTitle: settingsMap.FOOTER_NEWSLETTER_TITLE || 'Top Gartengeräte Newsletter',
     footerNewsletterText: settingsMap.FOOTER_NEWSLETTER_TEXT || 'Abonnieren Sie unseren Newsletter für exklusive Angebote und Gutscheine.',
     footerNewsletterPlaceholder: settingsMap.FOOTER_NEWSLETTER_PLACEHOLDER || 'Ihre E-Mail-Adresse...',
     footerCallUsText: settingsMap.FOOTER_CALL_US_TEXT || 'Kundenservice',
@@ -185,8 +185,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     footerSocialInstagram: settingsMap.FOOTER_SOCIAL_INSTAGRAM || '#',
     footerSocialLinkedin: settingsMap.FOOTER_SOCIAL_LINKEDIN || '#',
     footerColumns: footerColumns,
-    footerLogoImage: settingsMap.FOOTER_LOGO_IMAGE || '/LOGO-HLG-HAUSGERAETE.png',
-    footerDescription: settingsMap.FOOTER_DESCRIPTION || 'HLG Hausgeräte ist Ihr zuverlässiger Fachhändler für moderne Haushaltsgeräte. Entdecken Sie erstklassige Waschmaschinen, Geschirrspüler, Herde, Kaffeemaschinen und Kühlgeräte führender Marken zu Spitzenpreisen.',
+    footerLogoImage: settingsMap.FOOTER_LOGO_IMAGE && settingsMap.FOOTER_LOGO_IMAGE !== '/LOGO-HLG-HAUSGERAETE.png' ? settingsMap.FOOTER_LOGO_IMAGE : '/logo-top-gartengeraete-dark.svg',
+    footerDescription: settingsMap.FOOTER_DESCRIPTION || 'Top Gartengeräte ist Ihr zuverlässiger Fachhändler für hochwertige Gartengeräte. Entdecken Sie erstklassige Rasenmäher, Mähroboter, Motorsägen, Heckenscheren und Gartentechnik führender Marken zu Spitzenpreisen.',
     footerShowAddress: settingsMap.FOOTER_SHOW_ADDRESS !== 'false',
     footerShowEmail: settingsMap.FOOTER_SHOW_EMAIL !== 'false',
     footerShowPhone: settingsMap.FOOTER_SHOW_PHONE !== 'false',
@@ -209,8 +209,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     showNew: newProductsCount > 0,
     showHot: hotProductsCount >= 3,
     showSale: saleProductsCount > 0,
-    mobileAboutTitle: settingsMap.MOBILE_ABOUT_TITLE || 'HLG Hausgeräte',
-    mobileAboutDesc: settingsMap.MOBILE_ABOUT_DESC || 'Ihre hochwertigen Haushaltsgeräte zu den besten Preisen!',
+    mobileAboutTitle: settingsMap.MOBILE_ABOUT_TITLE || 'Top Gartengeräte',
+    mobileAboutDesc: settingsMap.MOBILE_ABOUT_DESC || 'Ihre hochwertigen Gartengeräte zu den besten Preisen!',
     mobileMenuLinks: (() => {
       try {
         return settingsMap.MOBILE_MENU_LINKS ? JSON.parse(settingsMap.MOBILE_MENU_LINKS) : menuLinks;
@@ -284,19 +284,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               "@context": "https://schema.org",
               "@type": "LocalBusiness",
               "name": storeName,
-              "image": settingsMap.HEADER_LOGO_IMAGE || '/logo.jpg',
+              "image": settingsMap.HEADER_LOGO_IMAGE || '/logo-top-gartengeraete-dark.svg',
               "url": SITE_URL,
               "telephone": settingsMap.FOOTER_SUPPORT_PHONE ?? settingsMap.HEADER_SUPPORT_PHONE,
-              "email": settingsMap.FOOTER_SUPPORT_EMAIL ?? settingsMap.HEADER_SUPPORT_EMAIL,
+              "email": settingsMap.FOOTER_SUPPORT_EMAIL ?? settingsMap.HEADER_SUPPORT_EMAIL ?? 'kontakt@topgartengeraete.de',
               "priceRange": "€€",
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": settingsMap.FOOTER_ADDRESS_1 || 'Borseler Chaussee 123',
-                "postalCode": "22453",
-                "addressLocality": "Hamburg",
+                "streetAddress": settingsMap.FOOTER_ADDRESS_1 || 'Rosenstraße 19',
+                "postalCode": "26529",
+                "addressLocality": "Marienhafe",
                 "addressCountry": settingsMap.STORE_COUNTRY || "DE"
               },
-              "description": "HLG Hausgeräte - Ihr Fachhändler für Haushaltsgeräte, Küchenmaschinen, Kaffeemaschinen und Unterhaltungselektronik."
+              "description": "Top Gartengeräte - Ihr Fachhändler für Gartengeräte, Rasenmäher, Mähroboter, Motorsägen, Heckenscheren und Gartentechnik."
             })
           }}
         />
@@ -329,8 +329,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 {children}
                 <DeferredWidgets
                   chatEnabled={settingsMap.CHAT_ENABLED !== 'false'}
-                  chatStoreName={settingsMap.CHAT_STORE_NAME || settingsMap.STORE_NAME || 'HLG Hausgeräte'}
-                  chatStoreIcon={settingsMap.CHAT_STORE_ICON || settingsMap.HEADER_LOGO_IMAGE || settingsMap.FAVICON_IMAGE || '/LOGO-HLG-HAUSGERAETE.png'}
+                  chatStoreName={settingsMap.CHAT_STORE_NAME || settingsMap.STORE_NAME || 'Top Gartengeräte'}
+                  chatStoreIcon={settingsMap.CHAT_STORE_ICON || settingsMap.HEADER_LOGO_IMAGE || settingsMap.FAVICON_IMAGE || '/logo-top-gartengeraete-dark.svg'}
                 />
               </StoreLayout>
             </CurrencyProvider>

@@ -9,7 +9,7 @@ import { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Bestellbestätigung | HLG Hausgeräte',
+  title: 'Bestellbestätigung | Top Gartengeräte',
   robots: {
     index: false,
     follow: false,

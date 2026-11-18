@@ -3,7 +3,7 @@ import { getSettings } from '@/actions/settings';
 import ShippingInfoForm from '@/components/admin/settings/ShippingInfoForm';
 
 export const metadata = {
-  title: 'Product shipping info Settings | Lenha & Carvao Silva Dias Admin',
+  title: 'Produkt-Versandinfos | Top Gartengeräte Admin',
 };
 
 export default async function ShippingInfoSettingsPage() {

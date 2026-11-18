@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Order Tracking',
+  title: 'Bestellung verfolgen | Top Gartengeräte',
   robots: {
     index: false,
     follow: false,

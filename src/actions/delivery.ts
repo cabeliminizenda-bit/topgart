@@ -12,7 +12,7 @@ async function geocodeCity(city: string, country: string): Promise<{ lat: number
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Lenha & Carvao Silva Dias-Tracking-System/1.0',
+        'User-Agent': 'Top-Gartengeraete-Tracking-System/1.0',
       },
     });
     
@@ -90,7 +90,7 @@ export async function addDeliveryPosition(orderId: string, city: string, country
   const coords = await geocodeCity(city, country);
   
   if (!coords) {
-    throw new Error(`Unable to find coordinates for ${city}, ${country}`);
+    throw new Error(`Koordinaten für ${city}, ${country} konnten nicht gefunden werden.`);
   }
 
   await prisma.deliveryPosition.create({

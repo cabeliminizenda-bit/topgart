@@ -9,7 +9,7 @@ export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
 
   const settingsMap = await getCachedSettings();
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
   const rssBeforeContent = settingsMap.RSS_BEFORE_CONTENT || '';
   const rssAfterContent = settingsMap.RSS_AFTER_CONTENT || 'Der Artikel {post_link} erschien zuerst auf {blog_link}.';
 

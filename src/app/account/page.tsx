@@ -18,7 +18,7 @@ export default async function AccountDashboard() {
 
   return (
     <div className="bg-white p-5 sm:p-8 rounded-2xl shadow-sm border border-stone-200 h-full space-y-6">
-      
+
       {/* Welcome Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-stone-100">
         <div>
@@ -26,7 +26,7 @@ export default async function AccountDashboard() {
             Hallo, <span className="text-[#107b46]">{username}</span>!
           </h2>
           <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Willkommen in Ihrem persönlichen Kundenbereich bei HLG Hausgeräte.
+            Willkommen in Ihrem persönlichen Kundenbereich bei Top Gartengeräte.
           </p>
         </div>
         <div className="text-xs">

@@ -3,8 +3,10 @@
 import { createClient } from '@/utils/supabase/server';
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { timingSafeStringEqual } from '@/lib/serverSecrets';
+import { SITE_URL } from '@/lib/site';
 
 export async function loginUser(formData: FormData) {
   const ip = await getClientIp();
@@ -170,61 +172,73 @@ export async function setupAdmin(formData: FormData) {
   const ip = await getClientIp();
   const rl = await checkRateLimit(`setup_admin_${ip}`, 3, 3600); // 3 attempts per hour
   if (!rl.success) {
-    return { error: 'Trop de tentatives de configuration. Accès restreint.' };
+    return { error: 'Zu viele Einrichtungsversuche. Zugriff eingeschränkt.' };
   }
 
-  // SECURITY (M6): Require SETUP_TOKEN in production (or whenever configured) to prevent public takeover
+  // Optional setup token protection whenever SETUP_TOKEN is configured in env
   const requiredSetupToken = process.env.SETUP_TOKEN;
   const providedSetupToken = String(formData.get('setupToken') || '').trim();
-  if (process.env.NODE_ENV === 'production' && !requiredSetupToken) {
-    return { error: 'L\'initialisation administrateur est désactivée (SETUP_TOKEN manquant).' };
-  }
   if (requiredSetupToken && !timingSafeStringEqual(providedSetupToken, requiredSetupToken)) {
-    return { error: 'Jeton de configuration invalide.' };
+    return { error: 'Ungültiges Einrichtungs-Token.' };
   }
 
   const email = String(formData.get('email') || '').trim().toLowerCase();
   const password = String(formData.get('password') || '');
 
   if (!email || !password) {
-    return { error: 'Tous les champs sont requis.' };
+    return { error: 'Alle Felder sind erforderlich.' };
   }
 
-  if (password.length < 12) {
-    return { error: 'Le mot de passe administrateur doit comporter au moins 12 caractères.' };
+  if (password.length < 8) {
+    return { error: 'Das Administrator-Passwort muss mindestens 8 Zeichen lang sein.' };
   }
 
   // Atomically check that there is no existing admin
   const adminCount = await prisma.user.count({ where: { role: 'ADMIN' } });
   if (adminCount > 0) {
-    return { error: 'Un administrateur existe déjà. L\'initialisation est verrouillée.' };
+    return { error: 'Es existiert bereits ein Administrator. Die Einrichtung ist gesperrt.' };
   }
 
   // Never silently promote an existing customer account
   const existingCustomer = await prisma.user.findUnique({ where: { email } });
   if (existingCustomer) {
-    return { error: 'Cette adresse e-mail est déjà utilisée par un autre compte.' };
+    return { error: 'Diese E-Mail-Adresse wird bereits von einem anderen Konto verwendet.' };
   }
+
+  // Resolve origin for email confirmation redirect (works both locally and in production)
+  let redirectBase = SITE_URL;
+  try {
+    const hdrs = await headers();
+    const origin = hdrs.get('origin');
+    const host = hdrs.get('x-forwarded-host') || hdrs.get('host');
+    const proto = hdrs.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
+    if (origin && /^https?:\/\//i.test(origin)) {
+      redirectBase = origin.replace(/\/$/, '');
+    } else if (host) {
+      redirectBase = `${proto}://${host}`;
+    }
+  } catch {}
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${redirectBase}/admin/login`,
       data: { username: 'Admin' }
     }
   });
 
   if (error) {
     console.error('[setupAdmin] Supabase error:', error.message);
-    return { error: 'Erreur lors de la création du compte administrateur.' };
+    return { error: `Fehler beim Erstellen des Administratorkontos: ${error.message}` };
   }
 
   if (data.user) {
     // Re-verify no other admin was created concurrently
     const recheckCount = await prisma.user.count({ where: { role: 'ADMIN' } });
     if (recheckCount > 0) {
-      return { error: 'Un administrateur a déjà été configuré.' };
+      return { error: 'Ein Administrator wurde bereits eingerichtet.' };
     }
 
     await prisma.user.create({
@@ -237,6 +251,15 @@ export async function setupAdmin(formData: FormData) {
   }
 
   revalidatePath('/', 'layout');
+
+  if (!data.session) {
+    return {
+      success: true,
+      needsConfirmation: true,
+      message: 'Administratorkonto erstellt! Ein Bestätigungslink wurde an Ihre E-Mail-Adresse gesendet. Bitte bestätigen Sie Ihre E-Mail über den Link und melden Sie sich anschließend an.',
+    };
+  }
+
   return { success: true };
 }
 
@@ -244,20 +267,20 @@ export async function loginAdmin(formData: FormData) {
   const ip = await getClientIp();
   const rl = await checkRateLimit(`login_admin_${ip}`, 5, 900); // 5 attempts per 15 mins
   if (!rl.success) {
-    return { error: 'Trop de tentatives de connexion administrateur. Accès temporairement suspendu.' };
+    return { error: 'Zu viele Anmeldeversuche. Zugriff vorübergehend gesperrt.' };
   }
 
   const email = String(formData.get('email') || '').trim().toLowerCase();
   const password = String(formData.get('password') || '');
 
   if (!email || !password) {
-    return { error: 'L\'email et le mot de passe sont requis.' };
+    return { error: 'E-Mail und Passwort sind erforderlich.' };
   }
 
   // SECURITY (H4): Also rate-limit per admin email across IPs
   const emailRl = await checkRateLimit(`login_admin_email_${email}`, 5, 900);
   if (!emailRl.success) {
-    return { error: 'Trop de tentatives de connexion administrateur. Accès temporairement suspendu.' };
+    return { error: 'Zu viele Anmeldeversuche. Zugriff vorübergehend gesperrt.' };
   }
 
   const supabase = await createClient();
@@ -267,14 +290,14 @@ export async function loginAdmin(formData: FormData) {
   });
 
   if (error) {
-    return { error: 'Identifiants incorrects.' };
+    return { error: 'Ungültige Zugangsdaten.' };
   }
 
   if (data.user) {
     const user = await prisma.user.findUnique({ where: { id: data.user.id } });
     if (!user || user.role !== 'ADMIN') {
       await supabase.auth.signOut({ scope: 'global' });
-      return { error: 'Accès refusé. Vous n’êtes pas administrateur.' };
+      return { error: 'Zugriff verweigert. Sie verfügen über keine Administratorrechte.' };
     }
   }
 

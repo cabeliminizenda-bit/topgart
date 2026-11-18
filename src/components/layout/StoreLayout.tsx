@@ -91,8 +91,8 @@ export default function StoreLayout({ children, settings, userRole }: StoreLayou
   if (settings.maintenanceMode) {
     return (
       <MaintenanceView 
-        title={settings.maintenanceTitle || 'Site en maintenance'} 
-        message={settings.maintenanceMessage || 'We are currently updating our store. Come back very soon!'} 
+        title={settings.maintenanceTitle || 'Geschäft in Wartung'} 
+        message={settings.maintenanceMessage || 'Wir aktualisieren derzeit unseren Shop. Bitte schauen Sie in Kürze wieder vorbei!'} 
         image={settings.maintenanceImage} 
         logoImage={settings.logoImage} 
       />

@@ -5,7 +5,7 @@ import BrandTable from '@/components/admin/BrandTable';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Manage Brands | Admin',
+  title: 'Marken verwalten | Top Gartengeräte Admin',
 };
 
 export default async function BrandsPage() {
@@ -15,11 +15,11 @@ export default async function BrandsPage() {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Gérer les Marques</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Marken verwalten</h1>
       </div>
       
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Ajouter une nouvelle marque</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Neue Marke hinzufügen</h2>
         <BrandCreateForm />
       </div>
 

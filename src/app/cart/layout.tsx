@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cart',
+  title: 'Warenkorb | Top Gartengeräte',
   robots: {
     index: false,
     follow: false,

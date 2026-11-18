@@ -55,7 +55,7 @@ export default function ProductsTable({ products, categories }: { products: any[
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (confirm(`Êtes-vous sûr de vouloir supprimer ces ${selectedIds.length} produits ?`)) {
+    if (confirm(`Möchten Sie diese ${selectedIds.length} Produkte wirklich löschen?`)) {
       setIsLoading(true);
       const res = await bulkDeleteProducts(selectedIds);
       if (res.error) alert(res.error);
@@ -96,14 +96,14 @@ export default function ProductsTable({ products, categories }: { products: any[
       {selectedIds.length > 0 && (
         <div className="bg-orange-50 px-6 py-3 border-b border-gray-200 flex items-center justify-between">
           <span className="text-sm font-medium text-orange-800">
-            {selectedIds.length} sélectionné(s)
+            {selectedIds.length} ausgewählt
           </span>
           <button
             onClick={handleBulkDelete}
             disabled={isLoading}
             className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded transition"
           >
-            Supprimer la sélection
+            Auswahl löschen
           </button>
         </div>
       )}

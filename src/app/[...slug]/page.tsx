@@ -33,7 +33,7 @@ export async function generateMetadata({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "HLG Hausgeräte";
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
 
   if (!slug || slug.length === 0) {
     return { title: `Seite nicht gefunden - ${storeName}` };
@@ -148,7 +148,7 @@ export default async function CatchAllPage({
                   {page.title}
                 </h1>
                 <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-                  HLG Hausgeräte • Borseler Chaussee 123, 22453 Hamburg, Deutschland • Zuverlässige Lieferung &amp; Kundenservice.
+                  Top Gartengeräte • Rosenstraße 19, 26529 Marienhafe, Deutschland • Zuverlässige Lieferung &amp; Kundenservice.
                 </p>
               </div>
             </div>
@@ -206,7 +206,7 @@ export default async function CatchAllPage({
 
               <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto shrink-0">
                 <a
-                  href="mailto:info@hlg-hausgeraete.de"
+                  href="mailto:kontakt@topgartengeraete.de"
                   className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#107b46] hover:bg-[#0d693b] text-white font-bold text-sm whitespace-nowrap shadow-lg shadow-emerald-900/30 transition-all flex items-center justify-center gap-2.5 shrink-0"
                 >
                   <svg className="w-4 h-4 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,7 +229,7 @@ export default async function CatchAllPage({
             {/* Bottom Copyright & EU ODR Dispute Link */}
             <div className="mt-8 pt-6 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500 text-center sm:text-left">
               <div>
-                <span>© {new Date().getFullYear()} HLG Hausgeräte. Alle Rechte vorbehalten.</span>
+                <span>© {new Date().getFullYear()} Top Gartengeräte. Alle Rechte vorbehalten.</span>
               </div>
               <div className="flex items-center gap-4">
                 <a

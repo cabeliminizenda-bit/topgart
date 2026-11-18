@@ -3,7 +3,7 @@ import { getSettings } from '@/actions/settings';
 import SeoForm from '@/components/admin/settings/SeoForm';
 
 export const metadata = {
-  title: 'Paramètres SEO et OpenGraph | Administration',
+  title: 'SEO & OpenGraph | Top Gartengeräte Admin',
 };
 
 export default async function SeoSettingsPage() {

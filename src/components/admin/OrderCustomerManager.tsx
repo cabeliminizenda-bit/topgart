@@ -154,7 +154,7 @@ export default function OrderCustomerManager({
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm"
-                  placeholder="client@exemple.com"
+                  placeholder="kunde@beispiel.de"
                 />
                 <p className="text-[11px] text-gray-500 mt-1">
                   {t('customer_email_hint')}

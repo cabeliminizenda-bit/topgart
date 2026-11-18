@@ -83,10 +83,10 @@ export default function MobileHeaderBar({
 
   return (
     <div className="lg:hidden w-full bg-white border-b border-stone-200 px-3.5 py-2.5 flex items-center justify-between gap-2 shrink-0">
-      <Link href="/" onClick={onLogoClick} className="flex items-center shrink-0" title="HLG Hausgeräte">
+      <Link href="/" onClick={onLogoClick} className="flex items-center shrink-0" title="Top Gartengeräte">
         <Image
           src={logoSrc}
-          alt="HLG HAUSGERÄTE"
+          alt="Top Gartengeräte"
           width={160}
           height={44}
           className="h-7 sm:h-8 w-auto object-contain"

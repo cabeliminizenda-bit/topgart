@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
       const isRSC = request.headers.get('rsc') === '1' || request.nextUrl.searchParams.has('_rsc');
       if (isRSC || request.headers.get('accept')?.includes('application/json')) {
         return NextResponse.json(
-          { error: 'Too Many Requests', retryAfter: Math.ceil((reset - Date.now()) / 1000) },
+          { error: 'Zu viele Anfragen', retryAfter: Math.ceil((reset - Date.now()) / 1000) },
           {
             status: 429,
             headers: {
@@ -54,7 +54,7 @@ export async function middleware(request: NextRequest) {
       }
 
       return new NextResponse(
-        `<!DOCTYPE html><html><head><title>429 Too Many Requests</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family: system-ui; text-align: center; padding: 2rem; background: #f9fafb;"><h1 style="color: #ef4444;">Access temporarily blocked</h1><p>You have sent too many requests in a short time.</p><p>For security reasons, please wait a few seconds before trying again.</p></body></html>`,
+        `<!DOCTYPE html><html lang="de"><head><title>429 Zu viele Anfragen</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family: system-ui; text-align: center; padding: 2rem; background: #f9fafb;"><h1 style="color: #ef4444;">Zugriff vorübergehend gesperrt</h1><p>Sie haben in kurzer Zeit zu viele Anfragen gesendet.</p><p>Aus Sicherheitsgründen warten Sie bitte einige Sekunden, bevor Sie es erneut versuchen.</p></body></html>`,
         { 
           status: 429, 
           headers: {

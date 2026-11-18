@@ -9,8 +9,8 @@ import { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Ratgeber & Blog | HLG Hausgeräte',
-  description: 'Praktische Tipps, Produktvergleiche und Experten-Ratgeber rund um moderne Haushaltsgeräte, Küchenausstattung und Energieeffizienz.',
+  title: 'Ratgeber & Blog | Top Gartengeräte',
+  description: 'Praktische Tipps, Produktvergleiche und Experten-Ratgeber rund um moderne Gartengeräte, Rasenpflege und Gartenarbeit.',
   alternates: {
     canonical: '/blog',
   },

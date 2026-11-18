@@ -3,7 +3,7 @@ import { getSettings } from '@/actions/settings';
 import FooterForm from '@/components/admin/settings/FooterForm';
 
 export const metadata = {
-  title: 'Footer Settings | Lenha & Carvao Silva Dias Admin',
+  title: 'Fußzeile-Einstellungen | Top Gartengeräte Admin',
 };
 
 export default async function FooterSettingsPage() {

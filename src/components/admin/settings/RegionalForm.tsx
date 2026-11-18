@@ -18,10 +18,10 @@ export default function RegionalForm({ initialSettings }: { initialSettings: Rec
   const t = useTranslations('Admin');
   const router = useRouter();
   
-  const [currency, setCurrency] = useState(initialSettings.currency || 'USD');
-  const [currencyPosition, setCurrencyPosition] = useState(initialSettings.currencyPosition || 'left');
-  const [thousandSeparator, setThousandSeparator] = useState(initialSettings.thousandSeparator || ',');
-  const [decimalSeparator, setDecimalSeparator] = useState(initialSettings.decimalSeparator || '.');
+  const [currency, setCurrency] = useState(initialSettings.currency || 'EUR');
+  const [currencyPosition, setCurrencyPosition] = useState(initialSettings.currencyPosition || 'right-space');
+  const [thousandSeparator, setThousandSeparator] = useState(initialSettings.thousandSeparator || '.');
+  const [decimalSeparator, setDecimalSeparator] = useState(initialSettings.decimalSeparator || ',');
   
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');

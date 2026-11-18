@@ -55,7 +55,7 @@ export default function AdminContactPageForm() {
     <div className="max-w-4xl mx-auto pb-12">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">
-          Modifier la page Contact
+          Kontaktseite bearbeiten
         </h1>
         <button
           onClick={() => router.push('/admin/pages')}

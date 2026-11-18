@@ -3,7 +3,7 @@ import { getSettings } from '@/actions/settings';
 import RobotsForm from '@/components/admin/settings/RobotsForm';
 
 export const metadata = {
-  title: 'Robots.txt | Administration',
+  title: 'Robots.txt | Top Gartengeräte Admin',
 };
 
 export default async function RobotsSettingsPage() {

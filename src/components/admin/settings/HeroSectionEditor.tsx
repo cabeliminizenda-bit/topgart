@@ -499,7 +499,7 @@ export default function HeroSectionEditor({
                 value={
                   settings.title ??
                   settings.titleGradient ??
-                  'Ihre hochwertigen Haushaltsgeräte zu den besten Preisen!'
+                  'Ihre hochwertigen Gartengeräte zu den besten Preisen!'
                 }
                 onChange={(e) =>
                   handleMultiChange({ title: e.target.value, titleGradient: e.target.value })
@@ -515,7 +515,7 @@ export default function HeroSectionEditor({
                 value={
                   settings.subtitle ??
                   settings.description ??
-                  'Premium-Marken für Küche & Haushalt. Bis zu 40% sparen • Sofort versandbereit • 2 Jahre Garantie.'
+                  'Premium-Marken für Garten & Forst. Bis zu 40% sparen • Sofort versandbereit • 2 Jahre Garantie.'
                 }
                 onChange={(e) =>
                   handleMultiChange({ subtitle: e.target.value, description: e.target.value })
@@ -794,7 +794,7 @@ export default function HeroSectionEditor({
                 <label className="block text-xs font-bold text-gray-700 mb-1">Link-Ziel</label>
                 <input
                   type="text"
-                  value={settings.sideCardUrl ?? '/shop?category=kaffeemaschinen'}
+                  value={settings.sideCardUrl ?? '/shop?category=maehroboter'}
                   onChange={(e) => handleFieldChange('sideCardUrl', e.target.value)}
                   className="w-full text-xs p-2 border border-gray-300 rounded-lg"
                 />

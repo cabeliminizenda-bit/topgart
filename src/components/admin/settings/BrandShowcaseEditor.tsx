@@ -490,7 +490,7 @@ export default function BrandShowcaseEditor({
         {modeTab === 'content' && contentSubTab === 'perks' && (
           <div className="space-y-3">
             <EditorToggleRow
-              label="HLG Vorteil-Banner"
+              label="Vorteil-Banner"
               description="Service-Leistungen unter den Marken anzeigen"
               checked={design.showServiceBanner !== false}
               onChange={(val) => updateDesign('showServiceBanner', val)}
@@ -659,7 +659,7 @@ export default function BrandShowcaseEditor({
               />
 
               <EditorToggleRow
-                label="HLG Vorteil-Banner anzeigen"
+                label="Vorteil-Banner anzeigen"
                 checked={design.showServiceBanner !== false}
                 onChange={(val) => updateDesign('showServiceBanner', val)}
               />

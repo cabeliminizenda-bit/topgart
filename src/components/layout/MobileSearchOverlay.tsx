@@ -9,7 +9,7 @@ type MobileSearchOverlayProps = {
   placeholder?: string;
 };
 
-export default function MobileSearchOverlay({ isOpen, onClose, placeholder = 'Rechercher un produit...' }: MobileSearchOverlayProps) {
+export default function MobileSearchOverlay({ isOpen, onClose, placeholder = 'Produkt suchen...' }: MobileSearchOverlayProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);

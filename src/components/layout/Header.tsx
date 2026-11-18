@@ -59,21 +59,21 @@ const emptySubscribe = () => () => {};
 
 const applianceCategoriesList = [
   { name: 'Alle Kategorien', slug: 'all' },
-  { name: 'Gaming', slug: 'gaming' },
-  { name: 'Geschirrspüler', slug: 'geschirrspueler' },
-  { name: 'Herde', slug: 'herde' },
-  { name: 'Kaffeemaschinen', slug: 'kaffeemaschinen' },
-  { name: 'Küchenmaschinen', slug: 'kuechenmaschinen' },
-  { name: 'Kühlen & Gefrieren', slug: 'kuehlen-gefrieren' },
-  { name: 'Staubsauger & Reiniger', slug: 'staubsauger-reiniger' },
-  { name: 'Waschmaschinen', slug: 'waschmaschinen' },
-  { name: 'Trockner', slug: 'trockner' },
-  { name: 'Mikrowellen', slug: 'mikrowellen' },
+  { name: 'Rasenmäher', slug: 'rasenmaeher' },
+  { name: 'Mähroboter', slug: 'maehroboter' },
+  { name: 'Aufsitzmäher', slug: 'aufsitzmaeher' },
+  { name: 'Motorsägen', slug: 'motorsagen' },
+  { name: 'Heckenscheren', slug: 'heckenscheren' },
+  { name: 'Rasentrimmer & Motorsensen', slug: 'rasentrimmer-motorsensen' },
+  { name: 'Laubbläser & Laubsauger', slug: 'laubblaeser-laubsauger' },
+  { name: 'Hochdruckreiniger', slug: 'hochdruckreiniger' },
+  { name: 'Vertikutierer', slug: 'vertikutierer' },
+  { name: 'Gartenhäcksler', slug: 'gartenhaecksler' },
 ];
 
 export default function Header({
-  announcement = 'Willkommen bei HLG Hausgeräte • Kostenloser Versand ab 200 €',
-  logoImage = '/LOGO-HLG-HAUSGERAETE.png',
+  announcement = 'Willkommen bei Top Gartengeräte • Kostenloser Versand ab 200 €',
+  logoImage = '/logo-top-gartengeraete.svg',
   headerLogoHeight = '48',
   mobileLogoHeight = '40',
   menuLinks = [],
@@ -223,13 +223,13 @@ export default function Header({
     { label: 'Rückgabe & Erstattung', url: '/rueckgabe-und-erstattung' },
   ];
 
-  const currentLogo = logoImage && logoImage !== '/logo.jpg' && logoImage !== '/logo-flame.png' 
+  const currentLogo = logoImage && logoImage !== '/logo.jpg' && logoImage !== '/logo-flame.png' && logoImage !== '/LOGO-HLG-HAUSGERAETE.png'
     ? logoImage 
-    : '/LOGO-HLG-HAUSGERAETE.png';
+    : '/logo-top-gartengeraete.svg';
 
   const mobileHeaderLogo =
-    currentLogo === '/LOGO-HLG-HAUSGERAETE.png'
-      ? '/LOGO-HLG-HAUSGERAETE-DARK.png'
+    currentLogo === '/logo-top-gartengeraete.svg'
+      ? '/logo-top-gartengeraete-dark.svg'
       : currentLogo;
 
   const handleAccountAction = () => {
@@ -260,10 +260,10 @@ export default function Header({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="flex items-center group transition-transform hover:opacity-95" title="HLG Hausgeräte">
+              <Link href="/" className="flex items-center group transition-transform hover:opacity-95" title="Top Gartengeräte">
                 <Image
                   src={currentLogo}
-                  alt="HLG HAUSGERÄTE"
+                  alt="Top Gartengeräte"
                   width={220}
                   height={58}
                   className="h-10 sm:h-12 w-auto object-contain brightness-105"
@@ -386,14 +386,14 @@ export default function Header({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      'Kaffeevollautomat',
-                      'Roborock S8',
-                      'Waschmaschine 9kg',
-                      'Side-by-Side',
-                      'Kenwood Titanium',
-                      'Induktionskochfeld',
-                      'PlayStation 5',
-                      'Geschirrspüler 60cm',
+                      'Mähroboter',
+                      'Akku-Rasenmäher',
+                      'Benzin-Motorsäge',
+                      'Akku-Heckenschere',
+                      'Aufsitzmäher',
+                      'Hochdruckreiniger',
+                      'Rasentrimmer',
+                      'Laubbläser',
                     ].map((term) => (
                       <button
                         key={term}
