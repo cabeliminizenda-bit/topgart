@@ -220,9 +220,19 @@ export default function GardenDealsShowcase({
             </div>
 
             {/* Circular Red Price Badge ("Ab 250€") */}
-            <div className="absolute left-5 top-[44%] z-10 w-[72px] h-[72px] rounded-full bg-[#e53e30] text-white flex flex-col items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <div className="absolute left-5 top-[44%] z-10 w-[74px] h-[74px] rounded-full bg-[#e53e30] text-white flex flex-col items-center justify-center shadow-lg ring-4 ring-white/30 group-hover:scale-105 transition-transform">
               <span className="text-[11px] font-medium leading-none">{promoBadgeTop}</span>
               <span className="text-[17px] font-extrabold leading-tight mt-0.5">{promoBadgePrice}</span>
+            </div>
+
+            {/* Subtle Bottom CTA Pill */}
+            <div className="absolute inset-x-4 bottom-4 z-10 flex justify-center">
+              <span className="inline-flex items-center gap-1.5 bg-white/95 backdrop-blur-xs text-stone-800 group-hover:bg-[#00a86b] group-hover:text-white text-[12px] font-semibold px-4 py-2 rounded-full shadow-md transition-colors">
+                <span>Angebote entdecken</span>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
             </div>
           </Link>
 
@@ -233,9 +243,9 @@ export default function GardenDealsShowcase({
               {/* 1. Kostenlose Rückgabe */}
               <Link
                 href="/rueckgabe-und-erstattung"
-                className="bg-[#fafafa] hover:bg-white border border-stone-200/80 hover:border-[#00a86b]/40 rounded-[5px] px-4 py-4 flex items-center gap-3.5 transition-all group"
+                className="bg-white border border-stone-200/90 hover:border-[#00a86b]/45 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group"
               >
-                <div className="w-11 h-11 rounded-full bg-white border border-stone-200/80 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:border-[#00a86b]/40 transition-colors">
+                <div className="w-11 h-11 rounded-full bg-emerald-50/80 border border-emerald-100 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -258,9 +268,9 @@ export default function GardenDealsShowcase({
               {/* 2. Kostenlose Lieferung */}
               <Link
                 href="/lieferzeiten"
-                className="bg-[#fafafa] hover:bg-white border border-stone-200/80 hover:border-[#00a86b]/40 rounded-[5px] px-4 py-4 flex items-center gap-3.5 transition-all group"
+                className="bg-white border border-stone-200/90 hover:border-[#00a86b]/45 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group"
               >
-                <div className="w-11 h-11 rounded-full bg-white border border-stone-200/80 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:border-[#00a86b]/40 transition-colors">
+                <div className="w-11 h-11 rounded-full bg-emerald-50/80 border border-emerald-100 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -284,10 +294,10 @@ export default function GardenDealsShowcase({
               <button
                 type="button"
                 onClick={handleCopyCoupon}
-                className="bg-[#fafafa] hover:bg-white border border-stone-200/80 hover:border-[#00a86b]/40 rounded-[5px] px-4 py-4 flex items-center gap-3.5 transition-all group text-left cursor-pointer"
+                className="bg-white border border-stone-200/90 hover:border-[#00a86b]/45 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group text-left cursor-pointer"
                 title={`Rabattcode ${couponCode} kopieren`}
               >
-                <div className="w-11 h-11 rounded-full bg-white border border-stone-200/80 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:border-[#00a86b]/40 transition-colors">
+                <div className="w-11 h-11 rounded-full bg-emerald-50/80 border border-emerald-100 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -303,38 +313,38 @@ export default function GardenDealsShowcase({
                   </h4>
                   <p className="text-[12px] text-stone-500 mt-0.5 truncate">
                     Rabattcode{' '}
-                    <span className="text-[#ef3e2d] font-semibold">{couponCode}</span>
+                    <span className="text-[#e05246] font-semibold bg-red-50/80 px-1.5 py-0.5 rounded-[3px]">{couponCode}</span>
                   </p>
                 </div>
               </button>
             </div>
 
             {/* BOTTOM ROW: "Aktuelle Angebote" Countdown & 3-Card Product Carousel */}
-            <div className="bg-[#fafafa] border border-stone-200/80 rounded-[5px] p-5 flex-1 flex flex-col justify-between">
+            <div className="bg-[#f9f9fa] border border-stone-200/85 rounded-[6px] p-5 flex-1 flex flex-col justify-between shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
               {/* Header: Title + Green Countdown Badge + Carousel Arrows */}
               <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
                 <div className="flex flex-wrap items-center gap-4">
-                  <h2 className="text-[18px] font-medium text-stone-800 tracking-tight">
+                  <h2 className="text-[18px] font-semibold text-stone-800 tracking-tight pl-3 border-l-[3px] border-[#00a86b] leading-none py-0.5">
                     {sectionTitle}
                   </h2>
 
                   {/* Green Countdown Pill */}
-                  <div className="bg-[#00a86b] text-white rounded-[4px] px-3.5 py-1.5 flex items-center gap-3.5 shadow-2xs tabular-nums">
-                    <div className="text-center leading-tight">
+                  <div className="bg-[#00a86b] text-white rounded-[5px] px-3.5 py-1.5 flex items-center divide-x divide-white/20 shadow-xs tabular-nums">
+                    <div className="text-center leading-tight pr-3">
                       <span className="block text-[13px] font-bold">{pad(timeLeft.days)}</span>
-                      <span className="block text-[10px] text-white/90">Tage</span>
+                      <span className="block text-[9.5px] uppercase tracking-wider text-white/85">Tage</span>
                     </div>
-                    <div className="text-center leading-tight">
+                    <div className="text-center leading-tight px-3">
                       <span className="block text-[13px] font-bold">{pad(timeLeft.hours)}</span>
-                      <span className="block text-[10px] text-white/90">Std</span>
+                      <span className="block text-[9.5px] uppercase tracking-wider text-white/85">Std</span>
                     </div>
-                    <div className="text-center leading-tight">
+                    <div className="text-center leading-tight px-3">
                       <span className="block text-[13px] font-bold">{pad(timeLeft.minutes)}</span>
-                      <span className="block text-[10px] text-white/90">Min.</span>
+                      <span className="block text-[9.5px] uppercase tracking-wider text-white/85">Min.</span>
                     </div>
-                    <div className="text-center leading-tight">
+                    <div className="text-center leading-tight pl-3">
                       <span className="block text-[13px] font-bold">{pad(timeLeft.seconds)}</span>
-                      <span className="block text-[10px] text-white/90">Sek.</span>
+                      <span className="block text-[9.5px] uppercase tracking-wider text-white/85">Sek.</span>
                     </div>
                   </div>
                 </div>
@@ -369,14 +379,23 @@ export default function GardenDealsShowcase({
                 {visibleDeals.map((product) => {
                   const href = product.slug ? `/produkt/${product.slug}` : '/shop';
                   const imageSrc = product.images?.[0] || '/images/hero-garden-mower.jpg';
+                  const discountPct =
+                    product.compareAtPrice && product.compareAtPrice > product.price
+                      ? Math.round((1 - product.price / product.compareAtPrice) * 100)
+                      : 0;
                   return (
                     <Link
                       key={product.id}
                       href={href}
-                      className="bg-white border border-stone-200/80 hover:border-[#00a86b]/50 hover:shadow-md rounded-[4px] p-4 flex items-center gap-3.5 transition-all group min-h-[146px]"
+                      className="relative bg-white border border-stone-200/85 hover:border-[#00a86b]/50 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:shadow-[0_10px_24px_-12px_rgba(15,23,42,0.15)] hover:-translate-y-0.5 rounded-[5px] p-4 flex items-center gap-3.5 transition-all duration-200 group min-h-[150px]"
                     >
+                      {discountPct > 0 && (
+                        <span className="absolute top-2.5 left-2.5 bg-[#e05246] text-white text-[10px] font-semibold px-2 py-0.5 rounded-full z-10">
+                          -{discountPct}%
+                        </span>
+                      )}
                       {/* Product Thumbnail */}
-                      <div className="w-[92px] h-[92px] shrink-0 relative bg-white rounded flex items-center justify-center overflow-hidden">
+                      <div className="w-[92px] h-[92px] shrink-0 relative bg-stone-50/50 rounded-[4px] p-1.5 flex items-center justify-center overflow-hidden">
                         <Image
                           src={imageSrc}
                           alt={product.title}
@@ -388,7 +407,7 @@ export default function GardenDealsShowcase({
 
                       {/* Product Info */}
                       <div className="min-w-0 flex-1 flex flex-col justify-center">
-                        <h3 className="text-[13px] font-normal text-stone-700 group-hover:text-[#00a86b] leading-snug line-clamp-3 transition-colors">
+                        <h3 className="text-[13px] font-medium text-stone-800 group-hover:text-[#00a86b] leading-snug line-clamp-3 transition-colors">
                           {product.title}
                         </h3>
 
@@ -400,13 +419,13 @@ export default function GardenDealsShowcase({
                           <Price
                             amount={product.price}
                             showTax={false}
-                            className="text-[15px] font-medium text-[#e05246] tabular-nums"
+                            className="text-[15.5px] font-semibold text-[#e05246] tabular-nums"
                           />
                           {product.compareAtPrice && product.compareAtPrice > product.price && (
                             <Price
                               amount={product.compareAtPrice}
                               showTax={false}
-                              className="text-[11px] text-stone-400 line-through tabular-nums"
+                              className="text-[11.5px] text-stone-400 line-through tabular-nums"
                             />
                           )}
                         </div>

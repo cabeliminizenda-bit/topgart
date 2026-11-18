@@ -258,8 +258,23 @@ export default function Header({
         />
 
         {/* TIER 1: Top Slim Utility Bar (Desktop lg+) */}
-        <div className="hidden lg:block bg-white border-b border-stone-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-9 flex items-center justify-end">
+        <div className="hidden lg:block bg-[#fafafa] border-b border-stone-200/70">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-9 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 text-[11.5px] text-stone-500">
+              <span className="inline-flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-[#00a86b]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Kostenloser Versand ab 200 €</span>
+              </span>
+              <span className="h-3 w-px bg-stone-200" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-[#00a86b]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>2 Jahre Garantie</span>
+              </span>
+            </div>
             <nav aria-label="Rechtliche Kurzlinks" className="flex items-center text-[12px] text-stone-500">
               {topUtilityLinks.map((item, idx) => (
                 <div key={item.url} className="flex items-center">
@@ -301,7 +316,7 @@ export default function Header({
             <div className="flex-1 max-w-[560px] relative" ref={searchContainerRef}>
               <form
                 onSubmit={handleSearchSubmit}
-                className="w-full h-[44px] bg-white rounded-[4px] flex items-stretch border border-stone-200 focus-within:border-[#00a86b] focus-within:ring-1 focus-within:ring-[#00a86b]/25 transition-all text-stone-800"
+                className="w-full h-[45px] bg-white rounded-[5px] flex items-stretch border border-stone-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)] focus-within:border-[#00a86b] focus-within:ring-2 focus-within:ring-[#00a86b]/15 transition-all text-stone-800"
               >
                 {/* Category Dropdown */}
                 <div className="relative shrink-0 flex items-center" ref={categoryDropdownRef}>
@@ -498,7 +513,7 @@ export default function Header({
                                   {product.title}
                                 </h4>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <Price amount={product.price} showTax={false} className="text-[#00a86b] font-bold text-sm" />
+                                  <Price amount={product.price} showTax={false} className="text-[#e05246] font-semibold text-sm tabular-nums" />
                                   {product.compareAtPrice && product.compareAtPrice > product.price && (
                                     <Price amount={product.compareAtPrice} showTax={false} className="text-stone-400 line-through text-xs" />
                                   )}
@@ -519,7 +534,7 @@ export default function Header({
             </div>
 
             {/* Right Side: Konto + Warenkorb */}
-            <div className="flex items-center gap-6 shrink-0">
+            <div className="flex items-center gap-5 shrink-0">
               {/* Account */}
               <button
                 type="button"
@@ -527,17 +542,20 @@ export default function Header({
                 className="flex items-center gap-2.5 group cursor-pointer text-left"
                 title={actualUserRole ? 'Mein Konto' : 'Anmelden / Registrieren'}
               >
-                <svg
-                  className="w-7 h-7 text-stone-300 group-hover:text-[#00a86b] transition-colors shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 2.239-7 5v1h14v-1c0-2.761-3.134-5-7-5z" />
-                </svg>
+                <span className="w-10 h-10 rounded-full bg-stone-100/90 group-hover:bg-emerald-50 border border-stone-200/70 group-hover:border-[#00a86b]/30 flex items-center justify-center text-stone-600 group-hover:text-[#00a86b] transition-all shrink-0">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </span>
                 <div className="leading-tight">
                   <span className="block text-[11px] text-stone-400">Konto</span>
-                  <span className="block text-[13px] font-bold text-stone-800 group-hover:text-[#00a86b] transition-colors whitespace-nowrap">
+                  <span className="block text-[13px] font-semibold text-stone-800 group-hover:text-[#00a86b] transition-colors whitespace-nowrap">
                     {actualUserRole
                       ? actualUserRole === 'ADMIN'
                         ? 'Admin-Panel'
@@ -556,21 +574,24 @@ export default function Header({
                 aria-label="Warenkorb"
               >
                 <div className="relative shrink-0">
-                  <svg
-                    className="w-7 h-7 text-stone-300 group-hover:text-[#00a86b] transition-colors"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14.26l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0020 3.5H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 14.37 5.48 16 7 16h12v-2H7.42c-.14 0-.25-.11-.26-.25z" />
-                  </svg>
-                  <span className="absolute -top-1.5 -right-1.5 bg-[#00a86b] text-white text-[10px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-xs">
+                  <span className="w-10 h-10 rounded-full bg-stone-100/90 group-hover:bg-emerald-50 border border-stone-200/70 group-hover:border-[#00a86b]/30 flex items-center justify-center text-stone-600 group-hover:text-[#00a86b] transition-all">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </span>
+                  <span className="absolute -top-1 -right-1 bg-[#00a86b] text-white text-[10px] font-bold min-w-[19px] h-[19px] px-1 rounded-full flex items-center justify-center ring-2 ring-white shadow-xs">
                     {mounted ? cartItems : 0}
                   </span>
                 </div>
                 <div className="leading-tight">
                   <span className="block text-[11px] text-stone-400">Warenkorb</span>
-                  <span className="block text-[13px] font-bold text-stone-800 group-hover:text-[#00a86b] transition-colors tabular-nums whitespace-nowrap">
+                  <span className="block text-[13px] font-semibold text-stone-800 group-hover:text-[#00a86b] transition-colors tabular-nums whitespace-nowrap">
                     {mounted ? (
                       <Price amount={cartTotal} showTax={false} />
                     ) : (
@@ -586,7 +607,7 @@ export default function Header({
         {/* TIER 3: Light-Gray Navigation Strip with Green "ZUM SHOP GEHEN" Button */}
         <div className="hidden lg:block bg-white pb-2">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-[#f4f5f6] border border-stone-200/70 rounded-[5px] flex items-center p-1 gap-7">
+            <div className="bg-[#f4f5f6] border border-stone-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.03)] rounded-[6px] flex items-center p-1 gap-7">
               {/* Green "ZUM SHOP GEHEN" CTA (aligned with Hero Left Sidebar width) */}
               <div
                 className="relative w-[246px] shrink-0"
@@ -596,7 +617,7 @@ export default function Header({
               >
                 <Link
                   href="/shop"
-                  className="w-full bg-[#00a86b] hover:bg-[#008f5a] text-white font-bold text-[13px] tracking-wide uppercase px-5 py-3 rounded-[4px] flex items-center justify-between transition-colors shadow-xs"
+                  className="w-full bg-[#00a86b] hover:bg-[#008f5a] text-white font-bold text-[12.5px] tracking-wider uppercase px-5 py-3 rounded-[5px] flex items-center justify-between transition-all shadow-xs hover:shadow-md hover:shadow-emerald-600/20"
                 >
                   <span>ZUM SHOP GEHEN</span>
                   <span className="w-5 h-5 rounded-full bg-white text-[#00a86b] flex items-center justify-center shrink-0">

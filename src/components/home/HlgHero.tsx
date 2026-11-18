@@ -251,7 +251,7 @@ export default function HlgHero({
             )}
 
             <div
-              className="h-full flex flex-col overflow-hidden border shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+              className="h-full flex flex-col overflow-hidden border shadow-[0_2px_10px_-4px_rgba(15,23,42,0.07)]"
               style={{
                 backgroundColor: block1BgColor,
                 borderColor: block1BorderColor,
@@ -266,14 +266,24 @@ export default function HlgHero({
                   <Link
                     key={idx}
                     href={cat.href || `/shop?category=${encodeURIComponent(cat.slug)}`}
-                    className="group/item flex items-center justify-between px-5 py-3.5 hover:bg-emerald-50/40 hover:text-[#00a86b] transition-colors"
+                    className="group/item relative flex items-center justify-between px-5 py-3.5 hover:bg-emerald-50/50 transition-all"
                   >
+                    <span className="absolute left-0 inset-y-2 w-[3px] rounded-r bg-[#00a86b] opacity-0 group-hover/item:opacity-100 transition-opacity" aria-hidden="true" />
                     <span
-                      className="truncate group-hover/item:text-[#00a86b] transition-colors"
+                      className="truncate font-medium group-hover/item:text-[#00a86b] transition-colors"
                       style={{ color: block1TextColor, fontSize: `${block1TextSize}px` }}
                     >
                       {cat.name}
                     </span>
+                    <svg
+                      className="w-3.5 h-3.5 text-stone-300 group-hover/item:text-[#00a86b] group-hover/item:translate-x-0.5 transition-all shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </Link>
                 ))}
               </nav>
@@ -325,19 +335,24 @@ export default function HlgHero({
             />
 
             {/* Right-Aligned Overlay Copy & CTA (matching mockup) */}
-            <div className="relative z-10 w-full max-w-[460px] px-6 py-10 sm:px-10 lg:pr-12 lg:pl-6 text-right flex flex-col items-end">
-              <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-medium text-white tracking-tight leading-tight drop-shadow-sm">
+            <div className="relative z-10 w-full max-w-[470px] px-6 py-10 sm:px-10 lg:pr-12 lg:pl-6 text-right flex flex-col items-end">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[11px] font-semibold uppercase tracking-wider text-white mb-3.5 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00a86b]" aria-hidden="true" />
+                <span>{activeSlide === 0 ? 'Saison-Highlights' : 'Premium Gartentechnik'}</span>
+              </span>
+
+              <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-semibold text-white tracking-tight leading-tight drop-shadow-sm">
                 {renderRichText(currentSlide.title)}
               </h1>
 
               {currentSlide.subtitle && (
-                <p className="mt-4 text-sm sm:text-base font-bold text-white leading-snug max-w-[340px] drop-shadow-xs">
+                <p className="mt-3.5 text-sm sm:text-base font-semibold text-white leading-snug max-w-[350px] drop-shadow-xs">
                   {renderRichText(currentSlide.subtitle)}
                 </p>
               )}
 
               {currentSlide.description && (
-                <p className="mt-3 text-xs sm:text-[13.5px] font-medium text-white/95 leading-relaxed whitespace-pre-line max-w-[350px] drop-shadow-xs">
+                <p className="mt-2.5 text-xs sm:text-[13.5px] font-normal text-white/90 leading-relaxed whitespace-pre-line max-w-[360px] drop-shadow-xs">
                   {renderRichText(currentSlide.description)}
                 </p>
               )}
@@ -346,13 +361,16 @@ export default function HlgHero({
                 <div className="mt-6">
                   <Link
                     href={currentSlide.ctaUrl || '/shop'}
-                    className="inline-flex items-center justify-center font-semibold text-sm px-7 py-3 rounded-[4px] shadow-md hover:shadow-lg transition-all hover:brightness-95 active:scale-[0.98]"
+                    className="inline-flex items-center justify-center gap-2 font-semibold text-sm px-7 py-3 rounded-[5px] shadow-md hover:shadow-xl transition-all hover:brightness-95 active:scale-[0.98]"
                     style={{
                       backgroundColor: block2BtnBg,
                       color: block2BtnTextColor,
                     }}
                   >
-                    {renderRichText(currentSlide.ctaText)}
+                    <span>{renderRichText(currentSlide.ctaText)}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
                   </Link>
                 </div>
               )}

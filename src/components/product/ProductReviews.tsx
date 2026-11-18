@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { submitReview } from '@/actions/reviews';
 import { useTranslations, useLocale } from 'next-intl';
 import SafeHTML from '@/components/SafeHTML';
@@ -46,6 +46,12 @@ export default function ProductReviews({
   const t = useTranslations('Product');
   const locale = useLocale();
 
+  useEffect(() => {
+    const handleOpenReviews = () => setActiveTab('reviews');
+    window.addEventListener('open-product-reviews', handleOpenReviews);
+    return () => window.removeEventListener('open-product-reviews', handleOpenReviews);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -64,7 +70,7 @@ export default function ProductReviews({
   };
 
   return (
-    <div className="mt-10 sm:mt-12 border border-stone-200 rounded-[4px] bg-white overflow-hidden">
+    <div id="produkt-bewertungen" className="mt-10 sm:mt-12 scroll-mt-24 border border-stone-200 rounded-[4px] bg-white overflow-hidden">
       {/* Minimalist Centered Tab Header Bar */}
       <div className="flex items-center justify-center gap-8 border-b border-stone-200 px-4">
         <button

@@ -13,7 +13,7 @@ type ProductCardActionButtonsProps = {
 };
 
 /**
- * Vertically stacked Wishlist + Quick View emerald action buttons (without Compare icon)
+ * Vertically stacked Wishlist + Quick View emerald action buttons (no Compare icon)
  * positioned at the upper-right of product card images.
  */
 export default function ProductCardActionButtons({
@@ -22,24 +22,26 @@ export default function ProductCardActionButtons({
   onQuickView,
   wishlistTitle,
   quickViewTitle = 'Schnellansicht',
-  positionClassName = 'top-2.5 right-2.5',
+  positionClassName = 'top-3 right-3',
   buttonSizeClassName = 'w-9 h-9',
 }: ProductCardActionButtonsProps) {
   return (
     <div
-      className={`absolute ${positionClassName} z-20 flex flex-col gap-2 transition-all duration-200 ${isWishlisted
+      className={`absolute ${positionClassName} z-20 flex flex-col gap-2 transition-all duration-200 ${
+        isWishlisted
           ? 'opacity-100'
-          : 'opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-1 lg:group-hover:translate-y-0'
-        }`}
+          : 'opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:translate-x-1.5 lg:group-hover:translate-x-0'
+      }`}
     >
       {/* Wishlist Button */}
       <button
         type="button"
         onClick={onToggleWishlist}
-        className={`${buttonSizeClassName} rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer ${isWishlisted
+        className={`${buttonSizeClassName} rounded-full flex items-center justify-center transition-all duration-200 shadow-md ring-2 ring-white hover:scale-105 cursor-pointer ${
+          isWishlisted
             ? 'bg-[#e05246] hover:bg-[#c94136] text-white'
             : 'bg-[#00a86b] hover:bg-[#008f5a] text-white'
-          }`}
+        }`}
         title={
           wishlistTitle ||
           (isWishlisted ? 'Von der Wunschliste entfernen' : 'Zur Wunschliste hinzufügen')
@@ -66,7 +68,7 @@ export default function ProductCardActionButtons({
       <button
         type="button"
         onClick={onQuickView}
-        className={`${buttonSizeClassName} rounded-full bg-[#00a86b] hover:bg-[#008f5a] text-white flex items-center justify-center transition-all shadow-sm cursor-pointer`}
+        className={`${buttonSizeClassName} rounded-full bg-[#00a86b] hover:bg-[#008f5a] text-white flex items-center justify-center transition-all duration-200 shadow-md ring-2 ring-white hover:scale-105 cursor-pointer`}
         title={quickViewTitle}
         aria-label="Schnellansicht"
       >

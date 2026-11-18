@@ -78,6 +78,7 @@ export default function ProductPageClient({
 
         <ProductActions
           product={product as any}
+          reviews={product.reviews || []}
           enableBuyNow={enableBuyNow}
           onVariationChange={(image: string | null) => setVariationImage(image)}
           shippingInfo={shippingInfo}

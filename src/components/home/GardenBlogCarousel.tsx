@@ -46,10 +46,10 @@ export default function GardenBlogCarousel({
           <div className="hidden lg:block w-[254px] shrink-0" aria-hidden="true" />
 
           {/* Right "Unser Blog" Container */}
-          <div className="flex-1 min-w-0 w-full bg-[#fafafa] border border-stone-200/80 rounded-[5px] p-5">
+          <div className="flex-1 min-w-0 w-full bg-[#f9f9fa] border border-stone-200/85 rounded-[6px] p-5 shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
             {/* Header Bar */}
             <div className="flex items-center justify-between gap-4 mb-5">
-              <h2 className="text-[18px] font-medium text-stone-800 tracking-tight">
+              <h2 className="text-[18px] font-semibold text-stone-800 tracking-tight pl-3 border-l-[3px] border-[#00a86b] leading-none py-0.5">
                 {title}
               </h2>
 
@@ -85,20 +85,27 @@ export default function GardenBlogCarousel({
                   <Link
                     key={art.id}
                     href={href}
-                    className="bg-white border border-stone-200/80 hover:border-[#00a86b]/50 hover:shadow-sm rounded-[4px] p-5 transition-all group block"
+                    className="bg-white border border-stone-200/85 hover:border-[#00a86b]/50 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:shadow-[0_10px_24px_-12px_rgba(15,23,42,0.14)] hover:-translate-y-0.5 rounded-[5px] p-5 transition-all duration-200 group flex flex-col"
                   >
-                    <div className="text-[12.5px] font-normal text-[#e05246] leading-snug">
+                    <div className="text-[12px] font-medium text-[#e05246] leading-snug">
                       <div>{art.dateFormatted} •</div>
-                      <div>von {art.authorName}</div>
+                      <div className="text-stone-400 font-normal">von {art.authorName}</div>
                     </div>
 
                     <h3 className="mt-2.5 text-[14px] font-semibold text-stone-800 group-hover:text-[#00a86b] leading-snug line-clamp-3 transition-colors">
                       {art.title}
                     </h3>
 
-                    <p className="mt-2.5 text-[12.5px] text-stone-500 leading-relaxed line-clamp-3">
+                    <p className="mt-2 text-[12.5px] text-stone-500 leading-relaxed line-clamp-3">
                       {art.excerpt}
                     </p>
+
+                    <span className="mt-auto pt-3.5 inline-flex items-center gap-1 text-[12px] font-semibold text-[#00a86b]">
+                      <span>Weiterlesen</span>
+                      <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
                   </Link>
                 );
               })}

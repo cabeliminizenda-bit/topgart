@@ -39,7 +39,7 @@ export default function Newsletter({ config }: { config?: any }) {
   return (
     <section className="w-full bg-white pt-2 pb-10 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-[#f4f5f6] border border-stone-200/80 rounded-[5px] px-5 sm:px-7 py-4 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-6">
+        <div className="bg-[#f4f5f6] border border-stone-200/90 border-l-[3px] border-l-[#00a86b] rounded-[6px] px-5 sm:px-7 py-4.5 shadow-[0_2px_8px_-4px_rgba(15,23,42,0.06)] flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-6">
           {/* Left: Flying Envelope Icon + Title */}
           <div className="flex items-center gap-3 shrink-0">
             <svg

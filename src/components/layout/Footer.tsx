@@ -237,6 +237,15 @@ export default function Footer({
                   {displayEmail}
                 </a>
               </div>
+
+              <div className="pt-2 flex flex-wrap items-center gap-2 text-[11.5px] text-stone-500">
+                <span className="inline-flex items-center gap-1 bg-emerald-50/70 text-[#00a86b] border border-emerald-100 px-2.5 py-1 rounded-full font-medium">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Geprüfte Fachhändler-Qualität
+                </span>
+              </div>
             </div>
           </div>
         </div>
