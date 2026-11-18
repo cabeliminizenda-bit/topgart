@@ -1,22 +1,12 @@
-'use server';
-
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import prisma from '@/lib/prisma';
+import { maskPII } from '@/lib/security';
 
 /**
+ * Internal server-only helper (NOT a 'use server' Server Action).
  * Finalizes an order after payment has been confirmed.
- * This function handles all post-payment logic:
- * - Recovering abandoned carts
- * - Sending confirmation emails (client + admin)
- * - Decrementing stock with Prisma transaction (race-condition safe)
- * - Sending low stock alerts
- * - Creating in-app notifications
- *
- * Called by:
- * - Stripe webhook (after checkout.session.completed)
- * - PayPal capture route (after successful capture)
- * - Bank transfer checkout (immediately after order creation)
+ * Includes an atomic idempotency guard so stock and emails are never processed twice.
  */
 export async function finalizeOrder(orderId: string) {
   try {
@@ -33,22 +23,62 @@ export async function finalizeOrder(orderId: string) {
       return;
     }
 
-    let userEmail = order.user.email;
-    let customerName = 'Kunde';
+    // SECURITY (M7): Atomic idempotency guard to prevent duplicate stock decrement or email spam
+    let parsedMeta: Record<string, any> | null = null;
     if (order.destinationAddress) {
       try {
-        const metadata = typeof order.destinationAddress === 'string' ? JSON.parse(order.destinationAddress) : order.destinationAddress;
-        const billing = metadata?.billing || metadata?.shipping;
-        if (billing) {
-          if (billing.firstName) {
-            customerName = `${billing.firstName} ${billing.lastName || ''}`.trim();
-          }
-          if (billing.email && typeof billing.email === 'string') {
-            userEmail = billing.email.trim().toLowerCase();
-          }
+        const parsed = typeof order.destinationAddress === 'string'
+          ? JSON.parse(order.destinationAddress)
+          : order.destinationAddress;
+        if (parsed && typeof parsed === 'object') {
+          parsedMeta = parsed;
         }
-      } catch (e) {
-        // Metadata parse failed, use default name
+      } catch {
+        parsedMeta = null;
+      }
+    }
+
+    if (parsedMeta?._finalizedAt) {
+      console.warn(`[finalizeOrder] Order ${orderId} already finalized at ${parsedMeta._finalizedAt}. Skipping.`);
+      return;
+    }
+
+    if (parsedMeta) {
+      const claimMeta = { ...parsedMeta, _finalizedAt: new Date().toISOString() };
+      const claimed = await prisma.order.updateMany({
+        where: {
+          id: orderId,
+          NOT: { destinationAddress: { contains: '"_finalizedAt":' } },
+        },
+        data: { destinationAddress: JSON.stringify(claimMeta) },
+      });
+      if (claimed.count === 0) {
+        console.warn(`[finalizeOrder] Concurrent finalization detected for order ${orderId}. Skipping.`);
+        return;
+      }
+    } else {
+      // Fallback idempotency check if destinationAddress is non-JSON or null
+      const existingNotif = await prisma.notification.findFirst({
+        where: { isAdmin: true, type: 'ORDER', link: `/admin/orders/${order.id}` },
+        select: { id: true },
+      });
+      if (existingNotif) {
+        console.warn(`[finalizeOrder] Order ${orderId} already has ORDER notification. Skipping.`);
+        return;
+      }
+    }
+
+    let userEmail = order.user.email;
+    let customerName = 'Kunde';
+    if (parsedMeta) {
+      const billing = parsedMeta?.billing || parsedMeta?.shipping;
+      if (billing) {
+        if (billing.firstName) {
+          customerName = `${billing.firstName} ${billing.lastName || ''}`.trim();
+        }
+        if (billing.email && typeof billing.email === 'string') {
+          userEmail = billing.email.trim().toLowerCase();
+        }
       }
     }
 
@@ -72,7 +102,11 @@ export async function finalizeOrder(orderId: string) {
       (acc, s) => ({ ...acc, [s.key]: s.value }),
       {} as Record<string, string>
     );
-    const adminEmail = settingsMap['CONTACT_RECEIVER_EMAIL'] || settingsMap['CONTACT_FORM_RECIPIENT'] || 'cabeliminizenda@gmail.com';
+    const adminEmail =
+      settingsMap['CONTACT_RECEIVER_EMAIL'] ||
+      settingsMap['CONTACT_FORM_RECIPIENT'] ||
+      process.env.ADMIN_EMAIL ||
+      'info@hlghausgeraete.de';
 
     // 3. Send emails (awaited to ensure serverless completion)
     try {
@@ -80,7 +114,7 @@ export async function finalizeOrder(orderId: string) {
         '@/lib/mailer'
       );
 
-      console.log(`[finalizeOrder] Sending order confirmation to client (${userEmail}) and admin (${adminEmail})...`);
+      console.log(`[finalizeOrder] Sending order confirmation for order ${order.id} (client: ${maskPII(userEmail)})...`);
       const emailResults = await Promise.allSettled([
         sendClientOrderConfirmation(order, userEmail, customerName),
         sendAdminOrderNotification(order, adminEmail, {

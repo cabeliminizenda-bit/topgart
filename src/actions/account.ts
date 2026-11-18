@@ -2,7 +2,6 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
-import prisma from '@/lib/prisma';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function updateAccountDetails(formData: FormData) {
@@ -16,6 +15,7 @@ export async function updateAccountDetails(formData: FormData) {
   const lastName = String(formData.get('lastName') || '').trim().slice(0, 100);
   const displayName = String(formData.get('displayName') || '').trim().slice(0, 100);
   const email = String(formData.get('email') || '').trim().toLowerCase();
+  const currentPassword = String(formData.get('currentPassword') || '');
   const newPassword = String(formData.get('newPassword') || '');
   const confirmPassword = String(formData.get('confirmPassword') || '');
 
@@ -34,15 +34,32 @@ export async function updateAccountDetails(formData: FormData) {
     }
   };
 
+  const isChangingEmail = Boolean(email && email !== user.email);
+  const isChangingPassword = Boolean(newPassword || confirmPassword);
+
+  // SECURITY (L7): Require current password verification for sensitive credential changes
+  if ((isChangingEmail || isChangingPassword) && user.email) {
+    if (!currentPassword) {
+      return { error: 'Bitte geben Sie Ihr aktuelles Passwort ein, um E-Mail oder Passwort zu ändern.' };
+    }
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (verifyError) {
+      return { error: 'Das aktuelle Passwort ist nicht korrekt.' };
+    }
+  }
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (email && email !== user.email) {
+  if (isChangingEmail) {
     if (!emailRegex.test(email) || email.length > 254) {
       return { error: 'Ungültige E-Mail-Adresse.' };
     }
     updates.email = email;
   }
 
-  if (newPassword || confirmPassword) {
+  if (isChangingPassword) {
     if (newPassword !== confirmPassword) {
       return { error: 'Die neuen Passwörter stimmen nicht überein.' };
     }
@@ -59,18 +76,14 @@ export async function updateAccountDetails(formData: FormData) {
     return { error: 'Fehler beim Aktualisieren des Kontos. Bitte überprüfen Sie Ihre Angaben.' };
   }
 
-  // Sync Prisma user if email was changed
-  if (email && email !== user.email) {
-    try {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { email }
-      });
-    } catch (e) {
-      console.error('[Account] Error syncing email to Prisma:', e);
-    }
-  }
+  // SECURITY (L7): Do NOT overwrite prisma.user.email before Supabase confirms the email change.
+  // Prisma user lookup uses user.id, and email stays synchronized after confirmation.
 
   revalidatePath('/account/details');
-  return { success: true, message: 'Kontodaten wurden erfolgreich aktualisiert.' };
+  return {
+    success: true,
+    message: isChangingEmail
+      ? 'Kontodaten aktualisiert. Bitte bestätigen Sie Ihre neue E-Mail-Adresse über den Bestätigungslink.'
+      : 'Kontodaten wurden erfolgreich aktualisiert.'
+  };
 }

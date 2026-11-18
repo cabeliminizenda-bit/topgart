@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { sendReviewRequestEmail } from '@/lib/mailer';
+import { timingSafeStringEqual } from '@/lib/serverSecrets';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,8 +9,9 @@ export async function GET(request: Request) {
   try {
     // SECURITY: always require the secret (Vercel Cron sends it automatically).
     // If CRON_SECRET is not configured, the endpoint is disabled.
-    const authHeader = request.headers.get('authorization');
-    if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const authHeader = request.headers.get('authorization') || '';
+    const expectedHeader = process.env.CRON_SECRET ? `Bearer ${process.env.CRON_SECRET}` : '';
+    if (!expectedHeader || !timingSafeStringEqual(authHeader, expectedHeader)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -56,7 +58,7 @@ export async function GET(request: Request) {
             if (b?.firstName) {
               userName = `${b.firstName} ${b.lastName || ''}`.trim();
             }
-          } catch (e) {}
+          } catch (e) { }
         }
         await sendReviewRequestEmail(order, order.user.email, userName, storeUrl);
 
@@ -69,12 +71,12 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Successfully sent ${processedCount} review requests.` 
+    return NextResponse.json({
+      success: true,
+      message: `Successfully sent ${processedCount} review requests.`
     });
   } catch (error: any) {
     console.error('Error processing review requests:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

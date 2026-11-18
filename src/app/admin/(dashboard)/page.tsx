@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getTranslations, getLocale } from 'next-intl/server';
 import { getDashboardStats } from '@/actions/dashboard';
 import DashboardChart from '@/components/admin/DashboardChart';
@@ -8,6 +9,7 @@ import { formatPriceNumber, defaultCurrencyOptions } from '@/lib/formatPrice';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
+  await requireAdminPage();
   const t = await getTranslations('AdminDashboard');
   const tOrders = await getTranslations('AdminOrders');
   const locale = await getLocale();

@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import SmtpForm from '@/components/admin/settings/SmtpForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function SmtpSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import FooterForm from '@/components/admin/settings/FooterForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function FooterSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

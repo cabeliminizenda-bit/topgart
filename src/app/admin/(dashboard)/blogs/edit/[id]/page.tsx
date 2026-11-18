@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import BlogForm from '@/components/admin/BlogForm';
 import Link from 'next/link';
 import { getArticleById, getDistinctBlogCategories, getDistinctBlogAuthors } from '@/actions/blog';
@@ -5,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 
 export default async function EditBlogPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   const t = await getTranslations('AdminBlogs');
   const { id } = await params;
   const [article, categories, authors] = await Promise.all([

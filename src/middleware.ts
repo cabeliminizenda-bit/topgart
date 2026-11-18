@@ -22,9 +22,16 @@ export async function middleware(request: NextRequest) {
 
   // 1. Rate Limiting Check (Protection anti-DDoS / Brute force sur routes publiques)
   if (ratelimit && !isAdminRoute && !isPrefetch) {
-    // Get IP address from headers (Vercel sets x-forwarded-for)
+    // Prefer trusted Vercel/proxy headers before generic x-forwarded-for
+    const vercelForwarded = request.headers.get('x-vercel-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
     const forwardedFor = request.headers.get('x-forwarded-for');
-    const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : (request as any).ip ?? '127.0.0.1';
+    const ip =
+      (vercelForwarded ? vercelForwarded.split(',')[0].trim() : '') ||
+      (realIp ? realIp.trim() : '') ||
+      (forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
+      (request as NextRequest & { ip?: string }).ip ||
+      '127.0.0.1';
     
     // Check limit for this IP
     const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`);
@@ -68,13 +75,27 @@ export async function middleware(request: NextRequest) {
   // Custom route protection logic
   // For example, redirect unauthenticated users away from /account
   const url = request.nextUrl.clone()
-  
+  const hasSession = request.cookies.getAll().some(
+    c => c.name.startsWith('sb-') && (c.name.endsWith('-auth-token') || c.name.includes('-auth-token.'))
+  )
+
   if (url.pathname.startsWith('/account')) {
-    // We can parse the session cookies to see if there is an auth token
-    const hasSession = request.cookies.getAll().some(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'))
-    
     if (!hasSession) {
       url.pathname = '/login'
+      return Response.redirect(url)
+    }
+  }
+
+  // SECURITY (H2 / L2): Edge session guard on /admin/* (except login & setup) and /preview
+  if (
+    (url.pathname.startsWith('/admin') &&
+      url.pathname !== '/admin/login' &&
+      url.pathname !== '/admin/setup') ||
+    url.pathname === '/preview' ||
+    url.pathname.startsWith('/preview/')
+  ) {
+    if (!hasSession) {
+      url.pathname = '/admin/login'
       return Response.redirect(url)
     }
   }

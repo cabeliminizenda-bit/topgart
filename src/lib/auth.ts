@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import prisma from '@/lib/prisma';
+import { redirect } from 'next/navigation';
 
 /**
  * Vérifie que l'utilisateur courant est authentifié et a le rôle ADMIN.
@@ -49,6 +50,31 @@ export async function requireAuth() {
 
   if (!user) {
     throw new Error('Unauthorized: User not found.');
+  }
+
+  return user;
+}
+
+
+/**
+ * Page-level admin guard for Server Components (H2).
+ * Unlike layouts, Next.js always executes the target page.tsx on navigation,
+ * preventing RSC partial-rendering authorization bypasses.
+ */
+export async function requireAdminPage() {
+  const supabase = await createClient();
+  const { data: { user: authUser }, error } = await supabase.auth.getUser();
+
+  if (error || !authUser) {
+    redirect('/admin/login');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: authUser.id },
+  });
+
+  if (!user || user.role !== 'ADMIN') {
+    redirect('/admin/login');
   }
 
   return user;

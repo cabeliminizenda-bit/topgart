@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCachedSettings } from '@/lib/cache';
 import { SITE_URL } from '@/lib/site';
+import { escapeXml, escapeXmlCdata } from '@/lib/security';
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL;
@@ -54,23 +55,23 @@ export async function GET() {
 
   const feedItems = articles.map(article => `
     <item>
-      <title><![CDATA[${article.title}]]></title>
-      <link>${baseUrl}/blog/${article.slug}</link>
-      <guid>${baseUrl}/blog/${article.slug}</guid>
+      <title><![CDATA[${escapeXmlCdata(article.title)}]]></title>
+      <link>${escapeXml(`${baseUrl}/blog/${article.slug}`)}</link>
+      <guid>${escapeXml(`${baseUrl}/blog/${article.slug}`)}</guid>
       <pubDate>${new Date(article.createdAt).toUTCString()}</pubDate>
-      ${article.authorName ? `<dc:creator><![CDATA[${article.authorName}]]></dc:creator>` : ''}
-      <description><![CDATA[${generateRssContent(article)}]]></description>
+      ${article.authorName ? `<dc:creator><![CDATA[${escapeXmlCdata(article.authorName)}]]></dc:creator>` : ''}
+      <description><![CDATA[${escapeXmlCdata(generateRssContent(article))}]]></description>
     </item>
   `).join('');
 
   const feed = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${storeName} - Blog</title>
-    <link>${baseUrl}/blog</link>
-    <description>Neueste Artikel von ${storeName}</description>
-    <language>${(settingsMap.STORE_COUNTRY || 'DE').toLowerCase()}</language>
-    <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    <title>${escapeXml(storeName)} - Blog</title>
+    <link>${escapeXml(`${baseUrl}/blog`)}</link>
+    <description>Neueste Artikel von ${escapeXml(storeName)}</description>
+    <language>${escapeXml((settingsMap.STORE_COUNTRY || 'DE').toLowerCase())}</language>
+    <atom:link href="${escapeXml(`${baseUrl}/rss.xml`)}" rel="self" type="application/rss+xml"/>
     ${feedItems}
   </channel>
 </rss>`;

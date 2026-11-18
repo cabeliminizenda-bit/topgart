@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getTranslations } from 'next-intl/server';
 import prisma from '@/lib/prisma';
 import CategoryTable from '@/components/admin/CategoryTable';
@@ -7,6 +8,7 @@ import AdminPagination from '@/components/admin/AdminPagination';
 export const dynamic = 'force-dynamic';
 
 export default async function CategoriesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  await requireAdminPage();
   const t = await getTranslations('AdminCategories');
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page || '1', 10);

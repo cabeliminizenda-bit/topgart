@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import TaxesForm from '@/components/admin/settings/TaxesForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function TaxesSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

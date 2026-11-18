@@ -34,27 +34,19 @@ export async function validateCoupon(code: string) {
           where: { key: { in: ['THANKYOU_COUPON_CODE', 'THANKYOU_COUPON_AMOUNT'] } }
         });
         const sMap = settings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-        const configuredCode = (sMap.THANKYOU_COUPON_CODE || 'WELCOME15').trim().toUpperCase();
-        const configuredAmount = parseFloat(sMap.THANKYOU_COUPON_AMOUNT || '15') || 15;
-        if (upperCode === configuredCode || upperCode === 'WELCOME15') {
+        const configuredCode = (sMap.THANKYOU_COUPON_CODE || '').trim().toUpperCase();
+        const configuredAmount = parseFloat(sMap.THANKYOU_COUPON_AMOUNT || '15');
+        if (configuredCode && upperCode === configuredCode && Number.isFinite(configuredAmount) && configuredAmount > 0 && configuredAmount <= 500) {
           coupon = {
             id: 'thankyou-coupon',
-            code: upperCode,
+            code: configuredCode,
             type: 'FIXED_AMOUNT' as const,
-            value: upperCode === configuredCode ? configuredAmount : 15,
+            value: configuredAmount,
             isActive: true,
           } as any;
         }
       } catch {
-        if (upperCode === 'WELCOME15') {
-          coupon = {
-            id: 'welcome15',
-            code: 'WELCOME15',
-            type: 'FIXED_AMOUNT' as const,
-            value: 15,
-            isActive: true,
-          } as any;
-        }
+        // Ignore settings lookup errors — do not fall back to hardcoded coupons
       }
     }
 
@@ -66,13 +58,13 @@ export async function validateCoupon(code: string) {
       return { error: "Dieser Gutscheincode ist leider nicht mehr gültig." };
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       coupon: {
         code: coupon.code,
         type: coupon.type,
         value: coupon.value
-      } 
+      }
     };
   } catch (error) {
     console.error("Coupon validation error:", error);
@@ -96,7 +88,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     const shippingMethodId = formData.get('shippingMethod') as string;
     const shipToDifferentAddress = formData.get('shipToDifferentAddress') === 'on';
     const shippingCountry = formData.get('shippingCountry') as string;
-    
+
     const effectiveCountry = shipToDifferentAddress ? shippingCountry : country;
 
     // ===== INPUT VALIDATION (never trust the client) =====
@@ -159,12 +151,13 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
           });
         }
 
-        // If not found in DB, auto-create it from curated showcase data or item data
-        if (!dbProd && (knownOffer || (targetTitle && typeof item.price === 'number' && item.price > 0))) {
-          const finalTitle = targetTitle || knownOffer?.title || 'Produkt';
-          const finalSlug = targetSlug || `prod-${Date.now()}`;
-          const finalPrice = knownOffer?.rawPrice ?? (typeof item.price === 'number' && item.price > 0 ? item.price : 0);
-          const finalImage = knownOffer?.image || (typeof item.image === 'string' ? item.image : '');
+        // SECURITY (C1): Never auto-create products from untrusted client-supplied price/title.
+        // Only allow auto-creation from the server-side curated KNOWN_OFFERS_BY_ID catalog.
+        if (!dbProd && knownOffer && typeof knownOffer.rawPrice === 'number' && knownOffer.rawPrice > 0) {
+          const finalTitle = knownOffer.title;
+          const finalSlug = knownOffer.slug;
+          const finalPrice = knownOffer.rawPrice;
+          const finalImage = knownOffer.image || '';
 
           try {
             dbProd = await prisma.product.create({
@@ -231,7 +224,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     }
 
     const chosenShippingMethod = validZone.methods[0];
-    
+
     // ===== SERVER-SIDE PRICE VERIFICATION =====
     // Never trust client-provided prices. Fetch real prices from database.
     const productIds = [...new Set(cartItems.map((item: any) => item.productId as string))];
@@ -312,48 +305,56 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     const shippingRate = chosenShippingMethod.rate;
 
     // Apply coupon discount server-side if provided
-    const couponCode = String(formData.get('couponCode') || '').slice(0, 64);
+    const couponCode = String(formData.get('couponCode') || '').trim().toUpperCase().slice(0, 64);
     let discountAmount = 0;
+    let appliedCouponCode: string | null = null;
     if (couponCode) {
-      const upperCoupon = couponCode.trim().toUpperCase();
+      const upperCoupon = couponCode;
+      const thankYouSettings = await prisma.setting.findMany({
+        where: { key: { in: ['THANKYOU_COUPON_CODE', 'THANKYOU_COUPON_AMOUNT'] } }
+      });
+      const tyMap = thankYouSettings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+      const configuredThankYouCode = (tyMap.THANKYOU_COUPON_CODE || '').trim().toUpperCase();
+      const configuredThankYouAmount = parseFloat(tyMap.THANKYOU_COUPON_AMOUNT || '15');
+
       let coupon = await prisma.coupon.findUnique({
         where: { code: upperCoupon },
       });
-      if (!coupon) {
-        try {
-          const settings = await prisma.setting.findMany({
-            where: { key: { in: ['THANKYOU_COUPON_CODE', 'THANKYOU_COUPON_AMOUNT'] } }
+      if (!coupon && configuredThankYouCode && upperCoupon === configuredThankYouCode && Number.isFinite(configuredThankYouAmount) && configuredThankYouAmount > 0 && configuredThankYouAmount <= 500) {
+        coupon = {
+          id: 'thankyou-coupon',
+          code: configuredThankYouCode,
+          type: 'FIXED_AMOUNT' as const,
+          value: configuredThankYouAmount,
+          isActive: true,
+        } as any;
+      }
+
+      if (coupon && coupon.isActive) {
+        // SECURITY (M2): Enforce single-use per customer email for the Thank-You welcome coupon
+        if (configuredThankYouCode && upperCoupon === configuredThankYouCode) {
+          const priorUsage = await prisma.order.findFirst({
+            where: {
+              status: { not: 'CANCELLED' },
+              OR: [
+                { user: { email } },
+                { destinationAddress: { contains: `"email":"${email}"` } }
+              ],
+              destinationAddress: { contains: `"couponCode":"${upperCoupon}"` }
+            },
+            select: { id: true }
           });
-          const sMap = settings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-          const configuredCode = (sMap.THANKYOU_COUPON_CODE || 'WELCOME15').trim().toUpperCase();
-          const configuredAmount = parseFloat(sMap.THANKYOU_COUPON_AMOUNT || '15') || 15;
-          if (upperCoupon === configuredCode || upperCoupon === 'WELCOME15') {
-            coupon = {
-              id: 'thankyou-coupon',
-              code: upperCoupon,
-              type: 'FIXED_AMOUNT' as const,
-              value: upperCoupon === configuredCode ? configuredAmount : 15,
-              isActive: true,
-            } as any;
-          }
-        } catch {
-          if (upperCoupon === 'WELCOME15') {
-            coupon = {
-              id: 'welcome15',
-              code: 'WELCOME15',
-              type: 'FIXED_AMOUNT' as const,
-              value: 15,
-              isActive: true,
-            } as any;
+          if (priorUsage) {
+            return { error: "Dieser Willkommens-Gutscheincode wurde bereits für eine frühere Bestellung verwendet." };
           }
         }
-      }
-      if (coupon && coupon.isActive) {
+
         if (coupon.type === 'PERCENTAGE') {
           discountAmount = serverCartTotal * (coupon.value / 100);
         } else {
           discountAmount = Math.min(coupon.value, serverCartTotal);
         }
+        appliedCouponCode = upperCoupon;
       }
     }
 
@@ -361,7 +362,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     // Round to 2 decimal places to avoid floating point issues
     const verifiedTotal = Math.round(serverTotal * 100) / 100;
 
-    
+
     // Find or link user
     const supabase = await createClient();
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -422,7 +423,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
       shippingMethodName: validZone.methods[0].type,
       subTotal: serverCartTotal,
       discount: discountAmount,
-      couponCode: couponCode || null,
+      couponCode: appliedCouponCode,
     };
 
     // Fetch settings once for currency and payment config
@@ -431,18 +432,22 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     const storeCurrencyCode = settingsMap.currency || 'EUR';
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://hlghausgeraete.de';
 
+    const resolvedStripeSecretKey = process.env.STRIPE_SECRET_KEY || settingsMap['STRIPE_SECRET_KEY'];
+    const resolvedPaypalClientId = process.env.PAYPAL_CLIENT_ID || settingsMap['PAYPAL_CLIENT_ID'];
+    const resolvedPaypalSecret = process.env.PAYPAL_SECRET || settingsMap['PAYPAL_SECRET'];
+
     // Helper to determine the best active fallback payment method
     const getFallbackPayment = () => {
       if (settingsMap.ENABLE_BANK_TRANSFER !== 'false') return 'BANK_TRANSFER';
-      if (settingsMap.ENABLE_STRIPE !== 'false' && settingsMap.STRIPE_SECRET_KEY && settingsMap.STRIPE_SECRET_KEY.startsWith('sk_')) return 'STRIPE';
-      if (settingsMap.ENABLE_PAYPAL !== 'false' && settingsMap.PAYPAL_CLIENT_ID && settingsMap.PAYPAL_SECRET) return 'PAYPAL';
+      if (settingsMap.ENABLE_STRIPE !== 'false' && resolvedStripeSecretKey && resolvedStripeSecretKey.startsWith('sk_')) return 'STRIPE';
+      if (settingsMap.ENABLE_PAYPAL !== 'false' && resolvedPaypalClientId && resolvedPaypalSecret) return 'PAYPAL';
       return null;
     };
 
     // ===== PRE-VALIDATE PAYMENT GATEWAY CONFIGURATION BEFORE CREATING ORDER =====
     // If a gateway is missing credentials, do NOT create a ghost order in DB!
     if (paymentMethod === 'STRIPE') {
-      const stripeSecretKey = settingsMap['STRIPE_SECRET_KEY'];
+      const stripeSecretKey = resolvedStripeSecretKey;
       if (!stripeSecretKey || !stripeSecretKey.startsWith('sk_')) {
         // Trigger live supervision alert (email + in-app)
         const { sendAdminAlertEmail } = await import('@/lib/mailer');
@@ -472,8 +477,8 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
         };
       }
     } else if (paymentMethod === 'PAYPAL') {
-      const paypalClientId = settingsMap['PAYPAL_CLIENT_ID'];
-      const paypalSecret = settingsMap['PAYPAL_SECRET'];
+      const paypalClientId = resolvedPaypalClientId;
+      const paypalSecret = resolvedPaypalSecret;
       if (!paypalClientId || !paypalSecret) {
         // Trigger live supervision alert (email + in-app)
         const { sendAdminAlertEmail } = await import('@/lib/mailer');
@@ -526,67 +531,67 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
 
     // ===== PAYMENT METHOD HANDLING =====
     if (paymentMethod === 'STRIPE') {
-      const stripeSecretKey = settingsMap['STRIPE_SECRET_KEY'];
+      const stripeSecretKey = resolvedStripeSecretKey!;
       try {
         const { default: Stripe } = await import('stripe');
-      const stripe = new Stripe(stripeSecretKey);
-      const currency = storeCurrencyCode.toLowerCase();
+        const stripe = new Stripe(stripeSecretKey);
+        const currency = storeCurrencyCode.toLowerCase();
 
-      const lineItems: any[] = verifiedItems.map(item => ({
-        price_data: {
-          currency,
-          product_data: {
-            name: item.title,
-            images: item.image && /^https:\/\//.test(item.image) ? [item.image] : [],
-          },
-          unit_amount: Math.round(item.price * 100),
-        },
-        quantity: item.quantity,
-      }));
-
-      // Charge shipping (amount paid == order total)
-      if (shippingRate > 0) {
-        lineItems.push({
+        const lineItems: any[] = verifiedItems.map(item => ({
           price_data: {
             currency,
-            product_data: { name: `Versand (${validZone.methods[0].type})` },
-            unit_amount: Math.round(shippingRate * 100),
+            product_data: {
+              name: item.title,
+              images: item.image && /^https:\/\//.test(item.image) ? [item.image] : [],
+            },
+            unit_amount: Math.round(item.price * 100),
           },
-          quantity: 1,
+          quantity: item.quantity,
+        }));
+
+        // Charge shipping (amount paid == order total)
+        if (shippingRate > 0) {
+          lineItems.push({
+            price_data: {
+              currency,
+              product_data: { name: `Versand (${validZone.methods[0].type})` },
+              unit_amount: Math.round(shippingRate * 100),
+            },
+            quantity: 1,
+          });
+        }
+
+        // Apply the server-verified coupon discount on Stripe as well
+        let discounts: any[] | undefined;
+        const discountCents = Math.round(discountAmount * 100);
+        if (discountCents > 0) {
+          const stripeCoupon = await stripe.coupons.create({
+            amount_off: discountCents,
+            currency,
+            duration: 'once',
+            max_redemptions: 1,
+            name: couponCode ? `Gutschein ${couponCode.toUpperCase()}` : 'Rabatt',
+          });
+          discounts = [{ coupon: stripeCoupon.id }];
+        }
+
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: lineItems,
+          ...(discounts ? { discounts } : {}),
+          mode: 'payment',
+          success_url: `${baseUrl}/checkout/success?orderId=${order.id}`,
+          cancel_url: `${baseUrl}/checkout?error=stripe_cancelled&method=STRIPE`,
+          client_reference_id: order.id,
+          customer_email: user.email,
         });
-      }
 
-      // Apply the server-verified coupon discount on Stripe as well
-      let discounts: any[] | undefined;
-      const discountCents = Math.round(discountAmount * 100);
-      if (discountCents > 0) {
-        const stripeCoupon = await stripe.coupons.create({
-          amount_off: discountCents,
-          currency,
-          duration: 'once',
-          max_redemptions: 1,
-          name: couponCode ? `Gutschein ${couponCode.toUpperCase()}` : 'Rabatt',
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { stripeSessionId: session.id }
         });
-        discounts = [{ coupon: stripeCoupon.id }];
-      }
 
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: lineItems,
-        ...(discounts ? { discounts } : {}),
-        mode: 'payment',
-        success_url: `${baseUrl}/checkout/success?orderId=${order.id}`,
-        cancel_url: `${baseUrl}/checkout?error=stripe_cancelled&method=STRIPE`,
-        client_reference_id: order.id,
-        customer_email: user.email,
-      });
-
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { stripeSessionId: session.id }
-      });
-
-      return { success: true, orderId: order.id, redirectUrl: session.url };
+        return { success: true, orderId: order.id, redirectUrl: session.url };
       } catch (stripeErr: any) {
         console.error("Stripe payment error:", stripeErr);
         return {
@@ -595,11 +600,11 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
           fallbackPaymentMethod: getFallbackPayment(),
         };
       }
-    } 
+    }
     else if (paymentMethod === 'PAYPAL') {
-      const paypalClientId = settingsMap['PAYPAL_CLIENT_ID'];
-      const paypalSecret = settingsMap['PAYPAL_SECRET'];
-      
+      const paypalClientId = resolvedPaypalClientId!;
+      const paypalSecret = resolvedPaypalSecret!;
+
       const auth = Buffer.from(`${paypalClientId}:${paypalSecret}`).toString('base64');
       const tokenRes = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
         method: 'POST',
@@ -609,7 +614,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-      
+
       const tokenData = await tokenRes.json();
       if (!tokenData.access_token) {
         return {
@@ -640,10 +645,10 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
           }
         })
       });
-      
+
       const orderData = await orderRes.json();
       const approveLink = orderData.links?.find((l: any) => l.rel === 'approve');
-      
+
       if (approveLink) {
         return { success: true, orderId: order.id, redirectUrl: approveLink.href };
       } else {
@@ -653,12 +658,12 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
           fallbackPaymentMethod: getFallbackPayment(),
         };
       }
-    } 
+    }
     else {
       // BANK_TRANSFER — Finalize immediately (no online payment to confirm)
       const { finalizeOrder } = await import('@/lib/orderFinalizer');
       await finalizeOrder(order.id).catch(e => console.error('Bank transfer finalization failed', e));
-      
+
       return { success: true, orderId: order.id, redirectUrl: '/checkout/success?orderId=' + order.id };
     }
 

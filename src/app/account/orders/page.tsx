@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function OrdersPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   const t = await getTranslations('AccountOrders');
   const locale = await getLocale();
 
@@ -41,7 +41,7 @@ export default async function OrdersPage() {
   }
 
   const dbUser = await prisma.user.findUnique({
-    where: { email: user.email! }
+    where: { id: user.id }
   });
 
   if (!dbUser) {
@@ -66,7 +66,7 @@ export default async function OrdersPage() {
           {orders.length} {orders.length === 1 ? 'Bestellung' : 'Bestellungen'}
         </span>
       </div>
-      
+
       {/* Mobile Orders List (Sleek Native Cards) */}
       <div className="block md:hidden divide-y divide-stone-100">
         {orders.length === 0 ? (
@@ -76,7 +76,7 @@ export default async function OrdersPage() {
         ) : (
           orders.map((order) => {
             const totalItems = order.orderItems.reduce((acc, item) => acc + item.quantity, 0);
-            
+
             return (
               <div key={order.id} className="p-4 space-y-3 bg-white">
                 <div className="flex items-center justify-between">
@@ -105,8 +105,8 @@ export default async function OrdersPage() {
                   <div className="font-black text-stone-900 text-base">
                     <Price amount={order.total} showTax={false} />
                   </div>
-                  <Link 
-                    href={`/account/orders/${order.id}`} 
+                  <Link
+                    href={`/account/orders/${order.id}`}
                     className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#107b46] hover:bg-[#0d6338] active:scale-95 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
                   >
                     <span>Bestellung ansehen</span>
@@ -141,7 +141,7 @@ export default async function OrdersPage() {
             ) : (
               orders.map((order) => {
                 const totalItems = order.orderItems.reduce((acc, item) => acc + item.quantity, 0);
-                
+
                 return (
                   <tr key={order.id} className="hover:bg-stone-50/80 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-stone-900">
@@ -166,8 +166,8 @@ export default async function OrdersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link 
-                        href={`/account/orders/${order.id}`} 
+                      <Link
+                        href={`/account/orders/${order.id}`}
                         className="inline-flex items-center justify-center px-3 py-1.5 bg-[#107b46] hover:bg-[#0d6338] text-white rounded-lg text-xs font-bold transition-colors"
                         title={t('view_order')}
                       >

@@ -7,11 +7,11 @@ import { updateSettingsBatch } from '@/actions/settings';
 export default function StoreFeaturesForm({ initialSettings }: { initialSettings: Record<string, string> }) {
   const tSettings = useTranslations('AdminSettings');
   const router = useRouter();
-  
+
   const [enableBuyNow, setEnableBuyNow] = useState(initialSettings.ENABLE_BUY_NOW_BUTTON === 'true');
-  const [contactReceiverEmail, setContactReceiverEmail] = useState(initialSettings.CONTACT_RECEIVER_EMAIL || 'cabeliminizenda@gmail.com');
+  const [contactReceiverEmail, setContactReceiverEmail] = useState(initialSettings.CONTACT_RECEIVER_EMAIL || 'info@hlghausgeraete.de');
   const [newsletterSuccessMessage, setNewsletterSuccessMessage] = useState(initialSettings.NEWSLETTER_SUCCESS_MESSAGE || 'Thank you for subscribing to our newsletter!');
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -19,7 +19,7 @@ export default function StoreFeaturesForm({ initialSettings }: { initialSettings
     e.preventDefault();
     setIsLoading(true);
     setMessage('');
-    
+
     await updateSettingsBatch({
       ENABLE_BUY_NOW_BUTTON: enableBuyNow.toString(),
       CONTACT_RECEIVER_EMAIL: contactReceiverEmail,

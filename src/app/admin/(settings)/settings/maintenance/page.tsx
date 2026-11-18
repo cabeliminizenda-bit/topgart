@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import MaintenanceForm from '@/components/admin/settings/MaintenanceForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function MaintenanceSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

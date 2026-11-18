@@ -14,10 +14,10 @@ export default async function OrderDetailsPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params;
-  
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   const t = await getTranslations('AccountOrders');
   const locale = await getLocale();
 
@@ -26,7 +26,7 @@ export default async function OrderDetailsPage({
   }
 
   const dbUser = await prisma.user.findUnique({
-    where: { email: user.email! }
+    where: { id: user.id }
   });
 
   if (!dbUser) {
@@ -88,7 +88,7 @@ export default async function OrderDetailsPage({
   if (order.destinationAddress && order.destinationAddress.startsWith('{')) {
     try {
       const parsed = JSON.parse(order.destinationAddress);
-      
+
       const shipObj = parsed.shipping || parsed;
       const billObj = parsed.billing || parsed;
 
@@ -96,7 +96,7 @@ export default async function OrderDetailsPage({
       if (shipObj.firstName || shipObj.lastName) {
         customerNameShipping = `${shipObj.firstName || ''} ${shipObj.lastName || ''}`.trim();
       }
-      
+
       // Billing Name
       if (billObj.firstName || billObj.lastName) {
         customerNameBilling = `${billObj.firstName || ''} ${billObj.lastName || ''}`.trim();
@@ -104,23 +104,23 @@ export default async function OrderDetailsPage({
 
       // Phone
       if (billObj.phone) {
-         customerPhone = billObj.phone;
+        customerPhone = billObj.phone;
       } else if (shipObj.phone) {
-         customerPhone = shipObj.phone;
+        customerPhone = shipObj.phone;
       } else if (parsed.phone) {
-         customerPhone = parsed.phone;
+        customerPhone = parsed.phone;
       }
-      
+
       // Email
       if (billObj.email) {
         customerEmail = billObj.email;
       }
-      
+
       // Totals
       if (parsed.subTotal) subTotalAmount = Number(parsed.subTotal);
       if (parsed.shippingCost !== undefined) shippingCostAmount = Number(parsed.shippingCost);
       else shippingCostAmount = order.total - subTotalAmount;
-      
+
       if (parsed.shippingMethodName) shippingMethodName = parsed.shippingMethodName;
 
       // Format Shipping
@@ -132,7 +132,7 @@ export default async function OrderDetailsPage({
       }
       if (shipObj.country) sParts.push(shipObj.country);
       if (sParts.length > 0) formattedShippingAddress = sParts.filter(Boolean).join('\n');
-      
+
       // Format Billing
       const bParts = [];
       if (billObj.address1) bParts.push(billObj.address1);
@@ -142,7 +142,7 @@ export default async function OrderDetailsPage({
       }
       if (billObj.country) bParts.push(billObj.country);
       if (bParts.length > 0) formattedBillingAddress = bParts.filter(Boolean).join('\n');
-      
+
     } catch (e) {
       formattedShippingAddress = order.destinationAddress;
       formattedBillingAddress = order.destinationAddress;
@@ -174,7 +174,7 @@ export default async function OrderDetailsPage({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
-      
+
       {/* Order Intro */}
       <p className="text-gray-600 mb-8 text-sm md:text-base">
         {t.rich('order_intro', {
@@ -187,7 +187,7 @@ export default async function OrderDetailsPage({
 
       {/* Order Details Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        
+
         {/* Articles — 2/3 */}
         <div className="lg:col-span-2">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -313,11 +313,11 @@ export default async function OrderDetailsPage({
           </div>
         </div>
       </div>
-      
+
       {order.trackingNumber && (
         <div className="mt-8 pt-6 border-t border-gray-100">
           <p className="text-gray-700">
-            <span className="font-bold mr-2">{t('tracking_number')} :</span> 
+            <span className="font-bold mr-2">{t('tracking_number')} :</span>
             <span className="bg-gray-100 px-3 py-1 rounded-md font-mono">{order.trackingNumber}</span>
           </p>
         </div>

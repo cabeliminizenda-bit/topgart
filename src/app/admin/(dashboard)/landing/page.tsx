@@ -1,9 +1,11 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getTranslations } from 'next-intl/server';
 import { getSettings } from '@/actions/settings';
 import { getCategories, getBrands } from '@/actions/admin';
 import LandingForm from './LandingForm';
 
 export default async function AdminLandingPage() {
+  await requireAdminPage();
   const t = await getTranslations('AdminLanding');
   const [initialSettings, categories, brands] = await Promise.all([
     getSettings(),

@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import LanguageForm from '@/components/admin/settings/LanguageForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function LanguageSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

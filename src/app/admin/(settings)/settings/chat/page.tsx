@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import ChatForm from '@/components/admin/settings/ChatForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function ChatSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

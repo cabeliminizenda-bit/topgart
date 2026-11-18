@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import NotFoundPageForm from '@/components/admin/settings/NotFoundPageForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function NotFoundPageSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

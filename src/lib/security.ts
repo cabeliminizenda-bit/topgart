@@ -107,3 +107,69 @@ export function maskPII(str: string) {
   if (!str) return "";
   return str.charAt(0) + "***" + str.slice(-1);
 }
+
+
+const SENSITIVE_SETTING_KEYS = new Set([
+  'STRIPE_SECRET_KEY',
+  'PAYPAL_SECRET',
+  'CRON_SECRET',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'SMTP_PASSWORD',
+  'SMTP_FROM',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'SETUP_TOKEN',
+  'NEWSLETTER_SUBSCRIBERS',
+  'PREVIEW_LAYOUT_DRAFT',
+  'PREVIEW_FONT_DRAFT',
+  'RESEND_API_KEY',
+  'CLOUDINARY_API_SECRET',
+  'WOOCOMMERCE_CONSUMER_SECRET',
+  'CONTACT_RECEIVER_EMAIL',
+  'CONTACT_FORM_RECIPIENT',
+]);
+
+/**
+ * Returns true if a Setting key holds credentials, PII, or internal drafts
+ * that must NEVER be exposed to non-admin callers or public caches.
+ */
+export function isSensitiveSettingKey(key: string): boolean {
+  if (!key) return true;
+  const upper = key.toUpperCase();
+  if (SENSITIVE_SETTING_KEYS.has(upper)) return true;
+  if (/(?:SECRET|PASSWORD|_PASS$|PRIVATE|SERVICE_ROLE|_TOKEN$|SUBSCRIBERS|API_KEY)/i.test(upper)) {
+    if (upper === 'STRIPE_PUBLISHABLE_KEY' || upper === 'PAYPAL_CLIENT_ID' || upper === 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY') {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Strip CR/LF control characters to prevent SMTP / email header injection.
+ */
+export function sanitizeEmailHeader(value: string): string {
+  return String(value || '').replace(/[\r\n\0]+/g, ' ').trim();
+}
+
+/**
+ * Safely escape content placed inside an XML <![CDATA[...]]> block.
+ */
+export function escapeXmlCdata(value: unknown): string {
+  return String(value ?? '').replace(/]]>/g, ']]]]><![CDATA[>');
+}
+
+/**
+ * Safely escape text/attribute content placed in XML elements.
+ */
+export function escapeXml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}

@@ -56,34 +56,50 @@ export async function POST(req: Request) {
           }))
       : [];
 
+    if (cartData.length === 0) {
+      return NextResponse.json({ error: 'Cart data is required' }, { status: 400 });
+    }
+
     const totalAmountNum = Number(body.totalAmount);
     const totalAmount = Number.isFinite(totalAmountNum) && totalAmountNum >= 0 && totalAmountNum < 1_000_000
       ? Math.round(totalAmountNum * 100) / 100
       : 0;
 
-    // Upsert the abandoned cart record
-    await prisma.abandonedCart.upsert({
-      where: { email },
-      update: {
-        firstName: firstName || undefined,
-        lastName: lastName || undefined,
-        phone: phone || undefined,
-        cartData,
-        totalAmount,
-        status: 'ABANDONED',
-        lastActive: new Date(),
-      },
-      create: {
-        email,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        phone: phone || null,
-        cartData,
-        totalAmount,
-        status: 'ABANDONED',
-        lastActive: new Date(),
-      },
-    });
+    // SECURITY (L6): Avoid overwriting existing PII or a recently recovered order record by unauthenticated callers
+    const existing = await prisma.abandonedCart.findUnique({ where: { email } });
+    if (existing) {
+      const recoveredRecently =
+        existing.status === 'RECOVERED' &&
+        Date.now() - existing.updatedAt.getTime() < 24 * 60 * 60 * 1000;
+      if (recoveredRecently) {
+        return NextResponse.json({ success: true });
+      }
+      await prisma.abandonedCart.update({
+        where: { email },
+        data: {
+          firstName: existing.firstName || firstName || undefined,
+          lastName: existing.lastName || lastName || undefined,
+          phone: existing.phone || phone || undefined,
+          cartData,
+          totalAmount,
+          status: 'ABANDONED',
+          lastActive: new Date(),
+        },
+      });
+    } else {
+      await prisma.abandonedCart.create({
+        data: {
+          email,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          phone: phone || null,
+          cartData,
+          totalAmount,
+          status: 'ABANDONED',
+          lastActive: new Date(),
+        },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

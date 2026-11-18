@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import SeoForm from '@/components/admin/settings/SeoForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function SeoSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getCategories } from '@/actions/admin';
 import Link from 'next/link';
 import ProductsTable from '@/components/admin/ProductsTable';
@@ -11,6 +12,7 @@ import { Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string }> }) {
+  await requireAdminPage();
   const t = await getTranslations('AdminProducts');
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page || '1', 10);

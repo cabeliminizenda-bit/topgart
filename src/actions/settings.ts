@@ -4,27 +4,20 @@ import prisma from '@/lib/prisma';
 import { revalidatePath, updateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/utils/supabase/server';
-
-const SENSITIVE_KEYS = new Set([
-  'STRIPE_SECRET_KEY',
-  'PAYPAL_SECRET',
-  'SMTP_PASS',
-]);
+import { isSensitiveSettingKey } from '@/lib/security';
 
 /**
  * Fetch settings map.
  *
- * SECURITY: If called without an active ADMIN session, sensitive credentials
- * (Stripe Secret Key, PayPal Secret, SMTP Password) are stripped to prevent
- * unauthorized extraction through Next.js Server Action RPCs.
+ * SECURITY (M3): If called without an active ADMIN session, all sensitive
+ * credentials, internal drafts, SMTP settings, and subscriber lists are stripped.
  */
 export async function getSettings() {
   const settings = await prisma.setting.findMany();
   const settingsMap: Record<string, string> = {};
-  
+
   let isAdmin = false;
   try {
-    const { requireAdmin } = await import('@/lib/auth');
     await requireAdmin();
     isAdmin = true;
   } catch {
@@ -42,12 +35,8 @@ export async function getSettings() {
     }
   }
 
-  // Liste des clés secrètes à ne jamais exposer au public
-  const hiddenKeys = ['STRIPE_SECRET_KEY', 'PAYPAL_SECRET', 'CRON_SECRET', 'SMTP_PASSWORD', 'SMTP_PASS'];
-
   settings.forEach(s => {
-    // Si l'utilisateur est admin, on envoie tout. Sinon, on filtre les clés secrètes.
-    if (isAdmin || (!hiddenKeys.includes(s.key) && !SENSITIVE_KEYS.has(s.key))) {
+    if (isAdmin || !isSensitiveSettingKey(s.key)) {
       settingsMap[s.key] = s.value;
     }
   });
@@ -81,7 +70,7 @@ export async function updateSettingsBatch(settingsMap: Record<string, string>) {
         create: { key, value }
       });
     });
-    
+
     await prisma.$transaction(transactions);
     revalidatePath('/', 'layout');
     updateTag('settings');
@@ -101,7 +90,7 @@ export async function saveThankYouSettings(settingsMap: Record<string, string>) 
         create: { key, value }
       });
     });
-    
+
     await prisma.$transaction(transactions);
 
     // Auto-sync the configured coupon code into prisma.coupon

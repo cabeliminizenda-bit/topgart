@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import DesignHeaderForm from '@/components/admin/settings/DesignHeaderForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function DesignHeaderSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

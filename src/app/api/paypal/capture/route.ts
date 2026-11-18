@@ -52,14 +52,20 @@ export async function GET(request: Request) {
       );
     }
 
-    // Fetch PayPal credentials from Settings DB
-    const [clientIdSetting, secretSetting] = await Promise.all([
-      prisma.setting.findUnique({ where: { key: 'PAYPAL_CLIENT_ID' } }),
-      prisma.setting.findUnique({ where: { key: 'PAYPAL_SECRET' } }),
-    ]);
+    // SECURITY (M4): Prefer PayPal credentials from env before Settings DB fallback
+    let paypalClientId = process.env.PAYPAL_CLIENT_ID;
+    let paypalSecret = process.env.PAYPAL_SECRET;
+    if (!paypalClientId || !paypalSecret) {
+      const [clientIdSetting, secretSetting] = await Promise.all([
+        prisma.setting.findUnique({ where: { key: 'PAYPAL_CLIENT_ID' } }),
+        prisma.setting.findUnique({ where: { key: 'PAYPAL_SECRET' } }),
+      ]);
+      paypalClientId = paypalClientId || clientIdSetting?.value;
+      paypalSecret = paypalSecret || secretSetting?.value;
+    }
 
-    if (!clientIdSetting?.value || !secretSetting?.value) {
-      console.error('[PayPal Capture] PayPal credentials not found in Settings');
+    if (!paypalClientId || !paypalSecret) {
+      console.error('[PayPal Capture] PayPal credentials not found in env or Settings');
       return NextResponse.redirect(
         new URL('/checkout?error=paypal_not_configured&method=PAYPAL', request.url)
       );
@@ -67,7 +73,7 @@ export async function GET(request: Request) {
 
     // Get PayPal access token
     const auth = Buffer.from(
-      `${clientIdSetting.value}:${secretSetting.value}`
+      `${paypalClientId}:${paypalSecret}`
     ).toString('base64');
 
     const tokenRes = await fetch(

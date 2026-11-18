@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import nodemailer from 'nodemailer';
 import prisma from '@/lib/prisma';
+import { maskPII, sanitizeEmailHeader } from '@/lib/security';
 
 // HTML escape utility to prevent XSS in email templates
 function escapeHtml(str: string): string {
@@ -51,23 +52,29 @@ async function getTransporter() {
   const logo = settings.HEADER_LOGO_IMAGE || settings.STYLE2_LOGO || '';
 
   // Clean from address: avoid gamingbm.com or bare 'resend' username
-  let from = settings.SMTP_FROM || `"${storeName}" <info@hlghausgeraete.de>`;
+  let from = process.env.SMTP_FROM || settings.SMTP_FROM || `"${storeName}" <info@hlghausgeraete.de>`;
   if (from.includes('gamingbm.com') || from.includes('<resend>')) {
     from = `"${storeName}" <info@hlghausgeraete.de>`;
   }
 
-  const resendApiKey = process.env.RESEND_API_KEY || settings.RESEND_API_KEY || (settings.SMTP_PASS?.startsWith('re_') ? settings.SMTP_PASS : null);
+  // SECURITY (M4): Prefer environment variables over plaintext DB settings
+  const smtpHost = process.env.SMTP_HOST || settings.SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT || settings.SMTP_PORT || '587';
+  const smtpUser = process.env.SMTP_USER || settings.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS || settings.SMTP_PASS;
+
+  const resendApiKey = process.env.RESEND_API_KEY || settings.RESEND_API_KEY || (smtpPass?.startsWith('re_') ? smtpPass : null);
 
   let transporter: any = null;
-  if (settings.SMTP_HOST && settings.SMTP_USER && settings.SMTP_PASS) {
+  if (smtpHost && smtpUser && smtpPass) {
     try {
       transporter = nodemailer.createTransport({
-        host: settings.SMTP_HOST,
-        port: parseInt(settings.SMTP_PORT || '587', 10),
-        secure: settings.SMTP_PORT === '465',
+        host: smtpHost,
+        port: parseInt(smtpPort, 10),
+        secure: smtpPort === '465',
         auth: {
-          user: settings.SMTP_USER,
-          pass: settings.SMTP_PASS,
+          user: smtpUser,
+          pass: smtpPass,
         },
       });
     } catch (e) {
@@ -100,7 +107,9 @@ export async function sendEmail({
   attachments?: any[];
   replyTo?: string;
 }) {
-  const targetEmail = String(to || '').trim().toLowerCase();
+  const targetEmail = sanitizeEmailHeader(String(to || '').trim().toLowerCase());
+  const safeSubject = sanitizeEmailHeader(subject);
+  const safeReplyTo = replyTo ? sanitizeEmailHeader(replyTo) : undefined;
   if (!targetEmail) {
     console.error('[sendEmail] Error: No recipient email specified.');
     return { success: false, error: 'Keine Empfänger-E-Mail angegeben.' };
@@ -128,15 +137,15 @@ export async function sendEmail({
         const resendPayload: any = {
           from,
           to: [targetEmail],
-          subject,
+          subject: safeSubject,
           html,
-          reply_to: replyTo || storeEmail,
+          reply_to: safeReplyTo || storeEmail,
         };
         if (formattedAttachments.length > 0) {
           resendPayload.attachments = formattedAttachments;
         }
 
-        console.log(`[sendEmail] Sending via Resend API to: ${targetEmail} | Subject: "${subject}"`);
+        console.log(`[sendEmail] Sending via Resend API to: ${maskPII(targetEmail)}`);
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -182,12 +191,12 @@ export async function sendEmail({
     // 2. Secondary delivery: Nodemailer SMTP
     if (transporter) {
       try {
-        console.log(`[sendEmail] Attempting SMTP delivery to: ${targetEmail}`);
+        console.log(`[sendEmail] Attempting SMTP delivery to: ${maskPII(targetEmail)}`);
         const info = await transporter.sendMail({
           from,
           to: targetEmail,
-          replyTo: replyTo || storeEmail,
-          subject,
+          replyTo: safeReplyTo || storeEmail,
+          subject: safeSubject,
           html,
           attachments,
         });
@@ -199,7 +208,7 @@ export async function sendEmail({
       }
     }
 
-    console.error(`[sendEmail] All email delivery attempts failed for: ${targetEmail}`);
+    console.error(`[sendEmail] All email delivery attempts failed for: ${maskPII(targetEmail)}`);
     return { success: false, error: 'E-Mail konnte über keinen Dienst versendet werden.' };
   } catch (error) {
     console.error('[sendEmail] Unexpected error in sendEmail:', error);

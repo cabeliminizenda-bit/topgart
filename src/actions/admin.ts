@@ -13,10 +13,28 @@ cloudinary.config({
 });
 
 // --- CLOUDINARY UPLOAD ---
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+  'image/svg+xml',
+]);
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+
 export async function uploadImage(formData: FormData) {
   await requireAdmin();
   const file = formData.get('file') as File;
   if (!file) return null;
+
+  // SECURITY (L3): Validate MIME type and file size before uploading
+  if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
+    throw new Error('Type de fichier non autorisé. Seules les images sont acceptées.');
+  }
+  if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
+    throw new Error('Fichier trop volumineux (max 10 Mo).');
+  }
 
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);

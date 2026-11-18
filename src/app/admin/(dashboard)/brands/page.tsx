@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getBrands } from '@/actions/admin';
 import BrandCreateForm from '@/components/admin/BrandCreateForm';
 import BrandTable from '@/components/admin/BrandTable';
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BrandsPage() {
+  await requireAdminPage();
   const brands = await getBrands();
 
   return (

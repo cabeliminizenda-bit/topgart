@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getSettings } from '@/actions/settings';
 import RegionalForm from '@/components/admin/settings/RegionalForm';
 
@@ -6,6 +7,7 @@ export const metadata = {
 };
 
 export default async function RegionalSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
 
   return (

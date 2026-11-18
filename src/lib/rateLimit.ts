@@ -105,14 +105,19 @@ export async function checkRateLimit(
 export async function getClientIp(): Promise<string> {
   try {
     const headerList = await headers();
-    const forwarded = headerList.get('x-forwarded-for');
-    if (forwarded) {
-      // Return the first IP in the comma-separated chain
-      const clientIp = forwarded.split(',')[0].trim();
+    // Prefer trusted proxy headers set by Vercel / edge before generic x-forwarded-for
+    const vercelForwarded = headerList.get('x-vercel-forwarded-for');
+    if (vercelForwarded) {
+      const clientIp = vercelForwarded.split(',')[0].trim();
       if (clientIp) return clientIp;
     }
     const realIp = headerList.get('x-real-ip');
     if (realIp) return realIp.trim();
+    const forwarded = headerList.get('x-forwarded-for');
+    if (forwarded) {
+      const clientIp = forwarded.split(',')[0].trim();
+      if (clientIp) return clientIp;
+    }
   } catch {
     // If called outside of a request context
   }

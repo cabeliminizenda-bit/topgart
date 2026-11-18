@@ -26,12 +26,14 @@ import { getCatalogBrandSummaries } from '@/lib/brands';
 import PreviewSectionWrapper from '@/components/admin/PreviewSectionWrapper';
 import { cookies } from 'next/headers';
 import { getSettings } from '@/actions/settings';
+import { requireAdminPage } from '@/lib/auth';
 
 import prisma from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PreviewPage() {
+  await requireAdminPage();
   const draftLayoutSetting = await prisma.setting.findUnique({ where: { key: 'PREVIEW_LAYOUT_DRAFT' } });
   const draftFontSetting = await prisma.setting.findUnique({ where: { key: 'PREVIEW_FONT_DRAFT' } });
 

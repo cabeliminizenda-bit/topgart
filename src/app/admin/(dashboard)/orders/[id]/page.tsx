@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import DeliveryTracker from '@/components/admin/DeliveryTracker';
@@ -9,6 +10,7 @@ import Image from "next/image";
 export const dynamic = 'force-dynamic';
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   const { id } = await params;
   const t = await getTranslations('AdminOrders');
   const order = await prisma.order.findUnique({

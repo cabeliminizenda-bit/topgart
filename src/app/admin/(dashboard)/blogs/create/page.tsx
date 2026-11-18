@@ -1,9 +1,11 @@
+import { requireAdminPage } from '@/lib/auth';
 import BlogForm from '@/components/admin/BlogForm';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { getDistinctBlogCategories, getDistinctBlogAuthors } from '@/actions/blog';
 
 export default async function CreateBlogPage() {
+  await requireAdminPage();
   const t = await getTranslations('AdminBlogs');
   const [categories, authors] = await Promise.all([
     getDistinctBlogCategories(),

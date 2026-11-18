@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getTags } from '@/actions/admin';
 import TagCreateForm from '@/components/admin/TagCreateForm';
 import TagTable from '@/components/admin/TagTable';
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TagsPage() {
+  await requireAdminPage();
   const tags = await getTags();
 
   return (

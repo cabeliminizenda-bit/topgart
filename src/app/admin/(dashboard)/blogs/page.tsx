@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import Link from 'next/link';
 import BlogTable from '@/components/admin/BlogTable';
 import AdminPagination from '@/components/admin/AdminPagination';
@@ -7,6 +8,7 @@ import prisma from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export default async function BlogsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  await requireAdminPage();
   const t = await getTranslations('AdminBlogs');
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page || '1', 10);

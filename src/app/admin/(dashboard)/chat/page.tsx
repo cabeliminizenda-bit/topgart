@@ -1,8 +1,10 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getTranslations } from 'next-intl/server';
 import { getAdminSessions } from '@/actions/chat';
 import AdminChatClient from './AdminChatClient';
 
 export default async function AdminChatPage() {
+  await requireAdminPage();
   const t = await getTranslations('AdminChat');
   const initialSessions = await getAdminSessions();
 

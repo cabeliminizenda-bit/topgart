@@ -26,13 +26,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get Stripe secret key from Settings DB
-    const stripeSecretSetting = await prisma.setting.findUnique({
-      where: { key: 'STRIPE_SECRET_KEY' },
-    });
+    // SECURITY (M4): Prefer STRIPE_SECRET_KEY from environment variables before DB Settings fallback
+    let stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      const stripeSecretSetting = await prisma.setting.findUnique({
+        where: { key: 'STRIPE_SECRET_KEY' },
+      });
+      stripeSecretKey = stripeSecretSetting?.value;
+    }
 
-    if (!stripeSecretSetting?.value) {
-      console.error('[Stripe Webhook] STRIPE_SECRET_KEY not found in Settings');
+    if (!stripeSecretKey) {
+      console.error('[Stripe Webhook] STRIPE_SECRET_KEY not found in env or Settings');
       return NextResponse.json(
         { error: 'Stripe not configured' },
         { status: 500 }
@@ -51,7 +55,7 @@ export async function POST(request: Request) {
 
     // Verify webhook signature
     const Stripe = require('stripe');
-    const stripe = new Stripe(stripeSecretSetting.value);
+    const stripe = new Stripe(stripeSecretKey);
 
     let event;
     try {

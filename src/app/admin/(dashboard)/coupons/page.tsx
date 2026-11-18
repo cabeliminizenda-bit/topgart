@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getTranslations } from 'next-intl/server';
 import { createCoupon } from '@/actions/admin';
 import CouponTable from '@/components/admin/CouponTable';
@@ -7,6 +8,7 @@ import prisma from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export default async function CouponsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  await requireAdminPage();
   const t = await getTranslations('AdminCoupons');
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page || '1', 10);

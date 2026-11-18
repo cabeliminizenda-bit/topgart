@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import { getShippingZones } from '@/actions/shipping';
 import ShippingManager from './ShippingManager';
 import { getTranslations } from 'next-intl/server';
@@ -7,6 +8,7 @@ export const metadata = {
 };
 
 export default async function ShippingPage() {
+  await requireAdminPage();
   const t = await getTranslations('AdminShipping');
   const initialZones = await getShippingZones();
 

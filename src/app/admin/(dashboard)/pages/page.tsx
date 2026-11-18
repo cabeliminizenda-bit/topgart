@@ -1,3 +1,4 @@
+import { requireAdminPage } from '@/lib/auth';
 import Link from 'next/link';
 import { deletePage } from '@/actions/pages';
 import AdminPagination from '@/components/admin/AdminPagination';
@@ -8,6 +9,7 @@ import { getContactSettings } from '@/actions/contactSettings';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPagesList({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  await requireAdminPage();
   const t = await getTranslations('AdminPages');
   const contactSettings = await getContactSettings();
   const resolvedParams = await searchParams;
