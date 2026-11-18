@@ -17,6 +17,7 @@ import {
   importWordPressArticles,
   importWooCommerceShipping,
   syncWooCommerceRankMathSEO,
+  type WcDuplicatePolicy,
   type WcProductImportItemResult
 } from '@/actions/woocommerce';
 
@@ -89,6 +90,11 @@ export default function WooCommerceImportModal() {
   const [summaryTabFilter, setSummaryTabFilter] = useState<FilterTab>('ALL');
   const [summarySearch, setSummarySearch] = useState('');
   const [copiedErrors, setCopiedErrors] = useState(false);
+
+  // Individual / force re-import policy & per-item loading state
+  const [duplicatePolicy, setDuplicatePolicy] = useState<'update' | 'create_new'>('create_new');
+  const [importingSingleIds, setImportingSingleIds] = useState<number[]>([]);
+  const [singleImportError, setSingleImportError] = useState<Record<number, string>>({});
 
   // Auto-scroll live logs during import
   useEffect(() => {
@@ -187,12 +193,98 @@ export default function WooCommerceImportModal() {
   };
 
   const handleSelectAllVisibleProducts = () => {
+    const visibleIds = availableProducts.map(p => p.id);
     const unimportedIds = availableProducts.filter(p => !p.alreadyImported).map(p => p.id);
-    const allSelected = unimportedIds.every(id => selectedProductIds.includes(id));
+    const targetIds = unimportedIds.length > 0 ? unimportedIds : visibleIds;
+    const allSelected = targetIds.length > 0 && targetIds.every(id => selectedProductIds.includes(id));
     if (allSelected) {
-      setSelectedProductIds(prev => prev.filter(id => !unimportedIds.includes(id)));
+      setSelectedProductIds(prev => prev.filter(id => !targetIds.includes(id)));
     } else {
-      setSelectedProductIds(prev => Array.from(new Set([...prev, ...unimportedIds])));
+      setSelectedProductIds(prev => Array.from(new Set([...prev, ...targetIds])));
+    }
+  };
+
+  // Direct 1-click individual import for a single product (works for "Already exist" items in both Individual list & Summary modal)
+  const handleImportSingleProduct = async (productId: number, policyOverride?: WcDuplicatePolicy) => {
+    if (!url || !consumerKey || !consumerSecret || importingSingleIds.includes(productId)) return;
+
+    const effectivePolicy: WcDuplicatePolicy = policyOverride || duplicatePolicy;
+    setImportingSingleIds(prev => [...prev, productId]);
+    setSingleImportError(prev => {
+      const next = { ...prev };
+      delete next[productId];
+      return next;
+    });
+
+    try {
+      const res = await importWooCommerceSelectedProducts(
+        url,
+        consumerKey,
+        consumerSecret,
+        [productId],
+        effectivePolicy
+      );
+
+      if (!res.success) {
+        setSingleImportError(prev => ({
+          ...prev,
+          [productId]: res.message || 'Fehler beim Einzelimport.'
+        }));
+        return;
+      }
+
+      const itemResult = res.results?.[0];
+      if (itemResult && itemResult.status === 'FAILED') {
+        setSingleImportError(prev => ({
+          ...prev,
+          [productId]: itemResult.error || 'Import fehlgeschlagen.'
+        }));
+        return;
+      }
+
+      // Update summary logs & counters if present
+      setImportLogs(prev => {
+        let updated = false;
+        const next = prev.map(log => {
+          if (log.id === productId && (log.status === 'ALREADY_EXISTS' || log.status === 'FAILED')) {
+            updated = true;
+            return {
+              ...log,
+              status: 'SUCCESS' as const,
+              error: undefined,
+              image: itemResult?.image || log.image,
+              price: itemResult?.price ?? log.price
+            };
+          }
+          return log;
+        });
+
+        if (updated) {
+          const success = next.filter(i => i.status === 'SUCCESS').length;
+          const alreadyExists = next.filter(i => i.status === 'ALREADY_EXISTS').length;
+          const failed = next.filter(i => i.status === 'FAILED').length;
+          setSummaryStats({ success, alreadyExists, failed, total: next.length });
+          setLiveSuccessCount(success);
+          setLiveAlreadyExistsCount(alreadyExists);
+          setLiveFailedCount(failed);
+        }
+
+        return next;
+      });
+
+      // Mark as imported in Individual list and uncheck it
+      setAvailableProducts(prev =>
+        prev.map(p => (p.id === productId ? { ...p, alreadyImported: true } : p))
+      );
+      setSelectedProductIds(prev => prev.filter(id => id !== productId));
+      router.refresh();
+    } catch (err: any) {
+      setSingleImportError(prev => ({
+        ...prev,
+        [productId]: err?.message || 'Unerwarteter Fehler beim Einzelimport.'
+      }));
+    } finally {
+      setImportingSingleIds(prev => prev.filter(id => id !== productId));
     }
   };
 
@@ -302,7 +394,13 @@ export default function WooCommerceImportModal() {
         }
 
         setTotalProducts(selectedProductIds.length);
-        const importRes = await importWooCommerceSelectedProducts(url, consumerKey, consumerSecret, selectedProductIds);
+        const importRes = await importWooCommerceSelectedProducts(
+          url,
+          consumerKey,
+          consumerSecret,
+          selectedProductIds,
+          duplicatePolicy
+        );
         
         if (!importRes.success) {
           setResultMessage({ type: 'error', text: t('import_error') + ': ' + importRes.message });
@@ -759,67 +857,123 @@ export default function WooCommerceImportModal() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-gray-500">
-                    <span>{selectedProductIds.length} produit(s) sélectionné(s) pour import</span>
-                    <span>Total distant : {totalRemoteProducts}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-amber-50/70 border border-amber-200/80 rounded-lg px-3 py-2 text-[11px]">
+                    <span className="font-semibold text-amber-900">
+                      Bei bereits vorhandenen Produkten:
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setDuplicatePolicy('create_new')}
+                        className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                          duplicatePolicy === 'create_new'
+                            ? 'bg-[#00a86b] text-white shadow-2xs'
+                            : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-50'
+                        }`}
+                      >
+                        Als neues Produkt anlegen
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDuplicatePolicy('update')}
+                        className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                          duplicatePolicy === 'update'
+                            ? 'bg-[#00a86b] text-white shadow-2xs'
+                            : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-50'
+                        }`}
+                      >
+                        Bestehendes aktualisieren
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white">
+                  <div className="flex items-center justify-between text-[11px] text-gray-500">
+                    <span>{selectedProductIds.length} Produkt(e) zum Import ausgewählt</span>
+                    <span>Gesamt im Remote-Shop: {totalRemoteProducts}</span>
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white">
                     {availableProducts.length === 0 ? (
-                      <p className="p-4 text-xs text-gray-400 text-center">Aucun produit trouvé.</p>
+                      <p className="p-4 text-xs text-gray-400 text-center">Keine Produkte gefunden.</p>
                     ) : (
-                      availableProducts.map(prod => (
-                        <div key={prod.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <input 
-                              type="checkbox"
-                              checked={selectedProductIds.includes(prod.id)}
-                              onChange={() => toggleProduct(prod.id)}
-                              disabled={prod.alreadyImported}
-                              className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 disabled:opacity-40"
-                            />
-                            {prod.image ? (
-                              <Image 
-                                src={prod.image} 
-                                alt="" 
-                                width={36} 
-                                height={36} 
-                                className="w-9 h-9 object-cover rounded-md border shrink-0 bg-gray-50" 
+                      availableProducts.map(prod => {
+                        const isImportingThis = importingSingleIds.includes(prod.id);
+                        const rowError = singleImportError[prod.id];
+                        return (
+                        <div key={prod.id} className="p-2.5 hover:bg-gray-50 space-y-1.5">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <input 
+                                type="checkbox"
+                                checked={selectedProductIds.includes(prod.id)}
+                                onChange={() => toggleProduct(prod.id)}
+                                className="rounded accent-[#00a86b] h-4 w-4 cursor-pointer"
                               />
-                            ) : (
-                              <div className="w-9 h-9 bg-gray-100 rounded-md shrink-0 flex items-center justify-center text-[10px] text-gray-400">
-                                No img
+                              {prod.image ? (
+                                <Image 
+                                  src={prod.image} 
+                                  alt="" 
+                                  width={36} 
+                                  height={36} 
+                                  className="w-9 h-9 object-cover rounded-md border shrink-0 bg-gray-50" 
+                                />
+                              ) : (
+                                <div className="w-9 h-9 bg-gray-100 rounded-md shrink-0 flex items-center justify-center text-[10px] text-gray-400">
+                                  Kein Bild
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold text-gray-900 truncate">
+                                  {prod.alreadyImported && (
+                                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 mr-1.5">
+                                      Already exist
+                                    </span>
+                                  )}
+                                  {prod.name}
+                                </p>
+                                <p className="text-[10px] text-gray-500">
+                                  {prod.categories.join(', ') || 'Ohne Kategorie'} &bull; <span className="font-bold text-gray-700">{prod.price} €</span>
+                                </p>
                               </div>
-                            )}
-                            <div className="min-w-0">
-                              <p className="text-xs font-semibold text-gray-900 truncate">
-                                {prod.alreadyImported && (
-                                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 mr-1.5">
-                                    Already exist
-                                  </span>
+                            </div>
+
+                            <div className="shrink-0 flex items-center gap-1.5">
+                              {selectedProductIds.includes(prod.id) && (
+                                <span className="text-[10px] font-bold text-[#00a86b] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                  Ausgewählt
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                disabled={isImportingThis}
+                                onClick={() => handleImportSingleProduct(prod.id)}
+                                className="px-2.5 py-1 bg-[#00a86b] hover:bg-[#008f5a] text-white text-[10.5px] font-semibold rounded-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1 whitespace-nowrap"
+                                title={
+                                  prod.alreadyImported
+                                    ? duplicatePolicy === 'create_new'
+                                      ? 'Trotzdem als neues Produkt importieren'
+                                      : 'Bestehendes Produkt mit WooCommerce-Daten aktualisieren'
+                                    : 'Dieses Produkt sofort einzeln importieren'
+                                }
+                              >
+                                {isImportingThis ? (
+                                  <>
+                                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span>Importiert...</span>
+                                  </>
+                                ) : (
+                                  <span>Einzeln importieren</span>
                                 )}
-                                {prod.name}
-                              </p>
-                              <p className="text-[10px] text-gray-500">
-                                {prod.categories.join(', ') || 'Sans catégorie'} &bull; <span className="font-bold text-gray-700">{prod.price}€</span>
-                              </p>
+                              </button>
                             </div>
                           </div>
-
-                          <div className="shrink-0">
-                            {prod.alreadyImported ? (
-                              <span className="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                <span>⚠️</span>
-                                <span>Already exist</span>
-                              </span>
-                            ) : selectedProductIds.includes(prod.id) ? (
-                              <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                                Sélectionné
-                              </span>
-                            ) : null}
-                          </div>
+                          {rowError && (
+                            <p className="text-[10px] text-rose-600 bg-rose-50 border border-rose-200 rounded px-2 py-1 ml-7">
+                              {rowError}
+                            </p>
+                          )}
                         </div>
-                      ))
+                      );})
                     )}
                   </div>
 
@@ -1182,16 +1336,52 @@ export default function WooCommerceImportModal() {
 
                 </div>
 
+                {/* Duplicate handling selector when Already exist items are present */}
+                {summaryStats.alreadyExists > 0 && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-amber-50/80 border border-amber-200 rounded-lg px-3 py-2 text-[11px]">
+                    <span className="font-semibold text-amber-900">
+                      Option für Einzelimport („Already exist“):
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setDuplicatePolicy('create_new')}
+                        className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                          duplicatePolicy === 'create_new'
+                            ? 'bg-[#00a86b] text-white shadow-2xs'
+                            : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-50'
+                        }`}
+                      >
+                        Als neues Produkt anlegen
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDuplicatePolicy('update')}
+                        className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                          duplicatePolicy === 'update'
+                            ? 'bg-[#00a86b] text-white shadow-2xs'
+                            : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-50'
+                        }`}
+                      >
+                        Bestehendes aktualisieren
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Items List */}
                 <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white">
                   {filteredSummaryLogs.length === 0 ? (
                     <div className="p-6 text-center text-gray-400 text-xs">
-                      Aucun produit ne correspond au filtre sélectionné.
+                      Keine Produkte für den gewählten Filter gefunden.
                     </div>
                   ) : (
-                    filteredSummaryLogs.map((item, idx) => (
-                      <div key={idx} className="p-3 hover:bg-gray-50 flex items-start justify-between gap-3 transition">
-                        <div className="flex items-start gap-3 min-w-0">
+                    filteredSummaryLogs.map((item, idx) => {
+                      const isImportingThis = importingSingleIds.includes(item.id);
+                      const rowError = singleImportError[item.id];
+                      return (
+                      <div key={`${item.id}-${idx}`} className="p-3 hover:bg-gray-50 flex items-start justify-between gap-3 transition">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
                           {item.image ? (
                             <img src={item.image} alt="" className="w-10 h-10 rounded-lg object-cover border shrink-0 bg-gray-50" />
                           ) : (
@@ -1199,7 +1389,7 @@ export default function WooCommerceImportModal() {
                               📦
                             </div>
                           )}
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               {item.status === 'ALREADY_EXISTS' && (
                                 <span className="font-extrabold text-[10px] uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
@@ -1210,34 +1400,58 @@ export default function WooCommerceImportModal() {
                               {item.status === 'SUCCESS' && (
                                 <span className="font-bold text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
                                   <span>✓</span>
-                                  <span>Importé</span>
+                                  <span>Importiert</span>
                                 </span>
                               )}
                               {item.status === 'FAILED' && (
                                 <span className="font-bold text-[10px] uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
                                   <span>✕</span>
-                                  <span>Échec</span>
+                                  <span>Fehlgeschlagen</span>
                                 </span>
                               )}
                               <p className="text-xs font-bold text-gray-900 truncate">
-                                {item.status === 'ALREADY_EXISTS' ? `[Already exist] ${item.name}` : item.name}
+                                {item.name}
                               </p>
                             </div>
                             
                             {item.status === 'FAILED' && item.error && (
                               <div className="mt-1.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-mono leading-relaxed">
-                                <span className="font-bold">Motif de l'échec :</span> {item.error}
+                                <span className="font-bold">Fehlerursache:</span> {item.error}
+                              </div>
+                            )}
+
+                            {rowError && (
+                              <div className="mt-1.5 p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10.5px]">
+                                {rowError}
                               </div>
                             )}
 
                             <p className="text-[10px] text-gray-500 mt-1">
-                              ID WooCommerce: <span className="font-mono">{item.id}</span>
-                              {item.price ? ` • Prix: ${item.price} €` : ''}
+                              WooCommerce-ID: <span className="font-mono">{item.id}</span>
+                              {item.price ? ` • Preis: ${item.price} €` : ''}
                             </p>
                           </div>
                         </div>
+
+                        {(item.status === 'ALREADY_EXISTS' || item.status === 'FAILED') && item.id > 0 && (
+                          <button
+                            type="button"
+                            disabled={isImportingThis}
+                            onClick={() => handleImportSingleProduct(item.id)}
+                            className="shrink-0 self-center px-3 py-1.5 bg-[#00a86b] hover:bg-[#008f5a] text-white text-[11px] font-semibold rounded-lg transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                          >
+                            {isImportingThis ? (
+                              <>
+                                <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Importiert...</span>
+                              </>
+                            ) : (
+                              <span>Einzeln importieren</span>
+                            )}
+                          </button>
+                        )}
                       </div>
-                    ))
+                    );})
                   )}
                 </div>
               </div>

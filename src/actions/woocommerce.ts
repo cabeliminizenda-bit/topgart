@@ -358,6 +358,8 @@ async function findOrCreateBrand(rawName: string, rawSlug?: string | null) {
 /**
  * Test WooCommerce API connection
  */
+export type WcDuplicatePolicy = 'skip' | 'update' | 'create_new';
+
 export type WcProductImportItemResult = {
   id: number;
   name: string;
@@ -490,26 +492,37 @@ export async function fetchWooCommerceProductsList(
       return { success: true, products: [], total: 0, totalPages: 0 };
     }
 
-    // Check which ones are already in local DB (comparing both decoded and raw titles)
-    const rawTitles = prods.map(p => p.name);
-    const decodedTitles = prods.map(p => unescapeHtml(p.name));
-    const allTitlesToCheck = Array.from(new Set([...rawTitles, ...decodedTitles]));
+    // Check which ones are already active in local DB (ignoring soft-deleted items, comparing title & slug)
+    const rawTitles = prods.map((p: any) => p.name);
+    const decodedTitles = prods.map((p: any) => unescapeHtml(p.name));
+    const allTitlesToCheck = Array.from(new Set([...rawTitles, ...decodedTitles].filter(Boolean)));
+    const allSlugsToCheck = Array.from(
+      new Set(prods.map((p: any) => p.slug || slugify(unescapeHtml(p.name || ''))).filter(Boolean))
+    );
 
     const existing = await prisma.product.findMany({
-      where: { title: { in: allTitlesToCheck } },
-      select: { title: true }
+      where: {
+        isDeleted: false,
+        OR: [
+          { title: { in: allTitlesToCheck } },
+          { slug: { in: allSlugsToCheck } }
+        ]
+      },
+      select: { title: true, slug: true }
     });
     const existingTitles = new Set(existing.map(e => e.title));
+    const existingSlugs = new Set(existing.map(e => e.slug));
 
     const products = prods.map((p: any) => {
       const decodedName = unescapeHtml(p.name);
+      const prodSlug = p.slug || slugify(decodedName);
       return {
         id: p.id,
         name: decodedName,
         price: p.price || p.regular_price || '0',
         image: (p.images && p.images[0]?.src) ? p.images[0].src : null,
         categories: (p.categories || []).map((c: any) => unescapeHtml(c.name)),
-        alreadyImported: existingTitles.has(decodedName) || existingTitles.has(p.name)
+        alreadyImported: existingTitles.has(decodedName) || existingTitles.has(p.name) || existingSlugs.has(prodSlug)
       };
     });
 
@@ -692,7 +705,8 @@ async function processAndSaveWcProducts(
   apiUrl: string,
   consumerKey: string,
   consumerSecret: string,
-  allowedCategoryIds?: number[]
+  allowedCategoryIds?: number[],
+  duplicatePolicy: WcDuplicatePolicy = 'skip'
 ): Promise<ProcessWcProductsResult> {
   let importedCount = 0;
   let alreadyExistsCount = 0;
@@ -711,20 +725,21 @@ async function processAndSaveWcProducts(
       // 1. Extract SEO metadata from RankMath / Yoast
       const seo = extractRankMathSEO(wcProduct.meta_data, wcProduct);
 
-      // Check if product with same title or slug already exists on destination site
+      // Check if an active (non-deleted) product with same title or slug already exists on destination site
       const baseSlug = wcProduct.slug || slugify(decodedTitle);
       const existingProduct = await prisma.product.findFirst({
         where: {
+          isDeleted: false,
           OR: [
             { title: decodedTitle },
             { title: rawTitle },
             { slug: baseSlug }
           ]
         },
-        select: { id: true, title: true }
+        select: { id: true, title: true, images: true }
       });
 
-      if (existingProduct) {
+      if (existingProduct && duplicatePolicy === 'skip') {
         // Synchronize SEO & GTIN metadata on existing product
         if (seo.metaTitle || seo.metaDescription || seo.gtin) {
           await prisma.product.update({
@@ -926,65 +941,112 @@ async function processAndSaveWcProducts(
         }
       }
 
-      // 8. Create Product in Prisma
-      const createdProduct = await prisma.product.create({
-        data: {
-          title: decodedTitle,
-          slug: uniqueSlug,
-          description: wcProduct.description || '',
-          shortDescription: wcProduct.short_description || '',
-          price: price,
-          compareAtPrice: (compareAtPrice > price) ? compareAtPrice : null,
-          images: cloudinaryImageUrls,
-          stock: stock,
-          type: wcProduct.type === 'variable' ? 'VARIABLE' : 'SIMPLE',
-          metaTitle: seo.metaTitle,
-          metaDescription: seo.metaDescription,
-          gtin: seo.gtin,
-          tags: {
-            connectOrCreate: tags.map((t: string) => ({
-              where: { name: t },
-              create: { name: t, slug: slugify(t) }
-            }))
+      // 8. Create or Update Product in Prisma
+      let savedProduct: { id: string };
+      if (existingProduct && duplicatePolicy === 'update') {
+        const finalImages =
+          cloudinaryImageUrls.length > 0 ? cloudinaryImageUrls : existingProduct.images;
+        savedProduct = await prisma.product.update({
+          where: { id: existingProduct.id },
+          data: {
+            title: decodedTitle,
+            description: wcProduct.description || '',
+            shortDescription: wcProduct.short_description || '',
+            price: price,
+            compareAtPrice: (compareAtPrice > price) ? compareAtPrice : null,
+            images: finalImages,
+            stock: stock,
+            type: wcProduct.type === 'variable' ? 'VARIABLE' : 'SIMPLE',
+            metaTitle: seo.metaTitle,
+            metaDescription: seo.metaDescription,
+            gtin: seo.gtin,
+            brandId: brandId,
+            attributes: parsedAttributes.length > 0 ? parsedAttributes : undefined,
+            variations: parsedVariations.length > 0 ? parsedVariations : undefined,
+            ...(categoryIds.length > 0
+              ? { categories: { set: categoryIds.map(id => ({ id })) } }
+              : {}),
+            ...(tags.length > 0
+              ? {
+                  tags: {
+                    set: [],
+                    connectOrCreate: tags.map((t: string) => ({
+                      where: { name: t },
+                      create: { name: t, slug: slugify(t) }
+                    }))
+                  }
+                }
+              : {}),
           },
-          brandId: brandId,
-          attributes: parsedAttributes.length > 0 ? parsedAttributes : undefined,
-          variations: parsedVariations.length > 0 ? parsedVariations : undefined,
-          categories: {
-            connect: categoryIds.map(id => ({ id }))
-          }
-        }
-      });
-
-      // 9. Import reviews
-      try {
-        const reviewsResponse = await fetch(`${apiUrl}/reviews?product=${wcProduct.id}`, {
-          headers: {
-            'Authorization': 'Basic ' + Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64'),
-            'Content-Type': 'application/json'
-          },
-          cache: 'no-store'
+          select: { id: true }
         });
+      } else {
+        savedProduct = await prisma.product.create({
+          data: {
+            title: decodedTitle,
+            slug: uniqueSlug,
+            description: wcProduct.description || '',
+            shortDescription: wcProduct.short_description || '',
+            price: price,
+            compareAtPrice: (compareAtPrice > price) ? compareAtPrice : null,
+            images: cloudinaryImageUrls,
+            stock: stock,
+            type: wcProduct.type === 'variable' ? 'VARIABLE' : 'SIMPLE',
+            metaTitle: seo.metaTitle,
+            metaDescription: seo.metaDescription,
+            gtin: seo.gtin,
+            tags: {
+              connectOrCreate: tags.map((t: string) => ({
+                where: { name: t },
+                create: { name: t, slug: slugify(t) }
+              }))
+            },
+            brandId: brandId,
+            attributes: parsedAttributes.length > 0 ? parsedAttributes : undefined,
+            variations: parsedVariations.length > 0 ? parsedVariations : undefined,
+            categories: {
+              connect: categoryIds.map(id => ({ id }))
+            }
+          },
+          select: { id: true }
+        });
+      }
 
-        if (reviewsResponse.ok) {
-          const wcReviews = await reviewsResponse.json();
-          if (Array.isArray(wcReviews) && wcReviews.length > 0) {
-            const reviewsToInsert = wcReviews
-              .filter(r => r.status === 'approved')
-              .map(r => ({
-                productId: createdProduct.id,
-                reviewerName: r.reviewer || null,
-                reviewerEmail: r.reviewer_email || null,
-                rating: r.rating || 5,
-                comment: r.review ? r.review.replace(/(<([^>]+)>)/gi, "") : '',
-                isApproved: true,
-                createdAt: new Date(r.date_created)
-              }));
+      // 9. Import reviews (only when creating a new product or if existing product has no reviews yet)
+      try {
+        const existingReviewsCount =
+          existingProduct && duplicatePolicy === 'update'
+            ? await prisma.review.count({ where: { productId: savedProduct.id } })
+            : 0;
+        if (existingReviewsCount === 0) {
+          const reviewsResponse = await fetch(`${apiUrl}/reviews?product=${wcProduct.id}`, {
+            headers: {
+              'Authorization': 'Basic ' + Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64'),
+              'Content-Type': 'application/json'
+            },
+            cache: 'no-store'
+          });
 
-            if (reviewsToInsert.length > 0) {
-              await prisma.review.createMany({
-                data: reviewsToInsert
-              });
+          if (reviewsResponse.ok) {
+            const wcReviews = await reviewsResponse.json();
+            if (Array.isArray(wcReviews) && wcReviews.length > 0) {
+              const reviewsToInsert = wcReviews
+                .filter(r => r.status === 'approved')
+                .map(r => ({
+                  productId: savedProduct.id,
+                  reviewerName: r.reviewer || null,
+                  reviewerEmail: r.reviewer_email || null,
+                  rating: r.rating || 5,
+                  comment: r.review ? r.review.replace(/(<([^>]+)>)/gi, "") : '',
+                  isApproved: true,
+                  createdAt: new Date(r.date_created)
+                }));
+
+              if (reviewsToInsert.length > 0) {
+                await prisma.review.createMany({
+                  data: reviewsToInsert
+                });
+              }
             }
           }
         }
@@ -1105,7 +1167,8 @@ export async function importWooCommerceSelectedProducts(
   url: string,
   consumerKey: string,
   consumerSecret: string,
-  productIds: number[]
+  productIds: number[],
+  duplicatePolicy: WcDuplicatePolicy = 'skip'
 ) {
   await requireAdmin();
 
@@ -1142,7 +1205,14 @@ export async function importWooCommerceSelectedProducts(
 
       const products = await response.json();
       if (Array.isArray(products) && products.length > 0) {
-        const batchResult = await processAndSaveWcProducts(products, apiUrl, consumerKey, consumerSecret);
+        const batchResult = await processAndSaveWcProducts(
+          products,
+          apiUrl,
+          consumerKey,
+          consumerSecret,
+          undefined,
+          duplicatePolicy
+        );
         totalImported += batchResult.importedCount;
         totalAlreadyExists += batchResult.alreadyExistsCount;
         totalFailed += batchResult.failedCount;
