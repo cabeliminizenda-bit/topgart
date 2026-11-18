@@ -83,7 +83,18 @@ export async function updateSettingsBatch(settingsMap: Record<string, string>) {
 export async function saveThankYouSettings(settingsMap: Record<string, string>) {
   await requireAdmin();
   try {
-    const transactions = Object.entries(settingsMap).map(([key, value]) => {
+    const rawAmount = String(settingsMap.THANKYOU_COUPON_AMOUNT || '15').replace(',', '.');
+    const parsedAmount = parseFloat(rawAmount);
+    const couponAmount = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : 15;
+    const couponCode = (settingsMap.THANKYOU_COUPON_CODE || 'WELCOME15').trim().toUpperCase();
+
+    const normalizedMap: Record<string, string> = {
+      ...settingsMap,
+      THANKYOU_COUPON_CODE: couponCode,
+      THANKYOU_COUPON_AMOUNT: String(couponAmount),
+    };
+
+    const transactions = Object.entries(normalizedMap).map(([key, value]) => {
       return prisma.setting.upsert({
         where: { key },
         update: { value },
@@ -94,8 +105,6 @@ export async function saveThankYouSettings(settingsMap: Record<string, string>) 
     await prisma.$transaction(transactions);
 
     // Auto-sync the configured coupon code into prisma.coupon
-    const couponCode = (settingsMap.THANKYOU_COUPON_CODE || 'WELCOME15').trim().toUpperCase();
-    const couponAmount = parseFloat(settingsMap.THANKYOU_COUPON_AMOUNT || '15') || 15;
     if (couponCode) {
       try {
         await prisma.coupon.upsert({
@@ -110,6 +119,7 @@ export async function saveThankYouSettings(settingsMap: Record<string, string>) 
 
     revalidatePath('/thank-you');
     revalidatePath('/danke');
+    revalidatePath('/admin/settings/thank-you');
     revalidatePath('/', 'layout');
     updateTag('settings');
     return { success: true };

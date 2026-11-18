@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveThankYouSettings } from '@/actions/settings';
 import Link from 'next/link';
@@ -12,13 +12,18 @@ interface ThankYouPageFormProps {
 export default function ThankYouPageForm({ initialSettings }: ThankYouPageFormProps) {
   const router = useRouter();
 
+  const initialAmount = initialSettings.THANKYOU_COUPON_AMOUNT || '15';
+  const lastNonEmptyAmountRef = useRef<string>(initialAmount);
+
   const [couponCode, setCouponCode] = useState(initialSettings.THANKYOU_COUPON_CODE || 'WELCOME15');
-  const [couponAmount, setCouponAmount] = useState(initialSettings.THANKYOU_COUPON_AMOUNT || '15');
+  const [couponAmount, setCouponAmount] = useState(initialAmount);
   const [badge, setBadge] = useState(initialSettings.THANKYOU_BADGE || 'Dein Willkommensgeschenk');
-  const [discountTitle, setDiscountTitle] = useState(initialSettings.THANKYOU_DISCOUNT_TITLE || '15 € Rabatt');
+  const [discountTitle, setDiscountTitle] = useState(
+    initialSettings.THANKYOU_DISCOUNT_TITLE || `${initialAmount} € Rabatt`
+  );
   const [discountDesc, setDiscountDesc] = useState(
     initialSettings.THANKYOU_DISCOUNT_DESC ||
-    'Sichere dir als Dankeschön für deine Newsletter-Anmeldung 15 € Rabatt auf deine nächste Bestellung!'
+    `Sichere dir als Dankeschön für deine Newsletter-Anmeldung ${initialAmount} € Rabatt auf deine nächste Bestellung!`
   );
   const [couponSubtitle, setCouponSubtitle] = useState(initialSettings.THANKYOU_COUPON_SUBTITLE || 'Einfach beim Bestellvorgang eingeben');
   const [infoTitle, setInfoTitle] = useState(initialSettings.THANKYOU_INFO_TITLE || 'Immer bestens informiert!');
@@ -34,15 +39,46 @@ export default function ThankYouPageForm({ initialSettings }: ThankYouPageFormPr
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  const syncAmountInText = (text: string, prevVal: string, nextVal: string) => {
+    if (prevVal) {
+      const escapedPrev = prevVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const exactRegex = new RegExp(`(^|\\s)${escapedPrev}(\\s*€)`, 'g');
+      if (exactRegex.test(text)) {
+        return text.replace(exactRegex, `$1${nextVal}$2`);
+      }
+    }
+    return text.replace(/(^|\s)\d+(?:[.,]\d+)?(\s*€)/, `$1${nextVal}$2`);
+  };
+
+  const handleCouponAmountChange = (rawVal: string) => {
+    const cleaned = rawVal.replace(/[^\d.,]/g, '');
+    setCouponAmount(cleaned);
+
+    const nextTrimmed = cleaned.trim();
+    const prevTrimmed = lastNonEmptyAmountRef.current;
+    if (nextTrimmed && nextTrimmed !== prevTrimmed) {
+      setDiscountTitle((curr) => syncAmountInText(curr, prevTrimmed, nextTrimmed));
+      setDiscountDesc((curr) => syncAmountInText(curr, prevTrimmed, nextTrimmed));
+      lastNonEmptyAmountRef.current = nextTrimmed;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage('');
     setError('');
 
+    const parsedAmount = parseFloat(couponAmount.replace(',', '.'));
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setIsLoading(false);
+      setError('Bitte geben Sie einen gültigen Rabattbetrag größer als 0 ein.');
+      return;
+    }
+
     const res = await saveThankYouSettings({
       THANKYOU_COUPON_CODE: couponCode.trim().toUpperCase(),
-      THANKYOU_COUPON_AMOUNT: couponAmount.trim(),
+      THANKYOU_COUPON_AMOUNT: String(parsedAmount),
       THANKYOU_BADGE: badge.trim(),
       THANKYOU_DISCOUNT_TITLE: discountTitle.trim(),
       THANKYOU_DISCOUNT_DESC: discountDesc.trim(),
@@ -114,7 +150,7 @@ export default function ThankYouPageForm({ initialSettings }: ThankYouPageFormPr
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                  Gutscheincode (Wird an der Kasse eingelöst)
+                  Gutscheincode
                 </label>
                 <input
                   type="text"
@@ -131,11 +167,10 @@ export default function ThankYouPageForm({ initialSettings }: ThankYouPageFormPr
                   Rabattbetrag in €
                 </label>
                 <input
-                  type="number"
-                  step="any"
-                  min="1"
+                  type="text"
+                  inputMode="decimal"
                   value={couponAmount}
-                  onChange={(e) => setCouponAmount(e.target.value)}
+                  onChange={(e) => handleCouponAmountChange(e.target.value)}
                   required
                   placeholder="z.B. 15"
                   className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 font-bold text-gray-900 focus:ring-2 focus:ring-[#107b46] focus:border-transparent outline-none"
