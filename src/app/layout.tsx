@@ -109,10 +109,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   };
   const contactSlug = settingsMap.CONTACT_SLUG || 'kontakt';
   const defaultMenuLinks = [
-    { label: 'Startseite', url: '/' },
-    { label: 'Shop', url: '/shop' },
-    { label: 'Kontakt', url: `/${contactSlug}` },
-    { label: 'Rückgabe & Erstattung', url: '/rueckgabe-und-erstattung' },
+    { label: 'AGB', url: '/agb' },
+    { label: 'ZAHLUNGSART', url: '/zahlungsinformationen' },
+    { label: 'ÜBER UNS', url: '/ueber-uns' },
+    { label: 'KONTAKT', url: `/${contactSlug}` },
+    { label: 'BLOG', url: '/blog' },
+    { label: 'BESTELLUNG VERFOLGEN', url: '/order-tracking' },
   ];
 
   let menuLinks = defaultMenuLinks;
@@ -159,7 +161,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   const storeSettings = {
     announcement: settingsMap.HEADER_ANNOUNCEMENT_TEXT || settingsMap.HEADER_ANNOUNCEMENT || 'Willkommen bei Top Gartengeräte • Kostenloser Versand ab 200 € • 2 Jahre Garantie',
-    logoImage: settingsMap.HEADER_LOGO_IMAGE && settingsMap.HEADER_LOGO_IMAGE !== '/logo.png' && settingsMap.HEADER_LOGO_IMAGE !== '/logo.jpg' && settingsMap.HEADER_LOGO_IMAGE !== '/LOGO-HLG-HAUSGERAETE.png' ? settingsMap.HEADER_LOGO_IMAGE : '/logo-top-gartengeraete.svg',
+    logoImage: settingsMap.HEADER_LOGO_IMAGE && settingsMap.HEADER_LOGO_IMAGE !== '/logo.png' && settingsMap.HEADER_LOGO_IMAGE !== '/logo.jpg' && settingsMap.HEADER_LOGO_IMAGE !== '/LOGO-HLG-HAUSGERAETE.png' ? settingsMap.HEADER_LOGO_IMAGE : '/logo-top-gartengeraete-dark.svg',
     supportPhone: settingsMap.FOOTER_SUPPORT_PHONE ?? settingsMap.HEADER_SUPPORT_PHONE ?? '',
     supportEmail: settingsMap.FOOTER_SUPPORT_EMAIL ?? settingsMap.HEADER_SUPPORT_EMAIL ?? 'kontakt@topgartengeraete.de',
     menuLinks: menuLinks,
@@ -179,7 +181,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     footerNewsletterText: settingsMap.FOOTER_NEWSLETTER_TEXT || 'Abonnieren Sie unseren Newsletter für exklusive Angebote und Gutscheine.',
     footerNewsletterPlaceholder: settingsMap.FOOTER_NEWSLETTER_PLACEHOLDER || 'Ihre E-Mail-Adresse...',
     footerCallUsText: settingsMap.FOOTER_CALL_US_TEXT || 'Kundenservice',
-    footerCopyright: settingsMap.FOOTER_COPYRIGHT || `© 2026 ${storeName}. Alle Rechte vorbehalten.`,
+    footerCopyright: settingsMap.FOOTER_COPYRIGHT || `© 2026 TOP GARTENGERÄTE`,
     footerSocialFacebook: settingsMap.FOOTER_SOCIAL_FACEBOOK || '#',
     footerSocialTwitter: settingsMap.FOOTER_SOCIAL_TWITTER || '#',
     footerSocialInstagram: settingsMap.FOOTER_SOCIAL_INSTAGRAM || '#',
@@ -201,11 +203,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     maintenanceTitle: settingsMap.MAINTENANCE_TITLE || 'Geschäft in Wartung',
     maintenanceMessage: settingsMap.MAINTENANCE_MESSAGE || 'Wir aktualisieren derzeit unseren Katalog. Wir sind in Kürze wieder für Sie da!',
     maintenanceImage: settingsMap.MAINTENANCE_IMAGE || '',
-    searchBorderColor: settingsMap.SEARCH_BORDER_COLOR || '#d1d5db',
-    searchPlaceholder: settingsMap.SEARCH_PLACEHOLDER || 'Produkt suchen .....',
-    searchBtnText: settingsMap.SEARCH_BTN_TEXT || 'Suchen',
-    searchBtnBgColor: settingsMap.SEARCH_BTN_BG_COLOR || '#f59e0b',
-    searchBtnTextColor: settingsMap.SEARCH_BTN_TEXT_COLOR || '#111827',
+    searchBorderColor: settingsMap.SEARCH_BORDER_COLOR || '#e5e7eb',
+    searchPlaceholder: settingsMap.SEARCH_PLACEHOLDER || 'Produkte suchen...',
+    searchBtnText: settingsMap.SEARCH_BTN_TEXT || 'Suche',
+    searchBtnBgColor: settingsMap.SEARCH_BTN_BG_COLOR || '#00a86b',
+    searchBtnTextColor: settingsMap.SEARCH_BTN_TEXT_COLOR || '#ffffff',
     showNew: newProductsCount > 0,
     showHot: hotProductsCount >= 3,
     showSale: saleProductsCount > 0,
@@ -319,7 +321,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             })
           }}
         />
-        <ThemeProvider themeColor={settingsMap.THEME_COLOR || '#107b46'} />
+        <ThemeProvider themeColor={settingsMap.THEME_COLOR || '#00a86b'} />
         <ZoomController />
         <NextIntlClientProvider messages={messages} locale={locale}>
           <PostHogProvider>

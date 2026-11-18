@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useEffect, useState, useRef, useSyncExternalStore } from 'react';
@@ -10,7 +10,6 @@ import dynamic from 'next/dynamic';
 import { searchProducts } from '@/actions/public';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import MobileHeaderBar from '@/components/layout/MobileHeaderBar';
-import { useTranslations } from 'next-intl';
 import Price from '@/components/Price';
 import { getUserRole } from '@/actions/auth';
 
@@ -57,53 +56,48 @@ type HeaderProps = {
 
 const emptySubscribe = () => () => {};
 
-const applianceCategoriesList = [
+const gardenCategoriesList = [
   { name: 'Alle Kategorien', slug: 'all' },
-  { name: 'Rasenmäher', slug: 'rasenmaeher' },
+  { name: 'Rasentraktoren', slug: 'rasentraktoren' },
   { name: 'Mähroboter', slug: 'maehroboter' },
-  { name: 'Aufsitzmäher', slug: 'aufsitzmaeher' },
-  { name: 'Motorsägen', slug: 'motorsagen' },
-  { name: 'Heckenscheren', slug: 'heckenscheren' },
-  { name: 'Rasentrimmer & Motorsensen', slug: 'rasentrimmer-motorsensen' },
-  { name: 'Laubbläser & Laubsauger', slug: 'laubblaeser-laubsauger' },
-  { name: 'Hochdruckreiniger', slug: 'hochdruckreiniger' },
-  { name: 'Vertikutierer', slug: 'vertikutierer' },
-  { name: 'Gartenhäcksler', slug: 'gartenhaecksler' },
+  { name: 'Rasenmäher', slug: 'rasenmaeher' },
+  { name: 'Kettensäge & Rasentrimmer', slug: 'kettensaege-rasentrimmer' },
+  { name: 'Hochlader', slug: 'hochlader' },
+  { name: 'Zubehör', slug: 'zubehoer' },
+  { name: 'Zubehör für Gartengeräte', slug: 'zubehoer-fuer-gartengeraete' },
+];
+
+const topUtilityLinks = [
+  { label: 'AGB', url: '/agb' },
+  { label: 'Blog', url: '/blog' },
+  { label: 'Versand', url: '/lieferzeiten' },
+  { label: 'Widerrufsbelehrung', url: '/rueckgabe-und-erstattung' },
+];
+
+const defaultNavLinks = [
+  { label: 'AGB', url: '/agb' },
+  { label: 'ZAHLUNGSART', url: '/zahlungsinformationen' },
+  { label: 'ÜBER UNS', url: '/ueber-uns' },
+  { label: 'KONTAKT', url: '/kontakt' },
+  { label: 'BLOG', url: '/blog' },
+  { label: 'BESTELLUNG VERFOLGEN', url: '/order-tracking' },
 ];
 
 export default function Header({
-  announcement = 'Willkommen bei Top Gartengeräte • Kostenloser Versand ab 200 €',
-  logoImage = '/logo-top-gartengeraete.svg',
-  headerLogoHeight = '48',
-  mobileLogoHeight = '40',
+  logoImage = '/logo-top-gartengeraete-dark.svg',
   menuLinks = [],
-  topBarLinks = [],
-  loginText,
-  myAccountText,
-  adminDashboardText,
-  topBarBgColor = '#ffffff',
-  topBarTextColor = '#4b5563',
   categories = [],
-  searchBorderColor = '#d1d5db',
-  searchPlaceholder = 'Produkt suchen .....',
-  searchBtnText = 'Suchen',
-  searchBtnBgColor = '#f59e0b',
-  searchBtnTextColor = '#111827',
-  showNew = true,
-  showHot = true,
-  showSale = true,
-  mobileAboutTitle = '',
-  mobileAboutDesc = '',
-  mobileMenuLinks = [],
+  searchPlaceholder = 'Produkte suchen...',
+  searchBtnText = 'Suche',
   mobileContactAddress = '',
-  mobileContactPhone = '',
   mobileContactEmail = '',
-  mobileContactWebsite = '',
   supportEmail = '',
-  mobileHeaderBorderColor = '#d1d5db',
   userRole = null,
 }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -119,6 +113,7 @@ export default function Header({
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isShopMenuOpen, setIsShopMenuOpen] = useState(false);
   const [actualUserRole, setActualUserRole] = useState<'ADMIN' | 'CUSTOMER' | null>(userRole);
 
   // Search state
@@ -126,15 +121,17 @@ export default function Header({
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCategoryLabel, setSelectedCategoryLabel] = useState('Alle Kategorien');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  const shopMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getUserRole().then(role => {
+    getUserRole().then((role) => {
       setActualUserRole(role as 'ADMIN' | 'CUSTOMER' | null);
     });
   }, []);
@@ -148,6 +145,9 @@ export default function Header({
       if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
         setIsCategoryDropdownOpen(false);
       }
+      if (shopMenuRef.current && !shopMenuRef.current.contains(event.target as Node)) {
+        setIsShopMenuOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
 
@@ -156,26 +156,29 @@ export default function Header({
     };
   }, []);
 
-  const searchCategories = categories && categories.length > 0
-    ? [
-        { name: 'Alle Kategorien', value: 'all', isChild: false },
-        ...categories
-          .filter((cat) => {
-            const slugLower = (cat.slug || '').toLowerCase();
-            const nameLower = cat.name.toLowerCase();
-            return slugLower !== 'uncategorized' && nameLower !== 'uncategorized' && nameLower !== 'allgemein';
-          })
-          .map((cat) => ({
-            name: cat.name,
-            value: cat.slug || cat.id,
-            isChild: Boolean(cat.parentId),
-          })),
-      ]
-    : applianceCategoriesList.map((cat) => ({
-        name: cat.name,
-        value: cat.slug,
-        isChild: false,
-      }));
+  const searchCategories =
+    categories && categories.length > 0
+      ? [
+          { name: 'Alle Kategorien', value: 'all', isChild: false },
+          ...categories
+            .filter((cat) => {
+              const slugLower = (cat.slug || '').toLowerCase();
+              const nameLower = cat.name.toLowerCase();
+              return slugLower !== 'uncategorized' && nameLower !== 'uncategorized' && nameLower !== 'allgemein';
+            })
+            .map((cat) => ({
+              name: cat.name,
+              value: cat.slug || cat.id,
+              isChild: Boolean(cat.parentId),
+            })),
+        ]
+      : gardenCategoriesList.map((cat) => ({
+          name: cat.name,
+          value: cat.slug,
+          isChild: false,
+        }));
+
+  const shopDropdownCategories = searchCategories.filter((c) => c.value !== 'all').slice(0, 10);
 
   // Debounced Search Effect
   useEffect(() => {
@@ -184,7 +187,11 @@ export default function Header({
         setIsSearching(true);
         setShowSearchResults(true);
         try {
-          const results = await searchProducts(searchQuery, selectedCategory === 'all' ? '' : selectedCategory, 6);
+          const results = await searchProducts(
+            searchQuery,
+            selectedCategory === 'all' ? '' : selectedCategory,
+            6
+          );
           setSearchResults(results);
         } catch (error) {
           console.error('Search error', error);
@@ -216,21 +223,16 @@ export default function Header({
     }
   };
 
-  const navLinks = menuLinks && menuLinks.length > 0 ? menuLinks : [
-    { label: 'Startseite', url: '/' },
-    { label: 'Shop', url: '/shop' },
-    { label: 'Kontakt', url: '/kontakt' },
-    { label: 'Rückgabe & Erstattung', url: '/rueckgabe-und-erstattung' },
-  ];
+  const navLinks = menuLinks && menuLinks.length > 0 ? menuLinks : defaultNavLinks;
 
-  const currentLogo = logoImage && logoImage !== '/logo.jpg' && logoImage !== '/logo-flame.png' && logoImage !== '/LOGO-HLG-HAUSGERAETE.png'
-    ? logoImage 
-    : '/logo-top-gartengeraete.svg';
-
-  const mobileHeaderLogo =
-    currentLogo === '/logo-top-gartengeraete.svg'
-      ? '/logo-top-gartengeraete-dark.svg'
-      : currentLogo;
+  const currentLogo =
+    logoImage &&
+    logoImage !== '/logo.jpg' &&
+    logoImage !== '/logo-flame.png' &&
+    logoImage !== '/LOGO-HLG-HAUSGERAETE.png' &&
+    logoImage !== '/logo-top-gartengeraete.svg'
+      ? logoImage
+      : '/logo-top-gartengeraete-dark.svg';
 
   const handleAccountAction = () => {
     if (actualUserRole) {
@@ -242,10 +244,10 @@ export default function Header({
 
   return (
     <>
-      <header className="w-full font-sans relative z-50 shadow-sm">
+      <header className="w-full font-sans relative z-50 bg-white">
         {/* Mobile Header Bar (< lg) */}
         <MobileHeaderBar
-          logoSrc={mobileHeaderLogo}
+          logoSrc={currentLogo}
           isMenuOpen={isMobileMenuOpen}
           onToggleMenu={() => setIsMobileMenuOpen((prev) => !prev)}
           onAccountClick={handleAccountAction}
@@ -255,53 +257,78 @@ export default function Header({
           wishlistCount={mounted ? wishlistItems : 0}
         />
 
-        {/* Desktop Top Green Brand Bar (lg+) */}
-        <div className="hidden lg:block bg-[#107b46] text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+        {/* TIER 1: Top Slim Utility Bar (Desktop lg+) */}
+        <div className="hidden lg:block bg-white border-b border-stone-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-9 flex items-center justify-end">
+            <nav aria-label="Rechtliche Kurzlinks" className="flex items-center text-[12px] text-stone-500">
+              {topUtilityLinks.map((item, idx) => (
+                <div key={item.url} className="flex items-center">
+                  {idx > 0 && <span className="mx-3 h-3 w-px bg-stone-200" aria-hidden="true" />}
+                  <Link
+                    href={item.url}
+                    className="hover:text-[#00a86b] transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                </div>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* TIER 2: Main White Header (Logo + Rectangular Search Bar + Account + Cart) */}
+        <div className="hidden lg:block bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-6">
             {/* Logo */}
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="flex items-center group transition-transform hover:opacity-95" title="Top Gartengeräte">
+            <div className="flex-shrink-0 flex items-center w-[250px]">
+              <Link
+                href="/"
+                className="flex items-center group transition-opacity hover:opacity-95"
+                title="Top Gartengeräte"
+              >
                 <Image
                   src={currentLogo}
                   alt="Top Gartengeräte"
-                  width={220}
+                  width={230}
                   height={58}
-                  className="h-10 sm:h-12 w-auto object-contain brightness-105"
+                  className="h-12 w-auto object-contain"
                   priority
                 />
               </Link>
             </div>
 
-            {/* Middle Search Bar with Categories Dropdown and Pill Button */}
-            <div className="hidden lg:flex flex-1 max-w-2xl mx-4 relative" ref={searchContainerRef}>
+            {/* Center Search Bar */}
+            <div className="flex-1 max-w-[560px] relative" ref={searchContainerRef}>
               <form
                 onSubmit={handleSearchSubmit}
-                className="w-full bg-white rounded-full flex items-center pl-3 pr-1.5 py-1 shadow-sm border border-transparent focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-200 transition-all text-stone-800"
+                className="w-full h-[44px] bg-white rounded-[4px] flex items-stretch border border-stone-200 focus-within:border-[#00a86b] focus-within:ring-1 focus-within:ring-[#00a86b]/25 transition-all text-stone-800"
               >
-                {/* Category Dropdown inside Search Bar */}
-                <div className="relative shrink-0" ref={categoryDropdownRef}>
+                {/* Category Dropdown */}
+                <div className="relative shrink-0 flex items-center" ref={categoryDropdownRef}>
                   <button
                     type="button"
                     onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-stone-700 hover:text-stone-900 transition rounded-full hover:bg-stone-100 select-none cursor-pointer"
+                    className="h-full flex items-center gap-2 px-3.5 text-[13px] font-normal text-stone-600 hover:text-stone-900 transition select-none cursor-pointer"
                   >
-                    <span className="truncate max-w-[130px]">{selectedCategoryLabel}</span>
+                    <span className="truncate max-w-[135px]">{selectedCategoryLabel}</span>
                     <svg
-                      className={`w-3.5 h-3.5 text-stone-500 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`}
+                      className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-200 ${
+                        isCategoryDropdownOpen ? 'rotate-180' : ''
+                      }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
                   {isCategoryDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-stone-200 shadow-xl rounded-2xl py-2 z-50 text-xs font-medium text-stone-700 animate-in fade-in duration-150">
-                      <div className="px-3 py-1 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
+                    <div className="absolute top-full left-0 mt-1.5 w-60 bg-white border border-stone-200 shadow-xl rounded-md py-1.5 z-50 text-[13px] text-stone-700 animate-in fade-in duration-150">
+                      <div className="px-3.5 py-1 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
                         Kategorie wählen
                       </div>
-                      <div className="max-h-60 overflow-y-auto">
+                      <div className="max-h-64 overflow-y-auto">
                         {searchCategories.map((cat) => (
                           <button
                             key={cat.value}
@@ -311,15 +338,22 @@ export default function Header({
                               setSelectedCategoryLabel(cat.name);
                               setIsCategoryDropdownOpen(false);
                             }}
-                            className={`w-full text-left py-2 hover:bg-emerald-50 hover:text-[#107b46] transition flex items-center justify-between ${
+                            className={`w-full text-left py-2 hover:bg-emerald-50 hover:text-[#00a86b] transition flex items-center justify-between cursor-pointer ${
                               cat.isChild ? 'pl-6 pr-3.5 text-stone-600' : 'px-3.5'
                             } ${
-                              selectedCategory === cat.value ? 'font-bold text-[#107b46] bg-emerald-50/70' : ''
+                              selectedCategory === cat.value
+                                ? 'font-semibold text-[#00a86b] bg-emerald-50/70'
+                                : ''
                             }`}
                           >
                             <span className="truncate">{cat.name}</span>
                             {selectedCategory === cat.value && (
-                              <svg className="w-3.5 h-3.5 text-[#107b46] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg
+                                className="w-3.5 h-3.5 text-[#00a86b] shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                               </svg>
                             )}
@@ -330,20 +364,20 @@ export default function Header({
                   )}
                 </div>
 
-                {/* Thin Divider */}
-                <div className="w-[1px] h-5 bg-stone-300 mx-1 shrink-0" />
+                {/* Vertical Divider */}
+                <div className="w-px my-2.5 bg-stone-200 shrink-0" />
 
                 {/* Search Input */}
                 <input
                   type="text"
-                  placeholder={searchPlaceholder}
+                  placeholder={searchPlaceholder || 'Produkte suchen...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowSearchResults(true)}
-                  className="flex-1 px-3 py-1 text-sm bg-transparent outline-none placeholder-stone-400 text-stone-800"
+                  className="flex-1 px-3.5 text-[13px] bg-transparent outline-none placeholder-stone-400 text-stone-800"
                 />
 
-                {/* Clear query button if text present */}
+                {/* Clear query button */}
                 {searchQuery.length > 0 && (
                   <button
                     type="button"
@@ -351,7 +385,7 @@ export default function Header({
                       setSearchQuery('');
                       setShowSearchResults(false);
                     }}
-                    className="p-1 mr-1 text-stone-400 hover:text-stone-600 transition"
+                    className="px-2 text-stone-400 hover:text-stone-600 transition cursor-pointer"
                     title="Löschen"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,40 +394,35 @@ export default function Header({
                   </button>
                 )}
 
-                {/* Yellow "Suchen" Button with Magnifying Glass */}
+                {/* Green "Suche" Submit Button */}
                 <button
                   type="submit"
-                  className="bg-[#f59e0b] hover:bg-[#d97706] active:bg-[#b45309] text-stone-900 font-bold px-5 py-2 rounded-full flex items-center gap-1.5 transition text-xs sm:text-sm shrink-0 shadow-sm cursor-pointer"
+                  className="bg-[#00a86b] hover:bg-[#008f5a] active:bg-[#007a4d] text-white font-semibold px-5 text-[13px] rounded-r-[3px] flex items-center justify-center gap-1.5 transition shrink-0 cursor-pointer"
                 >
                   {isSearching ? (
-                    <div className="w-3.5 h-3.5 border-2 border-stone-900 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <>
-                      <span>{searchBtnText}</span>
-                      <svg className="w-4 h-4 text-stone-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </>
+                    <span>{searchBtnText || 'Suche'}</span>
                   )}
                 </button>
               </form>
 
               {/* Popular Searches Dropdown when focused & empty */}
               {showSearchResults && searchQuery.trim().length <= 1 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 shadow-2xl rounded-2xl z-50 p-4 animate-in fade-in duration-150">
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-stone-200 shadow-2xl rounded-lg z-50 p-4 animate-in fade-in duration-150">
                   <div className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                    <span>🔥 Beliebte Suchbegriffe</span>
+                    <span>Beliebte Suchbegriffe</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {[
+                      'Rasentraktor',
                       'Mähroboter',
                       'Akku-Rasenmäher',
-                      'Benzin-Motorsäge',
-                      'Akku-Heckenschere',
-                      'Aufsitzmäher',
-                      'Hochdruckreiniger',
+                      'Kettensäge',
                       'Rasentrimmer',
-                      'Laubbläser',
+                      'Hochlader',
+                      'Heckenschere',
+                      'Gartenzubehör',
                     ].map((term) => (
                       <button
                         key={term}
@@ -403,7 +432,7 @@ export default function Header({
                           router.push(`/search?q=${encodeURIComponent(term)}`);
                           setShowSearchResults(false);
                         }}
-                        className="px-3 py-1.5 rounded-full bg-stone-100 hover:bg-emerald-50 text-stone-700 hover:text-[#107b46] text-xs font-semibold border border-stone-200/60 hover:border-emerald-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                        className="px-3 py-1.5 rounded-full bg-stone-100 hover:bg-emerald-50 text-stone-700 hover:text-[#00a86b] text-xs font-medium border border-stone-200/70 hover:border-emerald-300 transition-colors flex items-center gap-1.5 cursor-pointer"
                       >
                         <svg className="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -417,7 +446,7 @@ export default function Header({
 
               {/* Autocomplete Search Results Dropdown */}
               {showSearchResults && searchQuery.length > 1 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 shadow-2xl rounded-2xl z-50 overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-stone-200 shadow-2xl rounded-lg z-50 overflow-hidden">
                   {isSearching && searchResults.length === 0 ? (
                     <div className="p-4 text-center text-stone-500 text-sm">Suche nach Geräten...</div>
                   ) : searchResults.length > 0 ? (
@@ -431,7 +460,7 @@ export default function Header({
                               : `/search?q=${encodeURIComponent(searchQuery.trim())}`
                           }
                           onClick={() => setShowSearchResults(false)}
-                          className="text-[#107b46] hover:underline"
+                          className="text-[#00a86b] hover:underline"
                         >
                           Alle anzeigen &rarr;
                         </Link>
@@ -445,9 +474,9 @@ export default function Header({
                                 setShowSearchResults(false);
                                 setSearchQuery('');
                               }}
-                              className="flex items-center px-4 py-2.5 hover:bg-amber-50/50 transition group"
+                              className="flex items-center px-4 py-2.5 hover:bg-emerald-50/40 transition group"
                             >
-                              <div className="w-11 h-11 flex-shrink-0 bg-stone-50 rounded-lg overflow-hidden mr-3 p-1 border border-stone-100">
+                              <div className="w-11 h-11 flex-shrink-0 bg-stone-50 rounded overflow-hidden mr-3 p-1 border border-stone-100">
                                 {product.images && product.images.length > 0 ? (
                                   <Image
                                     width={100}
@@ -465,11 +494,11 @@ export default function Header({
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold text-stone-900 truncate group-hover:text-[#107b46] transition-colors">
+                                <h4 className="text-sm font-semibold text-stone-900 truncate group-hover:text-[#00a86b] transition-colors">
                                   {product.title}
                                 </h4>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <Price amount={product.price} showTax={false} className="text-[#107b46] font-bold text-sm" />
+                                  <Price amount={product.price} showTax={false} className="text-[#00a86b] font-bold text-sm" />
                                   {product.compareAtPrice && product.compareAtPrice > product.price && (
                                     <Price amount={product.compareAtPrice} showTax={false} className="text-stone-400 line-through text-xs" />
                                   )}
@@ -489,108 +518,137 @@ export default function Header({
               )}
             </div>
 
-            {/* Right Side: Konto + 3 Yellow Badge Icons + Hamburger */}
-            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-              {/* Account Button: Icon + "Konto" */}
+            {/* Right Side: Konto + Warenkorb */}
+            <div className="flex items-center gap-6 shrink-0">
+              {/* Account */}
               <button
                 type="button"
                 onClick={handleAccountAction}
-                className="flex items-center gap-1.5 text-white hover:text-amber-300 transition py-1 text-sm font-medium cursor-pointer"
-                title={actualUserRole ? 'Mein Konto' : 'Anmelden'}
+                className="flex items-center gap-2.5 group cursor-pointer text-left"
+                title={actualUserRole ? 'Mein Konto' : 'Anmelden / Registrieren'}
               >
-                <div className="w-8 h-8 rounded-full border border-white/40 flex items-center justify-center hover:border-white transition">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <span className="hidden sm:inline-block font-semibold text-sm">Konto</span>
-              </button>
-
-              {/* Vertical divider */}
-              <div className="w-[1px] h-6 bg-white/30 hidden sm:block" />
-
-              {/* 1. Wunschliste (Wishlist) Icon with yellow badge */}
-              <button
-                type="button"
-                onClick={() => wishlistStore.setIsOpen(true)}
-                className="relative p-1 text-white hover:text-amber-300 transition"
-                title="Wunschliste"
-                aria-label="Wunschliste"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <svg
+                  className="w-7 h-7 text-stone-300 group-hover:text-[#00a86b] transition-colors shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 2.239-7 5v1h14v-1c0-2.761-3.134-5-7-5z" />
                 </svg>
-                <span className="absolute -top-1 -right-1 bg-[#f59e0b] text-stone-900 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
-                  {mounted ? wishlistItems : 0}
-                </span>
+                <div className="leading-tight">
+                  <span className="block text-[11px] text-stone-400">Konto</span>
+                  <span className="block text-[13px] font-bold text-stone-800 group-hover:text-[#00a86b] transition-colors whitespace-nowrap">
+                    {actualUserRole
+                      ? actualUserRole === 'ADMIN'
+                        ? 'Admin-Panel'
+                        : 'Mein Konto'
+                      : 'Anmelden / Registrieren'}
+                  </span>
+                </div>
               </button>
 
-              {/* 3. Warenkorb (Cart) Icon with yellow badge */}
+              {/* Cart */}
               <button
                 type="button"
                 onClick={() => cartStore.setIsOpen(true)}
-                className="relative p-1 text-white hover:text-amber-300 transition"
+                className="flex items-center gap-2.5 group cursor-pointer text-left"
                 title="Warenkorb"
                 aria-label="Warenkorb"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span className="absolute -top-1 -right-1 bg-[#f59e0b] text-stone-900 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
-                  {mounted ? cartItems : 0}
-                </span>
-              </button>
-
-              {/* Hamburger Menu Toggle (Desktop Drawer) */}
-              <button
-                type="button"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-1.5 text-white hover:text-amber-300 transition ml-1 cursor-pointer"
-                aria-label={isMobileMenuOpen ? 'Menü schließen' : 'Menü öffnen'}
-                aria-expanded={isMobileMenuOpen}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                <div className="relative shrink-0">
+                  <svg
+                    className="w-7 h-7 text-stone-300 group-hover:text-[#00a86b] transition-colors"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14.26l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0020 3.5H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 14.37 5.48 16 7 16h12v-2H7.42c-.14 0-.25-.11-.26-.25z" />
+                  </svg>
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#00a86b] text-white text-[10px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-xs">
+                    {mounted ? cartItems : 0}
+                  </span>
+                </div>
+                <div className="leading-tight">
+                  <span className="block text-[11px] text-stone-400">Warenkorb</span>
+                  <span className="block text-[13px] font-bold text-stone-800 group-hover:text-[#00a86b] transition-colors tabular-nums whitespace-nowrap">
+                    {mounted ? (
+                      <Price amount={cartTotal} showTax={false} />
+                    ) : (
+                      '0,00 €'
+                    )}
+                  </span>
+                </div>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Secondary Navigation Bar (Desktop White Sub-Header) */}
-        <div className="hidden lg:block bg-white border-b border-stone-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            {/* Nav links on the left */}
-            <nav className="flex items-center space-x-6 sm:space-x-8 text-sm font-semibold">
-              {navLinks.map((link, idx) => {
-                const isHome = link.url === '/' || link.label.toLowerCase() === 'startseite';
-                return (
-                  <Link
-                    key={idx}
-                    href={link.url}
-                    className={`py-3.5 transition-colors relative block ${
-                      isHome
-                        ? 'text-[#107b46] font-bold after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#107b46]'
-                        : 'text-stone-700 hover:text-[#107b46]'
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </nav>
+        {/* TIER 3: Light-Gray Navigation Strip with Green "ZUM SHOP GEHEN" Button */}
+        <div className="hidden lg:block bg-white pb-2">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-[#f4f5f6] border border-stone-200/70 rounded-[5px] flex items-center p-1 gap-7">
+              {/* Green "ZUM SHOP GEHEN" CTA (aligned with Hero Left Sidebar width) */}
+              <div
+                className="relative w-[246px] shrink-0"
+                ref={shopMenuRef}
+                onMouseEnter={() => !isHomePage && setIsShopMenuOpen(true)}
+                onMouseLeave={() => !isHomePage && setIsShopMenuOpen(false)}
+              >
+                <Link
+                  href="/shop"
+                  className="w-full bg-[#00a86b] hover:bg-[#008f5a] text-white font-bold text-[13px] tracking-wide uppercase px-5 py-3 rounded-[4px] flex items-center justify-between transition-colors shadow-xs"
+                >
+                  <span>ZUM SHOP GEHEN</span>
+                  <span className="w-5 h-5 rounded-full bg-white text-[#00a86b] flex items-center justify-center shrink-0">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
+                </Link>
 
-            {/* Value perks on desktop right */}
-            <div className="hidden md:flex items-center space-x-6 text-xs font-medium text-stone-500">
-              <span className="flex items-center gap-1.5 text-stone-700">
-                <span className="text-[#107b46]">✓</span> Kostenloser Versand ab 200 €
-              </span>
-              <span className="flex items-center gap-1.5 text-stone-700">
-                <span className="text-[#107b46]">✓</span> 2 Jahre Herstellergarantie
-              </span>
-              <span className="flex items-center gap-1.5 text-stone-700">
-                <span className="text-[#107b46]">✓</span> Schnelle Lieferung
-              </span>
+                {/* Dropdown on non-home pages */}
+                {!isHomePage && isShopMenuOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-stone-200 rounded-[5px] shadow-xl py-1 z-50 divide-y divide-stone-100">
+                    <Link
+                      href="/"
+                      onClick={() => setIsShopMenuOpen(false)}
+                      className="block px-5 py-2.5 text-[13px] text-stone-700 hover:text-[#00a86b] hover:bg-emerald-50/40 transition-colors"
+                    >
+                      Startseite
+                    </Link>
+                    {shopDropdownCategories.map((cat) => (
+                      <Link
+                        key={cat.value}
+                        href={`/shop?category=${encodeURIComponent(cat.value)}`}
+                        onClick={() => setIsShopMenuOpen(false)}
+                        className="block px-5 py-2.5 text-[13px] text-stone-700 hover:text-[#00a86b] hover:bg-emerald-50/40 transition-colors truncate"
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Horizontal Uppercase Navigation Links */}
+              <nav aria-label="Hauptnavigation" className="flex items-center flex-wrap gap-x-7 gap-y-1 text-[13px] font-medium tracking-wide uppercase text-stone-700">
+                {navLinks.map((link, idx) => {
+                  const isActive = pathname === link.url;
+                  return (
+                    <Link
+                      key={idx}
+                      href={link.url}
+                      className={`py-2.5 transition-colors whitespace-nowrap ${
+                        isActive
+                          ? 'text-[#00a86b] font-bold'
+                          : 'text-stone-700 hover:text-[#00a86b]'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </nav>
             </div>
           </div>
         </div>
@@ -608,18 +666,18 @@ export default function Header({
         <MobileSearchOverlay
           isOpen={isMobileSearchOpen}
           onClose={() => setIsMobileSearchOpen(false)}
-          placeholder={searchPlaceholder}
+          placeholder={searchPlaceholder || 'Produkte suchen...'}
         />
         <MobileSidebar
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
-          logoImage={currentLogo}
-          darkLogoImage={mobileHeaderLogo}
+          logoImage="/logo-top-gartengeraete.svg"
+          darkLogoImage={currentLogo}
           menuLinks={navLinks}
           contactAddress={mobileContactAddress}
           contactEmail={mobileContactEmail || supportEmail}
           searchCategories={searchCategories}
-          searchPlaceholder={searchPlaceholder}
+          searchPlaceholder={searchPlaceholder || 'Produkte suchen...'}
           cartCount={mounted ? cartItems : 0}
           wishlistCount={mounted ? wishlistItems : 0}
           onCartClick={() => cartStore.setIsOpen(true)}

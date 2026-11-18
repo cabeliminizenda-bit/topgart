@@ -6,7 +6,7 @@ export default function TrustBar() {
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* 1. Kostenlose Lieferung */}
         <div className="flex items-center gap-2.5 sm:gap-3.5">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-[#107b46] flex items-center justify-center shrink-0 shadow-sm border border-emerald-100">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-[#00a86b] flex items-center justify-center shrink-0 shadow-sm border border-emerald-100">
             <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
             </svg>

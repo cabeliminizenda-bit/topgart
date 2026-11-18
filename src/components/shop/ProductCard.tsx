@@ -1,9 +1,16 @@
 'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Price from '@/components/Price';
 import QuickViewModal from '@/components/product/QuickViewModal';
+import ProductCardActionButtons from '@/components/product/ProductCardActionButtons';
+import { useCartStore } from '@/store/cartStore';
+import { useWishlistStore } from '@/store/wishlistStore';
+import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 
 interface ProductCardProps {
   product: {
@@ -14,7 +21,7 @@ interface ProductCardProps {
     compareAtPrice?: number | null;
     images: string[];
     discountLabel?: string | null;
-    categories?: { name: string, slug?: string | null }[] | null;
+    categories?: { name: string; slug?: string | null }[] | null;
     reviews?: { rating: number }[];
     type?: string;
   };
@@ -22,24 +29,25 @@ interface ProductCardProps {
   cardStyle?: 'design1' | 'design2';
   borderColor?: string;
 }
-import { useState } from 'react';
-import { useCartStore } from '@/store/cartStore';
-import { useWishlistStore } from '@/store/wishlistStore';
-import { toast } from 'react-hot-toast';
-import { useTranslations } from 'next-intl';
-import ProductCardActionButtons from '@/components/product/ProductCardActionButtons';
 
-const Star = ({ filled = true }: { filled?: boolean }) => (
+const Star = ({ filled = false }: { filled?: boolean }) => (
   <svg
-    className={`w-3.5 h-3.5 ${filled ? 'text-orange-600' : 'text-gray-300'}`}
-    fill="currentColor"
+    className="w-3.5 h-3.5 text-[#f5a623]"
+    fill={filled ? 'currentColor' : 'none'}
+    stroke="currentColor"
+    strokeWidth={1.5}
     viewBox="0 0 20 20"
+    aria-hidden="true"
   >
     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
   </svg>
 );
 
-export default function ProductCard({ product, view = 'grid', cardStyle = 'design2', borderColor }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  view = 'grid',
+  borderColor,
+}: ProductCardProps) {
   const router = useRouter();
   const image = product.images?.[0] || '';
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
@@ -51,24 +59,32 @@ export default function ProductCard({ product, view = 'grid', cardStyle = 'desig
   const reviews = product.reviews || [];
   const ratingCount = reviews.length;
   const avgRating = ratingCount > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / ratingCount : 0;
+  const filledStars = Math.round(avgRating);
+
+  const isVariable = product.type?.toUpperCase() === 'VARIABLE';
+
+  const hasDiscount = Boolean(product.compareAtPrice && product.compareAtPrice > product.price);
+  const computedDiscountBadge =
+    product.discountLabel ||
+    (hasDiscount && product.compareAtPrice
+      ? `-${Math.round((1 - product.price / product.compareAtPrice) * 100)}%`
+      : null);
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    if (product.type === 'variable') {
-      e.preventDefault();
-      e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
+    if (isVariable) {
       router.push(`/produkt/${product.slug}`);
       return;
     }
-    e.preventDefault();
-    e.stopPropagation();
     cartStore.addItem({
       id: product.id,
       productId: product.id,
       slug: product.slug,
       title: product.title,
       price: product.price,
-      image: image,
-      quantity: 1
+      image,
+      quantity: 1,
     });
     cartStore.setIsOpen(true);
   };
@@ -84,8 +100,6 @@ export default function ProductCard({ product, view = 'grid', cardStyle = 'desig
     }
   };
 
-
-
   const actionButtons = (
     <ProductCardActionButtons
       isWishlisted={isWishlisted}
@@ -97,26 +111,39 @@ export default function ProductCard({ product, view = 'grid', cardStyle = 'desig
       }}
       wishlistTitle={
         isWishlisted
-          ? t('removed_from_wishlist') || 'Aus Favoriten entfernen'
-          : t('add_to_wishlist') || 'Zu Favoriten hinzufügen'
+          ? t('removed_from_wishlist') || 'Von der Wunschliste entfernen'
+          : t('add_to_wishlist') || 'Zur Wunschliste hinzufügen'
       }
       quickViewTitle={t('quick_view') || 'Schnellansicht'}
       positionClassName="top-2.5 right-2.5"
-      buttonSizeClassName="w-8 h-8"
+      buttonSizeClassName="w-9 h-9"
     />
+  );
+
+  const placeholderSvg = (
+    <div className="w-16 h-16 rounded-full bg-stone-50 flex items-center justify-center text-stone-300">
+      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    </div>
   );
 
   if (view === 'list') {
     return (
       <div
         onClick={() => router.push(`/produkt/${product.slug}`)}
-        className="group flex flex-col sm:flex-row bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+        className="group flex flex-col sm:flex-row bg-white border border-stone-200 rounded-[4px] overflow-hidden hover:border-[#00a86b]/55 hover:shadow-sm transition-all duration-200 cursor-pointer"
         style={borderColor ? { borderColor } : {}}
       >
-        <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0 bg-gray-50 flex items-center justify-center p-4 border-b sm:border-b-0 sm:border-r border-gray-100 overflow-hidden">
-          {product.discountLabel && product.compareAtPrice && product.compareAtPrice > product.price && (
-            <span className="absolute top-3 left-3 bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-sm z-30">
-              {product.discountLabel}
+        <div className="relative h-52 sm:h-auto sm:w-56 shrink-0 bg-white flex items-center justify-center p-4 border-b sm:border-b-0 sm:border-r border-stone-100 overflow-hidden">
+          {computedDiscountBadge && hasDiscount && (
+            <span className="absolute top-2.5 left-2.5 bg-[#e05246] text-white text-[11px] font-semibold px-2 py-0.5 rounded-[3px] z-20">
+              {computedDiscountBadge}
             </span>
           )}
 
@@ -127,67 +154,71 @@ export default function ProductCard({ product, view = 'grid', cardStyle = 'desig
               src={image}
               alt={product.title}
               title={product.title}
-              width={500}
-              height={500}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 250px" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+              width={400}
+              height={400}
+              sizes="(max-width: 640px) 100vw, 224px"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="text-4xl text-gray-200">🛍️</div>
+            placeholderSvg
           )}
         </div>
 
-        <div className="p-6 flex flex-col flex-grow">
-          <span className="text-xs text-gray-500 mb-2 uppercase tracking-wide font-medium z-20 relative">
-            {product.categories && product.categories.length > 0 ? (
-              product.categories.map((c, idx) => (
+        <div className="p-5 flex flex-col flex-grow">
+          {product.categories && product.categories.length > 0 && (
+            <span className="text-[11.5px] text-stone-400 mb-1.5 z-20 relative">
+              {product.categories.map((c, idx) => (
                 <span key={idx}>
-                  <Link href={`/product-category/${c.slug}`} className="hover:text-orange-600 hover:underline" onClick={(e) => e.stopPropagation()}>
+                  <Link
+                    href={`/product-category/${c.slug}`}
+                    className="hover:text-[#00a86b] hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {c.name}
                   </Link>
                   {idx < product.categories!.length - 1 ? ', ' : ''}
                 </span>
-              ))
-            ) : t('general')}
-          </span>
+              ))}
+            </span>
+          )}
 
-          <h3 className="text-lg font-bold text-gray-900 mb-2 transition-colors">
+          <h3 className="text-[16px] font-medium text-stone-800 mb-2 leading-snug transition-colors">
             <Link
               href={`/produkt/${product.slug}`}
-              className="hover:text-orange-600"
+              className="hover:text-[#00a86b]"
               onClick={(e) => e.stopPropagation()}
             >
               {product.title}
             </Link>
           </h3>
 
-          {ratingCount > 0 && (
-            <div className="flex items-center gap-1 mb-3">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} filled={i < Math.round(avgRating)} />
-                ))}
-              </div>
-              <span className="text-xs text-gray-500 font-medium">({avgRating.toFixed(2)})</span>
-            </div>
-          )}
+          <div className="flex items-center gap-0.5 mb-3">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} filled={i < filledStars} />
+            ))}
+            {ratingCount > 0 && (
+              <span className="text-[11px] text-stone-400 ml-1">({ratingCount})</span>
+            )}
+          </div>
 
-          <div className="mt-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {product.compareAtPrice && (
-                <span className="text-sm text-gray-500 line-through">
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-2">
+            <div className="flex items-baseline gap-2.5">
+              {hasDiscount && product.compareAtPrice && (
+                <span className="text-[13.5px] text-stone-400 line-through tabular-nums">
                   <Price amount={product.compareAtPrice} />
                 </span>
               )}
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-[18px] font-medium text-[#e05246] tabular-nums">
                 <Price amount={product.price} />
               </span>
             </div>
+
             <button
-              className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-300 shadow-sm"
-              title={product.type === 'variable' ? t('select_options') : t('add_to_cart')}
+              type="button"
               onClick={handleAddToCart}
+              className="bg-[#00a86b] hover:bg-[#008f5a] text-white font-semibold text-[13px] px-5 h-[38px] rounded-[4px] transition-colors cursor-pointer"
             >
-              {product.type === 'variable' ? (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>) : (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>)}
+              {isVariable ? t('select_options') || 'Optionen wählen' : t('add_to_cart') || 'In den Warenkorb'}
             </button>
           </div>
         </div>
@@ -199,17 +230,18 @@ export default function ProductCard({ product, view = 'grid', cardStyle = 'desig
   return (
     <div
       onClick={() => router.push(`/produkt/${product.slug}`)}
-      className="group flex flex-col h-full bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+      className="group flex flex-col h-full bg-white border border-stone-200 rounded-[4px] overflow-hidden hover:border-[#00a86b]/55 hover:shadow-sm transition-all duration-200 cursor-pointer"
       style={borderColor ? { borderColor } : {}}
     >
-      {/* Image Container with fixed height and object-contain to prevent overflow/stretching */}
-      <div className="relative h-56 w-full bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
-        {product.discountLabel && product.compareAtPrice && product.compareAtPrice > product.price && (
-          <span className="absolute top-3 left-3 bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-sm z-30">
-            {product.discountLabel}
+      {/* Image Area */}
+      <div className="relative h-52 w-full bg-white flex items-center justify-center p-4 overflow-hidden">
+        {computedDiscountBadge && hasDiscount && (
+          <span className="absolute top-2.5 left-2.5 bg-[#e05246] text-white text-[11px] font-semibold px-2 py-0.5 rounded-[3px] z-20">
+            {computedDiscountBadge}
           </span>
         )}
 
+        {/* Only Wishlist + Quick View (no Compare icon) */}
         {actionButtons}
 
         {image ? (
@@ -217,78 +249,60 @@ export default function ProductCard({ product, view = 'grid', cardStyle = 'desig
             src={image}
             alt={product.title}
             title={product.title}
-            width={500}
-            height={500}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 250px" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+            width={420}
+            height={420}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 250px"
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="text-6xl text-gray-200">🛍️</div>
+          placeholderSvg
         )}
       </div>
 
-      {/* Product Details */}
-      <div className="p-4 flex flex-col flex-grow">
-        {/* Category */}
-        <span className="text-xs text-gray-500 mb-1 z-20 relative">
-          {product.categories && product.categories.length > 0 ? (
-            product.categories.map((c, idx) => (
-              <span key={idx}>
-                <Link href={`/product-category/${c.slug}`} className="hover:text-orange-600 hover:underline" onClick={(e) => e.stopPropagation()}>
-                  {c.name}
-                </Link>
-                {idx < product.categories!.length - 1 ? ', ' : ''}
-              </span>
-            ))
-          ) : t('general')}
-        </span>
-
-        {/* Title constrained to 2 lines max with ellipsis */}
+      {/* Centered Product Details matching Top Gartengeräte Card Design */}
+      <div className="px-4 pb-4 pt-1 flex flex-col flex-grow items-center text-center">
         <h3
-          className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 transition-colors"
+          className="text-[13.5px] font-medium text-stone-800 leading-snug line-clamp-3 min-h-[3.6rem] mb-2 transition-colors"
           title={product.title}
         >
           <Link
             href={`/produkt/${product.slug}`}
-            className="hover:text-[#107b46]"
+            className="hover:text-[#00a86b] transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             {product.title}
           </Link>
         </h3>
 
-        {/* Rating */}
-        {ratingCount > 0 && (
-          <div className="flex items-center gap-1 mb-2">
-            <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} filled={i < Math.round(avgRating)} />
-              ))}
-            </div>
-            <span className="text-[10px] text-gray-500 font-medium">({avgRating.toFixed(2)})</span>
-          </div>
-        )}
-
-        {/* Price (pushed to bottom if title is short) */}
-        <div className="mt-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {product.compareAtPrice && (
-              <span className="text-xs text-gray-500 line-through">
-                <Price amount={product.compareAtPrice} />
-              </span>
-            )}
-            <span className="text-sm font-bold text-gray-900">
-              <Price amount={product.price} />
-            </span>
-          </div>
-          <button
-            className="w-8 h-8 bg-[#107b46] text-white rounded-full flex items-center justify-center hover:bg-[#0d693b] transition-colors duration-300 shadow-sm cursor-pointer"
-            title={product.type === 'variable' ? (t('select_options') || 'Optionen wählen') : (t('add_to_cart') || 'In den Warenkorb')}
-            onClick={handleAddToCart}
-          >
-            {product.type === 'variable' ? (<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>) : (<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>)}
-          </button>
+        {/* Centered 5 Golden Stars */}
+        <div className="flex items-center justify-center gap-0.5 mb-2">
+          {[...Array(5)].map((_, i) => (
+            <Star key={i} filled={i < filledStars} />
+          ))}
         </div>
+
+        {/* Centered Price Row */}
+        <div className="flex items-center justify-center gap-2 mb-3.5">
+          {hasDiscount && product.compareAtPrice && (
+            <span className="text-[13px] text-stone-400 line-through tabular-nums">
+              <Price amount={product.compareAtPrice} />
+            </span>
+          )}
+          <span className="text-[15.5px] font-medium text-[#e05246] tabular-nums">
+            <Price amount={product.price} />
+          </span>
+        </div>
+
+        {/* Full-Width Emerald Green CTA Button */}
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          className="mt-auto w-full h-[38px] bg-[#00a86b] hover:bg-[#008f5a] active:bg-[#007a4d] text-white font-semibold text-[13px] rounded-[4px] transition-colors cursor-pointer"
+        >
+          {isVariable ? t('select_options') || 'Optionen wählen' : t('add_to_cart') || 'In den Warenkorb'}
+        </button>
       </div>
+
       <QuickViewModal isOpen={isQuickViewOpen} onClose={() => setIsQuickViewOpen(false)} product={product} />
     </div>
   );

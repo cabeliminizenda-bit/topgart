@@ -4,6 +4,7 @@ import ProductCard from '@/components/shop/ProductCard';
 import ShopFilters from '@/components/shop/ShopFilters';
 import ShopSort from '@/components/shop/ShopSort';
 import ShopPagination from '@/components/shop/ShopPagination';
+import Newsletter from '@/components/home/Newsletter';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 
@@ -236,41 +237,40 @@ export default async function ShopPage({
   }
 
   return (
-    <div className="bg-white min-h-screen font-sans">
-      {/* Breadcrumb */}
-      <div className="bg-gray-50 py-4 px-4 sm:px-8 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto text-sm text-gray-500">
-          <Link href="/" className="hover:text-orange-600">{t('home')}</Link>
-          <span className="mx-2">/</span>
-          <span className="text-gray-900 font-medium">{pageTitle}</span>
-        </div>
-      </div>
+    <div className="bg-white min-h-screen font-sans text-stone-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10">
+        {/* Clean Inline Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="text-[12px] text-stone-500 flex items-center gap-1.5 flex-wrap mb-4">
+          <Link href="/" className="hover:text-[#00a86b] transition-colors">{t('home')}</Link>
+          <span className="text-stone-400">/</span>
+          <span className="text-stone-700 font-medium">{pageTitle}</span>
+        </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-8">{pageTitle}</h1>
+        <h1 className="text-[22px] sm:text-[26px] font-semibold text-stone-800 mb-6">{pageTitle}</h1>
         <div className="flex flex-col lg:flex-row gap-8">
 
           {/* Left Sidebar (Filters) */}
-          <aside className="w-full lg:w-1/4 flex-shrink-0">
-            <ShopFilters categories={validCategories} brands={validBrands} globalMinPrice={globalMinPrice} globalMaxPrice={globalMaxPrice} />
+          <aside className="w-full lg:w-[254px] shrink-0">
+            <div className="bg-white border border-stone-200 rounded-[4px] p-5">
+              <ShopFilters categories={validCategories} brands={validBrands} globalMinPrice={globalMinPrice} globalMaxPrice={globalMaxPrice} />
+            </div>
           </aside>
 
           {/* Main Content (Products) */}
-          <section className="w-full lg:w-3/4">
+          <section className="flex-1 min-w-0">
 
             <ShopSort totalResults={totalResults} currentRange={currentRange} />
 
             {paginatedProducts.length > 0 ? (
-              <div className={view === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "flex flex-col gap-6"}>
+              <div className={view === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-4"}>
                 {paginatedProducts.map(product => (
                   <ProductCard key={product.id} product={product} view={view} cardStyle={cardStyle} borderColor={borderColor} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 bg-gray-50 rounded-lg border border-gray-100">
-                <div className="text-6xl mb-4">🔍</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{t('no_products_found')}</h3>
-                <p className="text-gray-500">{t('try_modifying_filters')}</p>
+              <div className="text-center py-16 bg-[#f9f9fa] rounded-[4px] border border-stone-200">
+                <h3 className="text-lg font-semibold text-stone-800 mb-2">{t('no_products_found')}</h3>
+                <p className="text-sm text-stone-500">{t('try_modifying_filters')}</p>
               </div>
             )}
 
@@ -279,6 +279,8 @@ export default async function ShopPage({
           </section>
         </div>
       </div>
+
+      <Newsletter />
     </div>
   );
 }

@@ -3,66 +3,59 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1f2937;
   zoom: 0.9;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  
-  /* Dynamic Theme Colors mapping */
-  --color-orange-50: color-mix(in srgb, var(--theme-primary, #c2410c), white 90%);
-  --color-orange-100: color-mix(in srgb, var(--theme-primary, #c2410c), white 80%);
-  --color-orange-200: color-mix(in srgb, var(--theme-primary, #c2410c), white 60%);
-  --color-orange-300: color-mix(in srgb, var(--theme-primary, #c2410c), white 40%);
-  --color-orange-400: color-mix(in srgb, var(--theme-primary, #c2410c), white 20%);
-  --color-orange-500: var(--theme-primary, #c2410c);
-  --color-orange-600: color-mix(in srgb, var(--theme-primary, #c2410c), black 10%);
-  --color-orange-700: color-mix(in srgb, var(--theme-primary, #c2410c), black 20%);
-  --color-orange-800: color-mix(in srgb, var(--theme-primary, #c2410c), black 30%);
-  --color-orange-900: color-mix(in srgb, var(--theme-primary, #c2410c), black 40%);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Dynamic Theme Colors mapping (Top Gartengeräte Emerald #00a86b) */
+  --color-orange-50: color-mix(in srgb, var(--theme-primary, #00a86b), white 90%);
+  --color-orange-100: color-mix(in srgb, var(--theme-primary, #00a86b), white 80%);
+  --color-orange-200: color-mix(in srgb, var(--theme-primary, #00a86b), white 60%);
+  --color-orange-300: color-mix(in srgb, var(--theme-primary, #00a86b), white 40%);
+  --color-orange-400: color-mix(in srgb, var(--theme-primary, #00a86b), white 20%);
+  --color-orange-500: var(--theme-primary, #00a86b);
+  --color-orange-600: color-mix(in srgb, var(--theme-primary, #00a86b), black 10%);
+  --color-orange-700: color-mix(in srgb, var(--theme-primary, #00a86b), black 20%);
+  --color-orange-800: color-mix(in srgb, var(--theme-primary, #00a86b), black 30%);
+  --color-orange-900: color-mix(in srgb, var(--theme-primary, #00a86b), black 40%);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: var(--font-inter), Inter, Arial, Helvetica, sans-serif;
 }
 
-button, 
+button,
 [role="button"],
 a {
   cursor: pointer;
 }
 
-.text-responsive { 
-  font-size: var(--sz-m); 
+.text-responsive {
+  font-size: var(--sz-m);
   line-height: var(--lh-m, normal);
   letter-spacing: var(--ls-m, normal);
-} 
-@media (min-width: 768px) { 
-  .text-responsive { 
-    font-size: var(--sz-t); 
+}
+@media (min-width: 768px) {
+  .text-responsive {
+    font-size: var(--sz-t);
     line-height: var(--lh-t, var(--lh-m, normal));
     letter-spacing: var(--ls-t, var(--ls-m, normal));
-  } 
-} 
-@media (min-width: 1024px) { 
-  .text-responsive { 
-    font-size: var(--sz-d); 
+  }
+}
+@media (min-width: 1024px) {
+  .text-responsive {
+    font-size: var(--sz-d);
     line-height: var(--lh-d, var(--lh-t, var(--lh-m, normal)));
     letter-spacing: var(--ls-d, var(--ls-t, var(--ls-m, normal)));
-  } 
+  }
 }
 
 /* Force normal word breaking to prevent letters splitting inside words */
@@ -71,8 +64,6 @@ a {
   overflow-wrap: break-word !important;
   hyphens: none !important;
 }
-
-
 
 /* Hero & Slider Entrance Animations */
 @keyframes heroFadeInUp {
@@ -120,7 +111,6 @@ a {
 .animate-hero-image {
   animation: heroFadeInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
-
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {

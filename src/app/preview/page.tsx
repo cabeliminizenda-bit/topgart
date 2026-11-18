@@ -1,5 +1,6 @@
 import HlgHero from '@/components/home/HlgHero';
-import AktuelleAngebote from '@/components/home/AktuelleAngebote';
+import GardenDealsShowcase from '@/components/home/GardenDealsShowcase';
+import GardenCategoryShowcase from '@/components/home/GardenCategoryShowcase';
 import CategoryShowcaseSections from '@/components/home/CategoryShowcaseSections';
 import CategoryShowcaseSection from '@/components/home/CategoryShowcaseSection';
 import CategoryOverviewSection from '@/components/home/CategoryOverviewSection';
@@ -23,6 +24,7 @@ import {
   normalizeHomepageSections,
 } from '@/components/home/categorySectionData';
 import { getCatalogBrandSummaries } from '@/lib/brands';
+import { getCachedCategoriesTree } from '@/lib/cache';
 import PreviewSectionWrapper from '@/components/admin/PreviewSectionWrapper';
 import { cookies } from 'next/headers';
 import { getSettings } from '@/actions/settings';
@@ -36,6 +38,7 @@ export default async function PreviewPage() {
   await requireAdminPage();
   const draftLayoutSetting = await prisma.setting.findUnique({ where: { key: 'PREVIEW_LAYOUT_DRAFT' } });
   const draftFontSetting = await prisma.setting.findUnique({ where: { key: 'PREVIEW_FONT_DRAFT' } });
+  const previewCategories = await getCachedCategoriesTree();
 
   let layoutCookieStr = draftLayoutSetting?.value || '';
   // We can use the draft font if needed later
@@ -199,11 +202,24 @@ export default async function PreviewPage() {
     let content = null;
     switch (section.type) {
       case 'Hero':
-        content = <HlgHero config={section.settings} isPreview={true} sectionId={section.id} />;
+        content = <HlgHero config={section.settings} categories={previewCategories} isPreview={true} sectionId={section.id} />;
         break;
       case 'AktuelleAngebote':
       case 'BestDeals':
-        content = <AktuelleAngebote config={section.settings} />;
+        content = (
+          <GardenDealsShowcase
+            catalogProducts={formattedProducts}
+            config={section.settings}
+          />
+        );
+        break;
+      case 'GardenCategoryShowcase':
+        content = (
+          <GardenCategoryShowcase
+            catalogProducts={formattedProducts}
+            config={section.settings}
+          />
+        );
         break;
       case 'CategoryShowcaseSection':
         content = (

@@ -183,14 +183,14 @@ export default function HeroSectionEditor({
       ? settings.bannerImage
       : settings.bgImageUrl !== undefined
         ? settings.bgImageUrl
-        : '/images/hero-appliances.jpg';
+        : '/images/hero-garden-mower.jpg';
 
   const block3ImageUrl =
     settings.sideCardImage !== undefined
       ? settings.sideCardImage
       : settings.showcaseBgImage !== undefined
         ? settings.showcaseBgImage
-        : '/images/hero-coffee-machine.jpg';
+        : '/images/hero-robot-mower.jpg';
 
   const blockTabs = [
     { id: 0, label: 'Hero' },

@@ -138,9 +138,9 @@ export default async function CatchAllPage({
 
             {/* Hero Header Card */}
             <div className="bg-gradient-to-r from-stone-900 via-stone-900 to-stone-950 text-white rounded-3xl p-6 sm:p-10 shadow-xl border border-stone-800 mb-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-80 h-80 bg-[#00a86b]/15 rounded-full blur-3xl pointer-events-none" />
               <div className="relative z-10 max-w-4xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/20 border border-red-500/30 text-red-400 font-bold text-xs uppercase tracking-wider mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00a86b]/20 border border-[#00a86b]/35 text-emerald-300 font-bold text-xs uppercase tracking-wider mb-4">
                   <span>{isLegalSlug ? '⚖️' : '📄'}</span>
                   <span>{isLegalSlug ? 'Rechtliche Informationen & Transparenz' : 'Offizielle Informationen'}</span>
                 </div>
@@ -165,7 +165,7 @@ export default async function CatchAllPage({
                         key={item.slug}
                         href={`/${item.slug}`}
                         className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-xs font-bold whitespace-nowrap transition-all shadow-xs ${isActive
-                          ? 'bg-[#107b46] text-white shadow-emerald-700/30 ring-2 ring-emerald-500/50'
+                          ? 'bg-[#00a86b] text-white shadow-emerald-700/30 ring-2 ring-emerald-500/50'
                           : 'bg-white text-stone-700 hover:bg-stone-100 hover:text-stone-900 border border-stone-200/90'
                           }`}
                       >
@@ -182,11 +182,11 @@ export default async function CatchAllPage({
             <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm p-6 sm:p-10 mb-10">
               <SafeHTML
                 html={page.desktopContent || ''}
-                className="hidden md:block w-full prose max-w-none text-stone-700 prose-headings:text-stone-900 prose-headings:font-bold prose-strong:text-stone-900 prose-a:text-[#107b46] hover:prose-a:underline"
+                className="hidden md:block w-full prose max-w-none text-stone-700 prose-headings:text-stone-900 prose-headings:font-bold prose-strong:text-stone-900 prose-a:text-[#00a86b] hover:prose-a:underline"
               />
               <SafeHTML
                 html={page.mobileContent || (page.desktopContent || '')}
-                className="block md:hidden w-full prose max-w-none text-stone-700 prose-headings:text-stone-900 prose-headings:font-bold prose-strong:text-stone-900 prose-a:text-[#107b46] hover:prose-a:underline"
+                className="block md:hidden w-full prose max-w-none text-stone-700 prose-headings:text-stone-900 prose-headings:font-bold prose-strong:text-stone-900 prose-a:text-[#00a86b] hover:prose-a:underline"
               />
             </div>
 
@@ -207,7 +207,7 @@ export default async function CatchAllPage({
               <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto shrink-0">
                 <a
                   href="mailto:kontakt@topgartengeraete.de"
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#107b46] hover:bg-[#0d693b] text-white font-bold text-sm whitespace-nowrap shadow-lg shadow-emerald-900/30 transition-all flex items-center justify-center gap-2.5 shrink-0"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#00a86b] hover:bg-[#008f5a] text-white font-bold text-sm whitespace-nowrap shadow-lg shadow-emerald-900/30 transition-all flex items-center justify-center gap-2.5 shrink-0"
                 >
                   <svg className="w-4 h-4 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

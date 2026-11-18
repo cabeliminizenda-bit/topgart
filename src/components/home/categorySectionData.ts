@@ -1,6 +1,7 @@
 export type SectionType =
   | 'Hero'
   | 'AktuelleAngebote'
+  | 'GardenCategoryShowcase'
   | 'CategoryShowcase'
   | 'CategoryShowcaseSection'
   | 'CategoryOverview'
@@ -681,18 +682,50 @@ export function createSplitCategorySections(enabled = true): SectionConfig[] {
 
 export const DEFAULT_HLG_SECTIONS: SectionConfig[] = [
   { id: 'sec_hero', type: 'Hero', name: 'Hero Banner & Kategorien', enabled: true, settings: {} },
-  { id: 'sec_deals', type: 'AktuelleAngebote', name: 'Aktuelle Angebote & Bestseller', enabled: true, settings: {} },
-  ...createSplitCategorySections(true),
-  { id: 'sec_brands', type: 'BrandShowcase', name: 'Marken & Garantien', enabled: true, settings: {} },
-  { id: 'sec_trust', type: 'TrustBar', name: 'Vertrauensgarantien (TrustBar)', enabled: true, settings: {} },
+  { id: 'sec_deals', type: 'AktuelleAngebote', name: 'Aktuelle Angebote & Vorteile', enabled: true, settings: {} },
+  {
+    id: 'sec_garden_tractors',
+    type: 'GardenCategoryShowcase',
+    name: 'Angebote Mähroboter & Unsere Rasentraktoren',
+    enabled: true,
+    settings: {},
+  },
+  {
+    id: 'sec_garden_robots',
+    type: 'GardenCategoryShowcase',
+    name: 'Mähroboter',
+    enabled: true,
+    settings: {
+      showSidebar: false,
+      showBanner: false,
+      fallbackPreset: 'robots',
+      title: 'MÄHROBOTER',
+      linkText: 'Mehr anzeigen',
+      linkUrl: '/shop?category=maehroboter',
+    },
+  },
+  {
+    id: 'sec_garden_hochlader',
+    type: 'GardenCategoryShowcase',
+    name: 'Hochlader',
+    enabled: true,
+    settings: {
+      showSidebar: false,
+      showBanner: false,
+      fallbackPreset: 'hochlader',
+      title: 'HOCHLADER',
+      linkText: 'Mehr anzeigen',
+      linkUrl: '/shop?category=hochlader',
+    },
+  },
   {
     id: 'sec_blogs',
     type: 'HeatingGuideBlogs',
-    name: 'Top Gartengeräte Magazin & Ratgeber',
+    name: 'Unser Blog',
     enabled: true,
-    settings: { title: 'Top Gartengeräte Magazin & Ratgeber' },
+    settings: { title: 'Unser Blog' },
   },
-  { id: 'sec_newsletter', type: 'Newsletter', name: 'Newsletter Registrierung', enabled: true, settings: {} },
+  { id: 'sec_newsletter', type: 'Newsletter', name: 'Newsletter abonnieren', enabled: true, settings: {} },
 ];
 
 /**
@@ -714,13 +747,16 @@ export function normalizeHomepageSections(rawSections: Partial<SectionConfig>[])
     }
   }
 
-  const hasHlg = expanded.some(
+  const hasModernSections = expanded.some(
     (s) =>
+      s.type === 'Hero' ||
+      s.type === 'CategoryExplorer' ||
+      s.type === 'BrandShowcase' ||
       s.type === 'AktuelleAngebote' ||
       s.type === 'CategoryShowcaseSection' ||
       s.type === 'CategoryOverview'
   );
-  return hasHlg ? expanded : DEFAULT_HLG_SECTIONS;
+  return hasModernSections ? expanded : DEFAULT_HLG_SECTIONS;
 }
 
 /**
@@ -827,20 +863,18 @@ export function resolveCategorySectionConfig(
 }
 
 export const DEFAULT_BRAND_SHOWCASE_ITEMS: BrandShowcaseItem[] = [
+  { id: 'br-stihl', name: 'STIHL', slug: 'stihl', slogan: 'Profi-Garten- & Forsttechnik', linkUrl: '/shop?brand=stihl' },
+  { id: 'br-husqvarna', name: 'Husqvarna', slug: 'husqvarna', slogan: 'Mähroboter & Rasentraktoren', linkUrl: '/shop?brand=husqvarna' },
+  { id: 'br-gardena', name: 'GARDENA', slug: 'gardena', slogan: 'Smarte Gartenpflege', linkUrl: '/shop?brand=gardena' },
+  { id: 'br-ariens', name: 'Ariens', slug: 'ariens', slogan: 'Profi-Aufsitzmäher', linkUrl: '/shop?brand=ariens' },
+  { id: 'br-makita', name: 'Makita', slug: 'makita', slogan: 'Starke Akku-Gartengeräte', linkUrl: '/shop?brand=makita' },
   { id: 'br-bosch', name: 'Bosch', slug: 'bosch', slogan: 'Technik fürs Leben', linkUrl: '/shop?brand=bosch' },
-  { id: 'br-siemens', name: 'Siemens', slug: 'siemens', slogan: 'Die Zukunft zieht ein', linkUrl: '/shop?brand=siemens' },
-  { id: 'br-miele', name: 'Miele', slug: 'miele', slogan: 'Immer besser', linkUrl: '/shop?brand=miele' },
-  { id: 'br-aeg', name: 'AEG', slug: 'aeg', slogan: 'Perfekt in Form & Funktion', linkUrl: '/shop?brand=aeg' },
-  { id: 'br-samsung', name: 'Samsung', slug: 'samsung', slogan: 'Smart Forward', linkUrl: '/shop?brand=samsung' },
-  { id: 'br-delonghi', name: "De'Longhi", slug: 'delonghi', slogan: 'Better Everyday', linkUrl: '/shop?brand=delonghi' },
-  { id: 'br-lg', name: 'LG', slug: 'lg', slogan: "Life's Good", linkUrl: '/shop?brand=lg' },
-  { id: 'br-philips', name: 'Philips', slug: 'philips', slogan: 'Innovation & You', linkUrl: '/shop?brand=philips' },
-  { id: 'br-kitchenaid', name: 'KitchenAid', slug: 'kitchenaid', slogan: 'Kulinarische Meisterwerke', linkUrl: '/shop?brand=kitchenaid' },
-  { id: 'br-roborock', name: 'Roborock', slug: 'roborock', slogan: 'Smarte Saugroboter', linkUrl: '/shop?brand=roborock' },
-  { id: 'br-jura', name: 'Jura', slug: 'jura', slogan: 'Kaffee-Tradition', linkUrl: '/shop?brand=jura' },
-  { id: 'br-haier', name: 'Haier', slug: 'haier', slogan: 'Intelligente Haushaltsgeräte', linkUrl: '/shop?brand=haier' },
-  { id: 'br-bauknecht', name: 'Bauknecht', slug: 'bauknecht', slogan: 'Für ein gesundes Zuhause', linkUrl: '/shop?brand=bauknecht' },
-  { id: 'br-candy', name: 'Candy', slug: 'candy', slogan: 'Smarte Alltagshelfer', linkUrl: '/shop?brand=candy' },
+  { id: 'br-stiga', name: 'STIGA', slug: 'stiga', slogan: 'Rasenmäher & Traktoren', linkUrl: '/shop?brand=stiga' },
+  { id: 'br-alko', name: 'AL-KO', slug: 'al-ko', slogan: 'Quality for Life', linkUrl: '/shop?brand=al-ko' },
+  { id: 'br-kaercher', name: 'Kärcher', slug: 'kaercher', slogan: 'Hochdruckreiniger & Pflege', linkUrl: '/shop?brand=kaercher' },
+  { id: 'br-honda', name: 'Honda', slug: 'honda', slogan: 'Zuverlässige Motorgeräte', linkUrl: '/shop?brand=honda' },
+  { id: 'br-einhell', name: 'Einhell', slug: 'einhell', slogan: 'Power X-Change Akku-Welt', linkUrl: '/shop?brand=einhell' },
+  { id: 'br-wolf', name: 'WOLF-Garten', slug: 'wolf-garten', slogan: 'Tradition für Ihren Rasen', linkUrl: '/shop?brand=wolf-garten' },
 ];
 
 export const DEFAULT_BRAND_SERVICE_PERKS: ServicePerkItem[] = [

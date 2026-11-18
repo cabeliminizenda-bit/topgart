@@ -679,9 +679,9 @@ export default function CheckoutClient({ settings, zones }: CheckoutClientProps)
               </div>
             </div>
 
-            <div className="flex justify-between text-lg font-bold text-gray-900 mb-8">
+            <div className="flex justify-between text-lg font-bold text-stone-900 mb-8">
               <span>{t('total')}</span>
-              <span>{formatPrice(finalTotal)}</span>
+              <span className="text-[#e05246] tabular-nums">{formatPrice(finalTotal)}</span>
             </div>
 
             {/* Payment method accordion */}
@@ -765,14 +765,14 @@ export default function CheckoutClient({ settings, zones }: CheckoutClientProps)
               )}
             </div>
 
-            <div className="text-xs text-gray-500 mb-6">
-              {t('privacy_policy_msg_1')}<Link href="/privacy" className="text-orange-700 hover:underline">{t('privacy_policy_link')}</Link>{t('privacy_policy_msg_2')}
+            <div className="text-xs text-stone-500 mb-6">
+              {t('privacy_policy_msg_1')}<Link href="/datenschutz" className="text-[#00a86b] hover:underline">{t('privacy_policy_link')}</Link>{t('privacy_policy_msg_2')}
             </div>
 
             <button 
               type="submit" 
               disabled={isProcessing || cart.length === 0 || !paymentMethod || (activeMethods.length > 0 && (!selectedMethod || !selectedMethodEligible))}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-6 rounded transition-colors flex justify-center items-center disabled:opacity-50"
+              className="w-full bg-[#00a86b] hover:bg-[#008f5a] text-white font-semibold py-3.5 px-6 rounded-[4px] transition-colors flex justify-center items-center disabled:opacity-50 cursor-pointer"
             >
               {isProcessing ? t('processing') : t('place_order')}
             </button>

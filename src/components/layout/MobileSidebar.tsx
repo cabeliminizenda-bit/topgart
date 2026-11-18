@@ -108,7 +108,7 @@ function DrawerSearchBar({ categories, placeholder, inputRef, onNavigate }: Draw
     <div className="relative" ref={dropdownRef}>
       <form
         onSubmit={handleSubmit}
-        className="w-full h-11 bg-[#f4f4f5] border border-stone-200/80 rounded-md flex items-center px-2.5 focus-within:bg-white focus-within:border-[#107b46] transition-colors"
+        className="w-full h-11 bg-[#f4f4f5] border border-stone-200/80 rounded-md flex items-center px-2.5 focus-within:bg-white focus-within:border-[#00a86b] transition-colors"
       >
         <button
           type="button"
@@ -140,7 +140,7 @@ function DrawerSearchBar({ categories, placeholder, inputRef, onNavigate }: Draw
         <button
           type="submit"
           aria-label="Suchen"
-          className="p-1.5 text-stone-700 hover:text-[#107b46] transition shrink-0 cursor-pointer"
+          className="p-1.5 text-stone-700 hover:text-[#00a86b] transition shrink-0 cursor-pointer"
         >
           <SearchSvg className="w-4 h-4" />
         </button>
@@ -157,12 +157,12 @@ function DrawerSearchBar({ categories, placeholder, inputRef, onNavigate }: Draw
                 setSelectedLabel(cat.name);
                 setIsDropdownOpen(false);
               }}
-              className={`w-full text-left py-2 text-xs font-medium hover:bg-emerald-50 hover:text-[#107b46] transition flex items-center justify-between cursor-pointer ${cat.isChild ? 'pl-6 pr-3.5 text-stone-600' : 'px-3.5 text-stone-800'
-                } ${selectedCategory === cat.value ? 'font-semibold text-[#107b46] bg-emerald-50/70' : ''}`}
+              className={`w-full text-left py-2 text-xs font-medium hover:bg-emerald-50 hover:text-[#00a86b] transition flex items-center justify-between cursor-pointer ${cat.isChild ? 'pl-6 pr-3.5 text-stone-600' : 'px-3.5 text-stone-800'
+                } ${selectedCategory === cat.value ? 'font-semibold text-[#00a86b] bg-emerald-50/70' : ''}`}
             >
               <span className="truncate">{cat.name}</span>
               {selectedCategory === cat.value && (
-                <svg className="w-3.5 h-3.5 text-[#107b46] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 text-[#00a86b] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               )}
@@ -196,7 +196,7 @@ function DrawerNavLinks({
               <Link
                 href={link.url}
                 onClick={onNavigate}
-                className={`block text-[15px] font-medium transition-colors ${isActive ? 'text-[#107b46]' : 'text-stone-800 hover:text-[#107b46]'
+                className={`block text-[15px] font-medium transition-colors ${isActive ? 'text-[#00a86b]' : 'text-stone-800 hover:text-[#00a86b]'
                   }`}
               >
                 {link.label}
@@ -310,7 +310,7 @@ export default function MobileSidebar({
   };
 
   const railBadgeClasses =
-    'absolute -top-1.5 -left-2 bg-[#facc15] text-stone-900 text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none shadow-2xs';
+    'absolute -top-1.5 -left-2 bg-[#e05246] text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none shadow-2xs';
 
   return (
     <>
@@ -324,7 +324,7 @@ export default function MobileSidebar({
 
         <div className="relative z-10 flex h-full w-[420px] max-w-[92vw] bg-white shadow-2xl animate-in slide-in-from-left duration-200">
           {/* Left Vertical Green Utility Rail */}
-          <div className="w-14 bg-[#107b46] text-white flex flex-col items-center justify-between py-4 shrink-0">
+          <div className="w-14 bg-[#00a86b] text-white flex flex-col items-center justify-between py-4 shrink-0">
             <div className="flex flex-col items-center gap-6">
               <button
                 type="button"
@@ -411,7 +411,7 @@ export default function MobileSidebar({
             <div className="pt-8 text-[13px] leading-relaxed text-stone-500 space-y-2">
               {formattedDate && <p>{formattedDate}</p>}
               <p>{displayAddress}</p>
-              <a href={`mailto:${displayEmail}`} className="block text-stone-500 hover:text-[#107b46] transition">
+              <a href={`mailto:${displayEmail}`} className="block text-stone-500 hover:text-[#00a86b] transition">
                 {displayEmail}
               </a>
             </div>
@@ -450,7 +450,7 @@ export default function MobileSidebar({
 
           <div className="mt-6 p-5 border border-stone-200 rounded-md bg-white text-sm text-stone-700 leading-relaxed space-y-1.5">
             <p className="whitespace-pre-line">{displayAddress}</p>
-            <a href={`mailto:${displayEmail}`} className="block text-stone-700 hover:text-[#107b46] transition">
+            <a href={`mailto:${displayEmail}`} className="block text-stone-700 hover:text-[#00a86b] transition">
               {displayEmail}
             </a>
           </div>

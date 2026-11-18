@@ -137,8 +137,8 @@ export default function CartClient({ zones }: { zones: CartShippingZone[] }) {
           <div className="flex-grow">
             {items.length === 0 ? (
               <div className="space-y-4">
-                <div className="bg-gray-50 border-t-2 border-blue-500 p-4 flex items-center text-gray-700 text-sm">
-                  <svg className="w-5 h-5 text-blue-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <div className="bg-[#f9f9fa] border-t-2 border-[#00a86b] p-4 flex items-center text-stone-700 text-sm rounded-b-[4px]">
+                  <svg className="w-5 h-5 text-[#00a86b] mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
@@ -149,7 +149,7 @@ export default function CartClient({ zones }: { zones: CartShippingZone[] }) {
                 </div>
                 <Link
                   href="/shop"
-                  className="inline-block bg-[#ff4500] hover:bg-[#e03e00] text-white font-medium px-6 py-2.5 rounded transition"
+                  className="inline-block bg-[#00a86b] hover:bg-[#008f5a] text-white font-semibold text-sm px-6 py-2.5 rounded-[4px] transition-colors"
                 >
                   {t('back_to_shop')}
                 </Link>
@@ -195,19 +195,19 @@ export default function CartClient({ zones }: { zones: CartShippingZone[] }) {
                       {/* Image */}
                       <div className="col-span-2 flex justify-center">
                         <Link
-                          href={`/produkt/${item.productId}`}
-                          className="w-20 h-20 bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden"
+                          href={`/produkt/${item.slug || item.productId}`}
+                          className="w-20 h-20 bg-white border border-stone-200 rounded-[4px] flex items-center justify-center overflow-hidden p-1"
                         >
                           {item.image ? (
                             <Image
-                              width={800}
-                              height={800}
+                              width={160}
+                              height={160}
                               src={item.image}
                               alt={item.title}
                               className="max-w-full max-h-full object-contain"
                             />
                           ) : (
-                            <span className="text-xs text-gray-500">{t('image')}</span>
+                            <span className="text-xs text-stone-400">{t('image')}</span>
                           )}
                         </Link>
                       </div>
@@ -215,8 +215,8 @@ export default function CartClient({ zones }: { zones: CartShippingZone[] }) {
                       {/* Title */}
                       <div className="col-span-4 text-center md:text-left">
                         <Link
-                          href={`/produkt/${item.productId}`}
-                          className="text-gray-800 hover:text-[#ff4500] font-medium text-sm"
+                          href={`/produkt/${item.slug || item.productId}`}
+                          className="text-stone-800 hover:text-[#00a86b] font-medium text-sm transition-colors"
                         >
                           {item.title}
                         </Link>
@@ -439,9 +439,9 @@ export default function CartClient({ zones }: { zones: CartShippingZone[] }) {
                 )}
 
                 {/* Total */}
-                <div className="flex justify-between p-4 bg-gray-50 items-center gap-4">
-                  <div className="font-bold text-gray-800">{t('total')}</div>
-                  <div className="text-lg font-bold text-gray-900 whitespace-nowrap text-right">
+                <div className="flex justify-between p-4 bg-[#f9f9fa] items-center gap-4">
+                  <div className="font-bold text-stone-800">{t('total')}</div>
+                  <div className="text-lg font-bold text-[#e05246] whitespace-nowrap text-right tabular-nums">
                     {formatPrice(total)}
                   </div>
                 </div>
@@ -450,7 +450,7 @@ export default function CartClient({ zones }: { zones: CartShippingZone[] }) {
               <button
                 onClick={handleProceedToCheckout}
                 disabled={items.length === 0}
-                className="w-full bg-[#111] hover:bg-black text-white font-bold py-3.5 px-4 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#00a86b] hover:bg-[#008f5a] text-white font-semibold py-3.5 px-4 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {t('proceed_checkout')}
               </button>

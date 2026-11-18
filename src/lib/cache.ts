@@ -110,7 +110,7 @@ export const getCachedProductBySlug = async (slug: string) => {
         rating: r.rating,
         comment: r.comment,
         createdAt: r.createdAt,
-        reviewerName: r.reviewerName || (r.user?.email ? r.user.email.split('@')[0] : 'Client'),
+        reviewerName: r.reviewerName || (r.user?.email ? r.user.email.split('@')[0] : 'Kunde'),
       }));
 
       return {
@@ -128,11 +128,18 @@ export const getCachedRelatedProducts = async (categoryIds: string[], excludePro
   const sortedIds = [...categoryIds].sort();
   return unstable_cache(
     async () => prisma.product.findMany({
-      where: { 
-        categories: { some: { id: { in: categoryIds } } }, 
-        id: { not: excludeProductId } 
+      where: {
+        isDeleted: false,
+        categories: { some: { id: { in: categoryIds } } },
+        id: { not: excludeProductId }
       },
-      include: { categories: true },
+      include: {
+        categories: true,
+        reviews: {
+          where: { isApproved: true },
+          select: { rating: true },
+        },
+      },
       take: 4,
     }),
     ['related-products', sortedIds.join(','), excludeProductId],

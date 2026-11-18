@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import HlgHero from '@/components/home/HlgHero';
-import AktuelleAngebote from '@/components/home/AktuelleAngebote';
+import GardenDealsShowcase from '@/components/home/GardenDealsShowcase';
+import GardenCategoryShowcase from '@/components/home/GardenCategoryShowcase';
 import CategoryShowcaseSections from '@/components/home/CategoryShowcaseSections';
 import CategoryShowcaseSection from '@/components/home/CategoryShowcaseSection';
 import CategoryOverviewSection from '@/components/home/CategoryOverviewSection';
@@ -26,7 +27,11 @@ import {
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const settings = await import('@/lib/cache').then(m => m.getCachedSettings());
+  const { getCachedSettings, getCachedCategoriesTree } = await import('@/lib/cache');
+  const [settings, categories] = await Promise.all([
+    getCachedSettings(),
+    getCachedCategoriesTree(),
+  ]);
 
   // Fetch products & brands from Prisma
   let formattedProducts: any[] = [];
@@ -134,13 +139,20 @@ export default async function Home() {
   const renderSection = (section: SectionConfig) => {
     switch (section.type) {
       case 'Hero':
-        return <HlgHero key={section.id} config={section.settings} />;
+        return <HlgHero key={section.id} config={section.settings} categories={categories} />;
       case 'AktuelleAngebote':
       case 'BestDeals':
         return (
-          <AktuelleAngebote
+          <GardenDealsShowcase
             key={section.id}
-            dbBestsellers={dbBestsellers}
+            catalogProducts={formattedProducts}
+            config={section.settings}
+          />
+        );
+      case 'GardenCategoryShowcase':
+        return (
+          <GardenCategoryShowcase
+            key={section.id}
             catalogProducts={formattedProducts}
             config={section.settings}
           />

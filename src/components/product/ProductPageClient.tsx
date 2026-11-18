@@ -1,25 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
 import ProductGallery from './ProductGallery';
 import ProductActions from './ProductActions';
 import Link from 'next/link';
-import Image from "next/image";
-
-const Star = ({ filled = true }: { filled?: boolean }) => (
-  <svg
-    className={`w-4 h-4 ${filled ? 'text-orange-600' : 'text-gray-300'}`}
-    fill="currentColor"
-    viewBox="0 0 20 20"
-  >
-    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-  </svg>
-);
 
 interface ProductPageClientProps {
   product: {
     id: string;
+    slug?: string;
     title: string;
+    shortDescription?: string | null;
     price: number;
     compareAtPrice?: number | null;
     discountLabel?: string | null;
@@ -27,11 +19,18 @@ interface ProductPageClientProps {
     stock: number | null;
     images: string[];
     attributes?: { name: string; options: string[] }[];
-    variations?: { id: string; price: string; stock?: string; image?: string; attributes: Record<string, string> }[];
+    variations?: {
+      id: string;
+      price: string;
+      stock?: string;
+      image?: string;
+      attributes: Record<string, string>;
+    }[];
     brand?: { name: string; logo?: string | null } | null;
-    categories?: { id: string; name: string }[];
-    tags?: { name: string }[];
+    categories?: { id: string; name: string; slug?: string | null }[];
+    tags?: { id?: string; name: string; slug?: string | null }[];
     reviews?: { rating: number }[];
+    gtin?: string | null;
     [key: string]: any;
   };
   enableBuyNow?: boolean;
@@ -49,20 +48,19 @@ interface ProductPageClientProps {
   contactSlug?: string;
 }
 
-export default function ProductPageClient({ product, enableBuyNow = false, storeName = 'My Store', translations, shippingInfo, contactSlug = 'contact' }: ProductPageClientProps) {
-  // L'image active de la galerie, pilotée par la variation sélectionnée
+export default function ProductPageClient({
+  product,
+  enableBuyNow = true,
+  translations,
+  shippingInfo,
+  contactSlug = 'kontakt',
+}: ProductPageClientProps) {
   const [variationImage, setVariationImage] = useState<string | null>(null);
-
-  const reviews = product.reviews || [];
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((acc: number, curr: any) => acc + curr.rating, 0) / reviews.length
-    : 0;
-
   const t = translations;
 
   return (
     <>
-      {/* Galerie — reçoit l'image de variation pour l'afficher en priorité */}
+      {/* Left: Vertical Thumbnail Strip + Large Bordered Main Image */}
       <ProductGallery
         images={product.images}
         title={product.title}
@@ -72,42 +70,12 @@ export default function ProductPageClient({ product, enableBuyNow = false, store
         activeVariationImage={variationImage}
       />
 
-      {/* Colonne droite : titre, marque, avis, actions, méta */}
-      <div className="w-full lg:w-1/2 flex flex-col">
-        <h1 className="text-3xl font-bold mb-4 leading-tight">{product.title}</h1>
+      {/* Right: Product Info & Conversion Column */}
+      <div className="w-full lg:w-[51%] flex flex-col">
+        <h1 className="text-[21px] sm:text-[23px] font-medium text-stone-800 leading-snug mb-2">
+          {product.title}
+        </h1>
 
-        {/* Marque : logo seul si défini, nom seul sinon */}
-        {product.brand && (
-          <div className="flex items-center mb-4">
-            {product.brand.logo ? (
-              <Image width={800} height={800} src={product.brand.logo} alt={product.brand.name} className="h-10 object-contain rounded-sm" />
-            ) : (
-              <span className="text-sm text-gray-500 uppercase tracking-wider font-semibold">{product.brand.name}</span>
-            )}
-          </div>
-        )}
-
-        {/* Avis & Vendus */}
-        <div className="flex items-center gap-4 mb-6 text-sm text-gray-500">
-          {reviews.length > 0 && (
-            <>
-              <div className="flex items-center gap-1">
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} filled={i <= Math.round(avgRating)} />)}
-                </div>
-                <span className="ml-1 text-gray-600">
-                  {t?.customer_reviews ?? `${reviews.length} avaliações`}
-                </span>
-              </div>
-              <span className="border-l border-gray-300 h-4"></span>
-            </>
-          )}
-          <span>
-            {t?.sold ?? 'Vendido'} <span className="font-semibold text-gray-900">24</span>
-          </span>
-        </div>
-
-        {/* Actions — remonte l'image quand une variation est sélectionnée */}
         <ProductActions
           product={product as any}
           enableBuyNow={enableBuyNow}
@@ -116,46 +84,39 @@ export default function ProductPageClient({ product, enableBuyNow = false, store
           contactSlug={contactSlug}
         />
 
-        {/* Méta */}
-        <div className="space-y-2 text-sm pt-4 border-t border-gray-100">
-          <p>
-            <span className="font-semibold text-gray-900">{t?.sku ?? 'Ref / SKU:'} </span>
+        {/* Subtle Compact Product Metadata (SKU, Categories, Brand, GTIN) */}
+        <div className="mt-5 pt-3.5 border-t border-stone-100 flex flex-wrap gap-x-5 gap-y-1.5 text-[11.5px] text-stone-500">
+          <span>
+            <strong className="font-medium text-stone-700">{t?.sku ?? 'Artikelnummer:'}</strong>{' '}
             {product.id.split('-')[0].toUpperCase()}
-          </p>
-          <p>
-            <span className="font-semibold text-gray-900">{t?.categories ?? 'Categorias:'} </span>
-            {product.categories && product.categories.length > 0
-              ? product.categories.map((c: any, index: number) => (
-                  <span key={c.id}>
-                    <Link href={`/product-category/${c.slug || c.id}`} className="hover:text-red-600 hover:underline transition-colors">
-                      {c.name}
-                    </Link>
-                    {index < product.categories!.length - 1 ? ', ' : ''}
-                  </span>
-                ))
-              : (t?.uncategorized ?? 'Sem categoria')}
-          </p>
-          {product.brand && !product.brand.logo && (
-            <p><span className="font-semibold text-gray-900">{t?.brand ?? 'Marca:'} </span>{product.brand.name}</p>
-          )}
-          {product.tags && product.tags.length > 0 && (
-            <p>
-              <span className="font-semibold text-gray-900">{t?.tags ?? 'Tags :'} </span>
-              {product.tags.map((tag: any, index: number) => (
-                <span key={tag.id}>
-                  <Link href={`/shop?tag=${tag.slug || tag.id}`} className="hover:text-orange-600 hover:underline transition-colors">
-                    {tag.name}
+          </span>
+          {product.categories && product.categories.length > 0 && (
+            <span>
+              <strong className="font-medium text-stone-700">{t?.categories ?? 'Kategorien:'}</strong>{' '}
+              {product.categories.map((c: any, index: number) => (
+                <span key={c.id}>
+                  <Link
+                    href={`/${c.slug || c.id}`}
+                    className="hover:text-[#00a86b] hover:underline transition-colors"
+                  >
+                    {c.name}
                   </Link>
-                  {index < product.tags!.length - 1 ? ', ' : ''}
+                  {index < product.categories!.length - 1 ? ', ' : ''}
                 </span>
               ))}
-            </p>
+            </span>
+          )}
+          {product.brand && (
+            <span>
+              <strong className="font-medium text-stone-700">{t?.brand ?? 'Marke:'}</strong>{' '}
+              {product.brand.name}
+            </span>
           )}
           {product.gtin && (
-            <p>
-              <span className="font-semibold text-gray-900">GTIN / EAN : </span>
-              <span className="font-mono text-gray-600">{product.gtin}</span>
-            </p>
+            <span>
+              <strong className="font-medium text-stone-700">GTIN / EAN:</strong>{' '}
+              <span className="font-mono">{product.gtin}</span>
+            </span>
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useSyncExternalStore } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
@@ -10,18 +10,26 @@ import { basicSanitizeHtml } from '@/lib/security';
 interface CategoryItem {
   name: string;
   slug: string;
-  icon?: string;
+  href?: string;
 }
 
-const defaultApplianceCategories: CategoryItem[] = [
-  { name: 'Rasenmäher', slug: 'rasenmaeher' },
+interface HeroSlide {
+  image: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  ctaText: string;
+  ctaUrl: string;
+}
+
+const defaultGardenCategories: CategoryItem[] = [
+  { name: 'Rasentraktoren', slug: 'rasentraktoren' },
   { name: 'Mähroboter', slug: 'maehroboter' },
-  { name: 'Aufsitzmäher', slug: 'aufsitzmaeher' },
-  { name: 'Motorsägen', slug: 'motorsagen' },
-  { name: 'Heckenscheren', slug: 'heckenscheren' },
-  { name: 'Rasentrimmer & Motorsensen', slug: 'rasentrimmer-motorsensen' },
-  { name: 'Laubbläser & Laubsauger', slug: 'laubblaeser-laubsauger' },
-  { name: 'Hochdruckreiniger', slug: 'hochdruckreiniger' },
+  { name: 'Rasenmäher', slug: 'rasenmaeher' },
+  { name: 'Kettensäge & Rasentrimmer', slug: 'kettensaege-rasentrimmer' },
+  { name: 'Hochlader', slug: 'hochlader' },
+  { name: 'Zubehör', slug: 'zubehoer' },
+  { name: 'Zubehör für Gartengeräte', slug: 'zubehoer-fuer-gartengeraete' },
 ];
 
 export interface HlgHeroProps {
@@ -30,16 +38,6 @@ export interface HlgHeroProps {
   categories?: Array<{ id?: string; name: string; slug: string | null }>;
   isPreview?: boolean;
   sectionId?: string;
-}
-
-function hexToRgba(hex: string, alphaPercent: number): string {
-  const clean = hex.replace('#', '');
-  if (clean.length !== 6 && clean.length !== 3) return `rgba(255,255,255,${alphaPercent / 100})`;
-  const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
-  const r = parseInt(full.substring(0, 2), 16);
-  const g = parseInt(full.substring(2, 4), 16);
-  const b = parseInt(full.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alphaPercent / 100))})`;
 }
 
 function parseNumberSetting(
@@ -91,137 +89,131 @@ export default function HlgHero({
     () => false
   );
   const cartStore = useCartStore();
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const cartItems = cartStore.getTotalItems();
   const cartTotal = cartStore.getTotalPrice();
 
   // Global Hero settings
-  const heroMinHeight = parseNumberSetting(config?.heroMinHeight, 460, 240, 900);
-  const heroPaddingY = parseNumberSetting(config?.heroPaddingY, 24, 0, 120);
-  const heroGap = parseNumberSetting(config?.heroGap, 20, 0, 64);
-  const heroBgColor = parseColorSetting(config?.heroBgColor, 'transparent');
-  const showMiniCart = config?.showMiniCart !== false;
+  const heroMinHeight = parseNumberSetting(config?.heroMinHeight, 445, 280, 760);
+  const heroPaddingY = parseNumberSetting(config?.heroPaddingY, 12, 0, 80);
+  const heroGap = parseNumberSetting(config?.heroGap, 24, 0, 64);
+  const heroBgColor = parseColorSetting(config?.heroBgColor, '#ffffff');
+  const showMiniCart = config?.showMiniCart === true;
   const showMobileCategories = config?.showMobileCategories !== false;
 
-  // Block 1 settings (Categories)
-  const block1MaxItems = parseNumberSetting(config?.block1MaxItems, 8, 3, 12);
-  const block1Title = config?.block1Title ?? 'Alle Kategorien';
-  const block1FooterText = config?.block1FooterText ?? 'Alle Kategorien ansehen';
-  const block1FooterUrl = config?.block1FooterUrl ?? '/shop';
+  // Block 1 settings (Left Categories Sidebar)
+  const block1MaxItems = parseNumberSetting(config?.block1MaxItems, 7, 3, 12);
   const block1BgColor = parseColorSetting(config?.block1BgColor, '#ffffff');
-  const block1BorderColor = parseColorSetting(config?.block1BorderColor, '#e7e5e4');
-  const block1BorderRadius = parseNumberSetting(config?.block1BorderRadius, 16, 0, 48);
-  const block1AccentColor = parseColorSetting(config?.block1AccentColor, '#107b46');
-  const block1TitleColor = parseColorSetting(config?.block1TitleColor, '#1c1917');
-  const block1TitleSize = parseNumberSetting(config?.block1TitleSize, 14, 8, 40);
-  const block1TextColor = parseColorSetting(config?.block1TextColor, '#44403c');
-  const block1TextSize = parseNumberSetting(config?.block1TextSize, 13, 8, 28);
-  const block1FooterColor = parseColorSetting(config?.block1FooterColor, block1AccentColor);
-  const block1FooterSize = parseNumberSetting(config?.block1FooterSize, 12, 8, 28);
+  const block1BorderColor = parseColorSetting(config?.block1BorderColor, '#e5e7eb');
+  const block1BorderRadius = parseNumberSetting(config?.block1BorderRadius, 5, 0, 24);
+  const block1TextColor = parseColorSetting(config?.block1TextColor, '#374151');
+  const block1TextSize = parseNumberSetting(config?.block1TextSize, 13.5, 11, 20);
 
-  const displayCategories =
-    categories && categories.length > 0
-      ? categories.slice(0, block1MaxItems).map((c) => ({ name: c.name, slug: c.slug || '' }))
-      : defaultApplianceCategories.slice(0, block1MaxItems);
+  const filteredDbCategories = (categories || []).filter((c) => {
+    const slugLower = (c.slug || '').toLowerCase();
+    const nameLower = c.name.toLowerCase();
+    return slugLower !== 'uncategorized' && nameLower !== 'uncategorized' && nameLower !== 'allgemein';
+  });
 
-  // Block 2 settings (Main Banner)
-  const block2Image =
-    config?.bannerImage !== undefined
+  const displayCategories: CategoryItem[] = [
+    { name: 'Startseite', slug: '', href: '/' },
+    ...(filteredDbCategories.length > 0
+      ? filteredDbCategories.slice(0, block1MaxItems).map((c) => ({
+          name: c.name,
+          slug: c.slug || '',
+        }))
+      : defaultGardenCategories.slice(0, block1MaxItems)),
+  ];
+
+  // Block 2 settings (Hero Banner Slider)
+  const customImage =
+    config?.bannerImage &&
+    config.bannerImage !== '/images/hero-appliances.jpg'
       ? config.bannerImage
-      : config?.bgImageUrl !== undefined
+      : config?.bgImageUrl &&
+          config.bgImageUrl !== '/images/hero-appliances.jpg'
         ? config.bgImageUrl
-        : '/images/hero-appliances.jpg';
-  const block2BadgeText = config?.badgeText ?? config?.campaignBadge ?? 'Sonderangebot';
-  const block2Title =
-    config?.title ??
-    config?.titleGradient ??
-    'Ihre hochwertigen Gartengeräte zu den besten Preisen!';
-  const block2Subtitle =
-    config?.subtitle ??
-    config?.description ??
-    'Premium-Marken für Garten & Forst. Bis zu 40% sparen • Sofort versandbereit • 2 Jahre Garantie.';
-  const block2Trust1 = config?.trustBadge1 ?? 'Kostenloser Versand ab 200 €';
-  const block2Trust2 = config?.trustBadge2 ?? '2 Jahre Garantie';
-  const block2CtaText = config?.ctaText ?? config?.buttonText ?? 'Angebote anzeigen';
-  const block2CtaUrl = config?.ctaUrl ?? config?.buttonLink ?? '/shop';
+        : '/images/hero-garden-mower.jpg';
 
-  const block2BgColor = parseColorSetting(config?.block2BgColor, '#f5f5f4');
-  const block2BorderRadius = parseNumberSetting(config?.block2BorderRadius, 16, 0, 48);
-  const block2Padding = parseNumberSetting(config?.block2Padding, 28, 0, 80);
-  const block2OverlayColor = parseColorSetting(config?.block2OverlayColor, '#ffffff');
-  const block2OverlayOpacity = parseNumberSetting(config?.block2OverlayOpacity, 85, 0, 100);
-  const block2OverlayStyle = (config?.block2OverlayStyle as 'gradient' | 'solid') || 'gradient';
-  const block2BadgeBg = parseColorSetting(config?.block2BadgeBg, '#e01b1b');
-  const block2BadgeTextColor = parseColorSetting(config?.block2BadgeTextColor, '#ffffff');
-  const block2BadgeSize = parseNumberSetting(config?.block2BadgeSize, 11, 8, 28);
-  const block2TitleColor = parseColorSetting(config?.block2TitleColor, '#dc2626');
-  const block2TitleSize = parseNumberSetting(config?.block2TitleSize, 34, 12, 72);
-  const block2SubtitleColor = parseColorSetting(config?.block2SubtitleColor, '#44403c');
-  const block2SubtitleSize = parseNumberSetting(config?.block2SubtitleSize, 14, 8, 36);
-  const block2TrustColor = parseColorSetting(config?.block2TrustColor, '#44403c');
-  const block2TrustIconColor = parseColorSetting(config?.block2TrustIconColor, '#107b46');
-  const block2TrustSize = parseNumberSetting(config?.block2TrustSize, 11, 8, 28);
-  const block2BtnBg = parseColorSetting(config?.block2BtnBg, '#f59e0b');
-  const block2BtnTextColor = parseColorSetting(config?.block2BtnTextColor, '#0c0a09');
-  const block2BtnSize = parseNumberSetting(config?.block2BtnSize, 15, 8, 32);
+  const primaryTitle =
+    config?.title && !String(config.title).includes('Haushaltsgeräte')
+      ? config.title
+      : 'Rasenmäher im Angebot';
 
-  // Block 3 settings (Right Highlight Card)
-  const block3Image =
-    config?.sideCardImage !== undefined
-      ? config.sideCardImage
-      : config?.showcaseBgImage !== undefined
-        ? config.showcaseBgImage
-        : '/images/hero-coffee-machine.jpg';
-  const block3Badge = config?.sideCardBadge ?? '★ Bestseller der Woche';
-  const block3Category = config?.sideCardCategory ?? 'Perfekter Rasen';
-  const block3Title = config?.sideCardTitle ?? 'Mähroboter & Rasenmäher';
-  const block3Subtitle =
-    config?.sideCardSubtitle ??
-    'Leistungsstarke Gartentechnik für mühelose Rasenpflege das ganze Jahr.';
-  const block3CtaText = config?.sideCardCtaText ?? 'Geräte entdecken';
-  const block3Url = config?.sideCardUrl ?? '/shop?category=maehroboter';
+  const primarySubtitle =
+    config?.subtitle && !String(config.subtitle).includes('Küche & Haushalt')
+      ? config.subtitle
+      : 'Pflegen Sie Ihren Garten, ohne viel auszugeben!';
 
-  const block3BgColor = parseColorSetting(config?.block3BgColor, '#1c1917');
-  const block3BorderRadius = parseNumberSetting(config?.block3BorderRadius, 16, 0, 48);
-  const block3OverlayOpacity = parseNumberSetting(config?.block3OverlayOpacity, 90, 0, 100);
-  const block3BadgeBg = parseColorSetting(config?.block3BadgeBg, '#ffffff');
-  const block3BadgeTextColor = parseColorSetting(config?.block3BadgeTextColor, '#1c1917');
-  const block3BadgeSize = parseNumberSetting(config?.block3BadgeSize, 10, 8, 24);
-  const block3CategoryColor = parseColorSetting(config?.block3CategoryColor, '#fbbf24');
-  const block3CategorySize = parseNumberSetting(config?.block3CategorySize, 11, 8, 28);
-  const block3TitleColor = parseColorSetting(config?.block3TitleColor, '#ffffff');
-  const block3TitleSize = parseNumberSetting(config?.block3TitleSize, 18, 10, 48);
-  const block3SubtitleColor = parseColorSetting(config?.block3SubtitleColor, '#d6d3d1');
-  const block3SubtitleSize = parseNumberSetting(config?.block3SubtitleSize, 12, 8, 28);
-  const block3LinkColor = parseColorSetting(config?.block3LinkColor, '#fbbf24');
-  const block3LinkSize = parseNumberSetting(config?.block3LinkSize, 12, 8, 28);
+  const primaryDescription =
+    config?.description && !String(config.description).includes('Küche & Haushalt')
+      ? config.description
+      : 'Leistung, Qualität, unschlagbare Preise\nTreffen Sie die richtige Wahl!';
+
+  const primaryCtaText = config?.ctaText ?? config?.buttonText ?? 'Angebote ansehen';
+  const primaryCtaUrl = config?.ctaUrl ?? config?.buttonLink ?? '/shop';
+
+  const block2BorderRadius = parseNumberSetting(config?.block2BorderRadius, 5, 0, 24);
+  const block2BtnBg = parseColorSetting(config?.block2BtnBg, '#ef3e2d');
+  const block2BtnTextColor = parseColorSetting(config?.block2BtnTextColor, '#ffffff');
+
+  const slides: HeroSlide[] = [
+    {
+      image: customImage,
+      title: primaryTitle,
+      subtitle: primarySubtitle,
+      description: primaryDescription,
+      ctaText: primaryCtaText,
+      ctaUrl: primaryCtaUrl,
+    },
+    {
+      image: '/images/hero-robot-mower.jpg',
+      title: 'Mähroboter & Gartentechnik',
+      subtitle: 'Perfekter Rasen – vollautomatisch und leise!',
+      description: 'Top-Marken, 2 Jahre Garantie & schneller Versand\nJetzt attraktive Saisonangebote entdecken!',
+      ctaText: 'Jetzt entdecken',
+      ctaUrl: '/shop?category=maehroboter',
+    },
+  ];
+
+  useEffect(() => {
+    if (isPaused || slides.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 6500);
+    return () => clearInterval(timer);
+  }, [isPaused, slides.length]);
+
+  const currentSlide = slides[activeSlide] || slides[0];
 
   const previewRing = isPreview
-    ? 'hover:ring-2 hover:ring-[#107b46]/80 transition-shadow duration-200'
+    ? 'hover:ring-2 hover:ring-[#00a86b]/80 transition-shadow duration-200'
     : '';
 
   return (
     <section
       style={{
         paddingTop: `${heroPaddingY}px`,
-        paddingBottom: `${heroPaddingY}px`,
+        paddingBottom: `${heroPaddingY + 16}px`,
         backgroundColor: heroBgColor,
       }}
       className="relative"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Floating Mini-Cart Widget (Desktop only) */}
+        {/* Optional Floating Mini-Cart Widget (only when explicitly enabled) */}
         {showMiniCart && !isPreview && (
           <div className="hidden lg:block fixed right-0 top-1/2 -translate-y-1/2 z-40">
             <button
               type="button"
               onClick={() => cartStore.setIsOpen(true)}
-              className="bg-[#156b42] hover:bg-[#107b46] text-white shadow-lg hover:shadow-xl rounded-l-2xl rounded-r-none px-3.5 py-3.5 sm:px-4 sm:py-4 flex flex-col items-center justify-center gap-2 transition-all group cursor-pointer"
+              className="bg-[#00a86b] hover:bg-[#008f5a] text-white shadow-lg hover:shadow-xl rounded-l-2xl rounded-r-none px-3.5 py-3.5 sm:px-4 sm:py-4 flex flex-col items-center justify-center gap-2 transition-all group cursor-pointer"
               title="Warenkorb ansehen"
               aria-label="Warenkorb ansehen"
             >
               <svg
-                className="w-7 h-7 text-white group-hover:scale-105 transition-transform"
+                className="w-6 h-6 text-white group-hover:scale-105 transition-transform"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -234,24 +226,24 @@ export default function HlgHero({
                   d="M7 9l2.2-4.5M17 9l-2.2-4.5M4.5 9h15a1.5 1.5 0 011.45 1.88l-1.35 5.4A2.5 2.5 0 0117.17 18.2H6.83a2.5 2.5 0 01-2.43-1.92l-1.35-5.4A1.5 1.5 0 014.5 9zM9.2 12.5h5.6M10.7 15h2.6"
                 />
               </svg>
-              <span className="text-[12px] sm:text-[13px] font-medium tracking-tight leading-none whitespace-nowrap">
+              <span className="text-[12px] font-medium tracking-tight leading-none whitespace-nowrap">
                 {mounted ? cartItems : 0} {mounted && cartItems > 1 ? 'Produkte' : 'Produkt'}
               </span>
-              <span className="bg-white/25 text-white text-[12px] sm:text-[13px] font-semibold px-3 py-1 rounded-full leading-tight tabular-nums whitespace-nowrap">
-                {mounted ? cartTotal.toFixed(2).replace('.', ',') : '0,00'}€
+              <span className="bg-white/25 text-white text-[12px] font-semibold px-3 py-1 rounded-full leading-tight tabular-nums whitespace-nowrap">
+                {mounted ? cartTotal.toFixed(2).replace('.', ',') : '0,00'} €
               </span>
             </button>
           </div>
         )}
 
-        {/* Main Grid: Block 1 (Categories) + Block 2 (Center Banner) + Block 3 (Highlight Card) */}
+        {/* Main 2-Column Layout: Left Category Sidebar (aligned with ZUM SHOP GEHEN) + Full-Width Hero Banner */}
         <div
-          className="grid grid-cols-1 lg:grid-cols-12 items-stretch"
+          className="flex flex-col lg:flex-row items-stretch"
           style={{ gap: `${heroGap}px` }}
         >
-          {/* 1. BLOCK 1: Left Categories Column */}
+          {/* 1. LEFT SIDEBAR: Categories Navigation Card */}
           <div
-            className={`hidden lg:block lg:col-span-3 relative group/block ${previewRing}`}
+            className={`hidden lg:flex flex-col w-[254px] shrink-0 relative group/block ${previewRing}`}
             style={{ borderRadius: `${block1BorderRadius}px` }}
           >
             {isPreview && sectionId && (
@@ -259,286 +251,157 @@ export default function HlgHero({
             )}
 
             <div
-              className="shadow-sm h-full flex flex-col overflow-hidden border"
+              className="h-full flex flex-col overflow-hidden border shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
               style={{
                 backgroundColor: block1BgColor,
                 borderColor: block1BorderColor,
                 borderRadius: `${block1BorderRadius}px`,
               }}
             >
-              {/* Header with Accent Indicator */}
-              <div className="px-5 pt-4 pb-3 border-b" style={{ borderColor: block1BorderColor }}>
-                <h3
-                  className="font-extrabold tracking-tight leading-snug"
-                  style={{ color: block1TitleColor, fontSize: `${block1TitleSize}px` }}
-                >
-                  {renderRichText(block1Title)}
-                </h3>
-                <div
-                  className="w-8 h-0.5 rounded-full mt-1.5"
-                  style={{ backgroundColor: block1AccentColor }}
-                />
-              </div>
-
-              {/* Category List */}
               <nav
-                className="flex-1 divide-y divide-stone-100/90 font-medium"
-                style={{ fontSize: `${block1TextSize}px` }}
+                aria-label="Kategorien"
+                className="flex-1 flex flex-col divide-y divide-stone-100"
               >
                 {displayCategories.map((cat, idx) => (
                   <Link
                     key={idx}
-                    href={`/shop?category=${encodeURIComponent(cat.slug)}`}
-                    className="group/item flex items-center justify-between px-5 py-3 hover:bg-black/[0.03] transition-colors"
+                    href={cat.href || `/shop?category=${encodeURIComponent(cat.slug)}`}
+                    className="group/item flex items-center justify-between px-5 py-3.5 hover:bg-emerald-50/40 hover:text-[#00a86b] transition-colors"
                   >
                     <span
-                      className="group-hover/item:font-semibold transition-colors truncate"
+                      className="truncate group-hover/item:text-[#00a86b] transition-colors"
                       style={{ color: block1TextColor, fontSize: `${block1TextSize}px` }}
                     >
                       {cat.name}
                     </span>
-                    <svg
-                      className="w-3.5 h-3.5 opacity-45 group-hover/item:opacity-100 group-hover/item:translate-x-0.5 transition-all shrink-0 ml-2"
-                      style={{ color: block1TextColor }}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                    </svg>
                   </Link>
                 ))}
               </nav>
-
-              {/* Footer link */}
-              {block1FooterText && (
-                <div
-                  className="p-3 bg-black/[0.03] border-t text-center"
-                  style={{ borderColor: block1BorderColor }}
-                >
-                  <Link
-                    href={block1FooterUrl || '/shop'}
-                    className="font-bold hover:underline inline-flex items-center gap-1"
-                    style={{ color: block1FooterColor, fontSize: `${block1FooterSize}px` }}
-                  >
-                    <span>{renderRichText(block1FooterText)}</span>
-                    <span>&rarr;</span>
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* 2. BLOCK 2: Center Main Banner */}
+          {/* 2. RIGHT MAIN HERO BANNER SLIDER */}
           <div
-            className={`lg:col-span-6 xl:col-span-6 relative overflow-hidden shadow-sm border border-stone-200/80 flex items-center group/block ${previewRing}`}
+            className={`flex-1 min-w-0 relative overflow-hidden shadow-sm border border-stone-200/70 flex items-center justify-end group/block ${previewRing}`}
             style={{
               minHeight: `${heroMinHeight}px`,
-              backgroundColor: block2BgColor,
               borderRadius: `${block2BorderRadius}px`,
+              backgroundColor: '#1f2937',
             }}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
           >
             {isPreview && sectionId && (
               <HeroPreviewEditButton sectionId={sectionId} blockNum={2} label="Block 2: Hauptbanner" />
             )}
 
-            {/* Background Image */}
-            {block2Image && (
-              <Image
-                src={block2Image}
-                alt={stripHtmlTags(block2Title)}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 660px"
-                quality={90}
-                className="object-cover object-center transition-transform duration-700"
-              />
-            )}
+            {/* Slide Background Images */}
+            {slides.map((slide, idx) => (
+              <div
+                key={idx}
+                className={`absolute inset-0 transition-opacity duration-700 ${
+                  idx === activeSlide ? 'opacity-100 z-0' : 'opacity-0 z-0 pointer-events-none'
+                }`}
+              >
+                <Image
+                  src={slide.image}
+                  alt={stripHtmlTags(slide.title)}
+                  fill
+                  priority={idx === 0}
+                  sizes="(max-width: 1024px) 100vw, 960px"
+                  quality={90}
+                  className="object-cover object-center"
+                />
+              </div>
+            ))}
 
-            {/* Overlay on Block Background */}
+            {/* Right-side Readability Gradient Scrim */}
             <div
-              className="absolute inset-0 pointer-events-none transition-opacity"
+              className="absolute inset-0 z-[1] pointer-events-none"
               style={{
                 background:
-                  block2OverlayStyle === 'solid'
-                    ? hexToRgba(block2OverlayColor, block2OverlayOpacity)
-                    : `linear-gradient(to right, ${hexToRgba(block2OverlayColor, block2OverlayOpacity)} 0%, ${hexToRgba(block2OverlayColor, Math.round(block2OverlayOpacity * 0.85))} 50%, ${hexToRgba(block2OverlayColor, Math.round(block2OverlayOpacity * 0.35))} 100%)`,
+                  'linear-gradient(to left, rgba(15, 23, 42, 0.62) 0%, rgba(15, 23, 42, 0.36) 46%, rgba(15, 23, 42, 0.04) 100%)',
               }}
             />
 
-            {/* Banner Content (placed directly on block, no translucent card background) */}
-            <div className="relative z-10 max-w-xl" style={{ padding: `${block2Padding}px` }}>
-              {/* Badge */}
-              {block2BadgeText && (
-                <div className="inline-flex items-center shadow-xs">
-                  <span
-                    className="relative font-black tracking-wider uppercase px-3.5 py-1 rounded-sm shadow-sm flex items-center gap-1.5"
-                    style={{
-                      backgroundColor: block2BadgeBg,
-                      color: block2BadgeTextColor,
-                      fontSize: `${block2BadgeSize}px`,
-                    }}
-                  >
-                    <span
-                      style={{
-                        color:
-                          block2BadgeTextColor.toLowerCase() === '#ffffff'
-                            ? '#fde047'
-                            : block2BadgeTextColor,
-                      }}
-                    >
-                      ⚡
-                    </span>
-                    <span>{renderRichText(block2BadgeText)}</span>
-                  </span>
-                </div>
-              )}
-
-              {/* Main Title */}
-              <h1
-                className="font-black leading-[1.15] tracking-tight mt-3"
-                style={{
-                  color: block2TitleColor,
-                  fontSize: `${block2TitleSize}px`,
-                }}
-              >
-                {renderRichText(block2Title)}
+            {/* Right-Aligned Overlay Copy & CTA (matching mockup) */}
+            <div className="relative z-10 w-full max-w-[460px] px-6 py-10 sm:px-10 lg:pr-12 lg:pl-6 text-right flex flex-col items-end">
+              <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-medium text-white tracking-tight leading-tight drop-shadow-sm">
+                {renderRichText(currentSlide.title)}
               </h1>
 
-              {/* Subtitle */}
-              {block2Subtitle && (
-                <p
-                  className="font-semibold mt-2 max-w-md leading-relaxed"
-                  style={{
-                    color: block2SubtitleColor,
-                    fontSize: `${block2SubtitleSize}px`,
-                  }}
-                >
-                  {renderRichText(block2Subtitle)}
+              {currentSlide.subtitle && (
+                <p className="mt-4 text-sm sm:text-base font-bold text-white leading-snug max-w-[340px] drop-shadow-xs">
+                  {renderRichText(currentSlide.subtitle)}
                 </p>
               )}
 
-              {/* Trust Micro-Bullets */}
-              {(block2Trust1 || block2Trust2) && (
-                <div
-                  className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-bold"
-                  style={{ fontSize: `${block2TrustSize}px`, color: block2TrustColor }}
-                >
-                  {[block2Trust1, block2Trust2].filter(Boolean).map((item, idx) => (
-                    <span key={idx} className="inline-flex items-center gap-1">
-                      <span style={{ color: block2TrustIconColor }}>✓</span>
-                      <span style={{ color: block2TrustColor }}>{renderRichText(item)}</span>
-                    </span>
-                  ))}
-                </div>
+              {currentSlide.description && (
+                <p className="mt-3 text-xs sm:text-[13.5px] font-medium text-white/95 leading-relaxed whitespace-pre-line max-w-[350px] drop-shadow-xs">
+                  {renderRichText(currentSlide.description)}
+                </p>
               )}
 
-              {/* CTA Button */}
-              {block2CtaText && (
-                <div className="mt-5 flex flex-wrap items-center gap-3">
+              {currentSlide.ctaText && (
+                <div className="mt-6">
                   <Link
-                    href={block2CtaUrl || '/shop'}
-                    className="font-extrabold px-7 py-3 rounded-full inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                    href={currentSlide.ctaUrl || '/shop'}
+                    className="inline-flex items-center justify-center font-semibold text-sm px-7 py-3 rounded-[4px] shadow-md hover:shadow-lg transition-all hover:brightness-95 active:scale-[0.98]"
                     style={{
                       backgroundColor: block2BtnBg,
                       color: block2BtnTextColor,
-                      fontSize: `${block2BtnSize}px`,
                     }}
                   >
-                    <span>{renderRichText(block2CtaText)}</span>
-                    <svg className="w-[1.05em] h-[1.05em]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
+                    {renderRichText(currentSlide.ctaText)}
                   </Link>
                 </div>
               )}
             </div>
-          </div>
 
-          {/* 3. BLOCK 3: Right Highlight Card */}
-          <div
-            className={`lg:col-span-3 hidden lg:flex flex-col relative overflow-hidden shadow-sm border border-stone-200/80 group/block ${previewRing}`}
-            style={{
-              minHeight: `${heroMinHeight}px`,
-              backgroundColor: block3BgColor,
-              borderRadius: `${block3BorderRadius}px`,
-            }}
-          >
-            {isPreview && sectionId && (
-              <HeroPreviewEditButton sectionId={sectionId} blockNum={3} label="Block 3: Highlight" />
-            )}
-
-            {/* Background Image */}
-            {block3Image && (
-              <Image
-                src={block3Image}
-                alt={stripHtmlTags(block3Title)}
-                fill
-                sizes="(max-width: 1024px) 100vw, 320px"
-                quality={90}
-                className="object-cover object-center transition-transform duration-700"
-              />
-            )}
-
-            {/* Gradient overlay */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `linear-gradient(to top, rgba(12, 10, 9, ${block3OverlayOpacity / 100}) 0%, rgba(12, 10, 9, ${Math.round(block3OverlayOpacity * 0.35) / 100}) 50%, rgba(12, 10, 9, 0) 100%)`,
-              }}
-            />
-
-            {/* Top Badge */}
-            {block3Badge && (
-              <div className="relative z-10 p-5 pr-12">
-                <span
-                  className="inline-block backdrop-blur-sm font-extrabold uppercase tracking-wider px-3 py-1 rounded-full shadow-md"
-                  style={{
-                    backgroundColor: block3BadgeBg,
-                    color: block3BadgeTextColor,
-                    fontSize: `${block3BadgeSize}px`,
-                  }}
+            {/* Subtle Prev/Next Arrows on Hover */}
+            {slides.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+                  aria-label="Vorherige Folie"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover/block:opacity-100 transition-opacity cursor-pointer"
                 >
-                  {renderRichText(block3Badge)}
-                </span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSlide((prev) => (prev + 1) % slides.length)}
+                  aria-label="Nächste Folie"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center opacity-0 group-hover/block:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Bottom Center Square Pagination Dots (matching mockup) */}
+            {slides.length > 1 && (
+              <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                {slides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveSlide(idx)}
+                    aria-label={`Folie ${idx + 1}`}
+                    className={`w-2.5 h-2.5 rounded-[2px] transition-all cursor-pointer ${
+                      idx === activeSlide
+                        ? 'bg-stone-700/90 ring-1 ring-white/70 scale-110'
+                        : 'bg-stone-300/80 hover:bg-white'
+                    }`}
+                  />
+                ))}
               </div>
             )}
-
-            {/* Bottom Card Content */}
-            <div className="relative z-10 mt-auto p-5">
-              {block3Category && (
-                <span
-                  className="font-bold uppercase tracking-wider block"
-                  style={{ color: block3CategoryColor, fontSize: `${block3CategorySize}px` }}
-                >
-                  {renderRichText(block3Category)}
-                </span>
-              )}
-              <h4
-                className="font-black tracking-tight leading-tight mt-1"
-                style={{ color: block3TitleColor, fontSize: `${block3TitleSize}px` }}
-              >
-                {renderRichText(block3Title)}
-              </h4>
-              {block3Subtitle && (
-                <p
-                  className="mt-1 line-clamp-2 leading-snug"
-                  style={{ color: block3SubtitleColor, fontSize: `${block3SubtitleSize}px` }}
-                >
-                  {renderRichText(block3Subtitle)}
-                </p>
-              )}
-              {block3CtaText && (
-                <Link
-                  href={block3Url || '/shop?category=maehroboter'}
-                  className="mt-3 inline-flex items-center gap-1.5 font-bold hover:opacity-80 transition-opacity"
-                  style={{ color: block3LinkColor, fontSize: `${block3LinkSize}px` }}
-                >
-                  <span>{renderRichText(block3CtaText)}</span>
-                  <span>&rarr;</span>
-                </Link>
-              )}
-            </div>
           </div>
         </div>
 
@@ -549,14 +412,8 @@ export default function HlgHero({
               {displayCategories.map((cat, idx) => (
                 <Link
                   key={idx}
-                  href={`/shop?category=${encodeURIComponent(cat.slug)}`}
-                  className="border font-semibold px-3.5 py-1.5 rounded-full whitespace-nowrap shadow-xs hover:opacity-80 transition-opacity"
-                  style={{
-                    backgroundColor: block1BgColor,
-                    borderColor: block1BorderColor,
-                    color: block1TextColor,
-                    fontSize: `${block1TextSize}px`,
-                  }}
+                  href={cat.href || `/shop?category=${encodeURIComponent(cat.slug)}`}
+                  className="bg-white border border-stone-200 text-stone-700 hover:border-[#00a86b] hover:text-[#00a86b] text-xs font-medium px-3.5 py-2 rounded-full whitespace-nowrap shadow-2xs transition-colors"
                 >
                   {cat.name}
                 </Link>

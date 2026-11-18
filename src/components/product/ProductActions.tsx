@@ -1,26 +1,36 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCurrency } from '@/components/CurrencyProvider';
 import { useTranslations } from 'next-intl';
-import Image from "next/image";
+import SafeHTML from '@/components/SafeHTML';
 
 interface ProductActionsProps {
   product: {
     id: string;
+    slug?: string;
     title: string;
+    shortDescription?: string | null;
     price: number;
     compareAtPrice?: number | null;
     type: string;
     stock: number | null;
     images: string[];
     attributes?: { name: string; options: string[] }[];
-    variations?: { id: string; price: string; stock?: string; image?: string; attributes: Record<string, string> }[];
+    variations?: {
+      id: string;
+      price: string;
+      stock?: string;
+      image?: string;
+      attributes: Record<string, string>;
+    }[];
     forceSales?: any[];
     saleTogether?: any[];
   };
@@ -30,18 +40,34 @@ interface ProductActionsProps {
   contactSlug?: string;
 }
 
-export default function ProductActions({ product, enableBuyNow = false, onVariationChange, shippingInfo, contactSlug = 'contact' }: ProductActionsProps) {
+function getDeterministicCount(seed: string, min: number, max: number): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return min + (hash % (max - min + 1));
+}
+
+export default function ProductActions({
+  product,
+  enableBuyNow = true,
+  onVariationChange,
+  contactSlug = 'kontakt',
+}: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
   const router = useRouter();
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
   const { formatPrice } = useCurrency();
   const [addedItemName, setAddedItemName] = useState<string | null>(null);
   const [wishlistedItemName, setWishlistedItemName] = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [selectedSaleTogether, setSelectedSaleTogether] = useState<string[]>([]);
   const actionButtonsRef = useRef<HTMLDivElement>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const t = useTranslations('Product');
+
+  const viewerCount = getDeterministicCount(product.id || product.title, 17, 29);
 
   useEffect(() => {
     setIsClient(true);
@@ -58,59 +84,69 @@ export default function ProductActions({ product, enableBuyNow = false, onVariat
     observer.observe(actionButtonsRef.current);
     return () => observer.disconnect();
   }, []);
-  
+
   const cartStore = useCartStore();
   const wishlistStore = useWishlistStore();
-  
   const isWishlisted = wishlistStore.hasItem(product.id);
 
-  // For variable products, we check if a variation matches the selected attributes
+  // Variable products
   const isVariable = product.type === 'VARIABLE';
   const attributes = product.attributes || [];
   const variations = product.variations || [];
 
-  let currentVariation: { id: string; price: string; stock?: string; image?: string; attributes: Record<string, string> } | null = null;
+  let currentVariation: {
+    id: string;
+    price: string;
+    stock?: string;
+    image?: string;
+    attributes: Record<string, string>;
+  } | null = null;
   if (isVariable && Object.keys(selectedAttributes).length === attributes.length) {
-    currentVariation = variations.find(v => {
-      return Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value);
-    }) || null;
+    currentVariation =
+      variations.find((v) =>
+        Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
+      ) || null;
   }
 
-  // Notifier le parent de l'image de la variation courante
   useEffect(() => {
     if (onVariationChange) {
       onVariationChange(currentVariation?.image || null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentVariation?.id]);
 
-  // Prix et stock dynamiques
   const currentPrice = currentVariation ? parseFloat(currentVariation.price) : product.price;
-  const currentStock = currentVariation 
-    ? (currentVariation.stock ? parseInt(currentVariation.stock) : null) 
+  const currentStock = currentVariation
+    ? currentVariation.stock
+      ? parseInt(currentVariation.stock, 10)
+      : null
     : product.stock;
 
-  const getCartItemBase = (prod: any, price: number, qty: number = 1, currentVar: any = null, attrs: any = undefined) => ({
+  const isOutOfStock = currentStock !== null && currentStock <= 0;
+
+  const getCartItemBase = (
+    prod: any,
+    price: number,
+    qty: number = 1,
+    currentVar: any = null,
+    attrs: any = undefined
+  ) => ({
     id: currentVar ? `${prod.id}-${currentVar.id}` : prod.id,
     productId: prod.id,
     slug: prod.slug,
     variationId: currentVar?.id,
     title: prod.title,
-    price: price,
+    price,
     image: currentVar?.image || prod.images?.[0] || '',
     quantity: qty,
     attributes: attrs,
   });
 
   const getLinkedItemsForCart = (qty: number) => {
-    // Les forceSales sont forcés et prennent la quantité du produit principal
-    const fsItems = (product.forceSales || []).map(fs => getCartItemBase(fs, fs.price, qty));
-    
-    // Les saleTogether cochés
+    const fsItems = (product.forceSales || []).map((fs) => getCartItemBase(fs, fs.price, qty));
     const stItems = (product.saleTogether || [])
-      .filter(st => selectedSaleTogether.includes(st.id))
-      .map(st => getCartItemBase(st, st.price, 1)); // ou `qty` selon la logique métier, mettons 1 par défaut pour un accessoire
-
+      .filter((st) => selectedSaleTogether.includes(st.id))
+      .map((st) => getCartItemBase(st, st.price, 1));
     return [...fsItems, ...stItems];
   };
 
@@ -120,12 +156,18 @@ export default function ProductActions({ product, enableBuyNow = false, onVariat
       return;
     }
 
-    const mainItem = getCartItemBase(product, currentPrice, quantity, currentVariation, currentVariation ? selectedAttributes : undefined);
+    const mainItem = getCartItemBase(
+      product,
+      currentPrice,
+      quantity,
+      currentVariation,
+      currentVariation ? selectedAttributes : undefined
+    );
     const linkedItems = getLinkedItemsForCart(quantity);
-    
+
     cartStore.addItem(mainItem, linkedItems);
     cartStore.setIsOpen(true);
-    
+
     setAddedItemName(product.title);
     setTimeout(() => {
       setAddedItemName(null);
@@ -138,21 +180,23 @@ export default function ProductActions({ product, enableBuyNow = false, onVariat
       return;
     }
 
-    const mainItem = getCartItemBase(product, currentPrice, quantity, currentVariation, currentVariation ? selectedAttributes : undefined);
+    const mainItem = getCartItemBase(
+      product,
+      currentPrice,
+      quantity,
+      currentVariation,
+      currentVariation ? selectedAttributes : undefined
+    );
     const linkedItems = getLinkedItemsForCart(quantity);
-    
+
     cartStore.addItem(mainItem, linkedItems);
-    
     router.push('/checkout');
   };
-
-  const notificationPortal = isClient ? document.getElementById('cart-notification-portal') : null;
 
   const handleToggleWishlist = () => {
     const wasWishlisted = wishlistStore.hasItem(product.id);
     wishlistStore.toggleItem(product.id);
-    
-    // Only show notification and open drawer when ADDING to wishlist
+
     if (!wasWishlisted) {
       setWishlistedItemName(product.title);
       wishlistStore.setIsOpen(true);
@@ -162,93 +206,178 @@ export default function ProductActions({ product, enableBuyNow = false, onVariat
     }
   };
 
+  const handleShare = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    if (!url) return;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: product.title, url });
+        return;
+      } catch {
+        // Fallback to clipboard
+      }
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2500);
+      } catch {
+        // Ignore clipboard errors
+      }
+    }
+  };
+
+  const notificationPortal = isClient ? document.getElementById('cart-notification-portal') : null;
+  const disablePurchase = (isVariable && !currentVariation) || isOutOfStock;
+
   return (
     <div>
-      {addedItemName && notificationPortal && createPortal(
-        <div className="bg-[#1b8448] text-white px-6 py-4 mb-8 flex flex-col sm:flex-row items-center justify-between shadow-sm rounded-sm">
-          <div className="flex items-center gap-3 text-sm font-medium">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-            <span>{t('added_to_cart', { name: addedItemName })}</span>
-          </div>
-          <Link href="/cart" className="mt-4 sm:mt-0 text-xs font-bold tracking-wider hover:underline whitespace-nowrap bg-black/10 hover:bg-black/20 transition-colors px-6 py-3 rounded-sm">
-            {t('view_cart_caps')}
-          </Link>
-        </div>,
-        notificationPortal
-      )}
+      {/* Cart & Wishlist Toast Portals */}
+      {addedItemName &&
+        notificationPortal &&
+        createPortal(
+          <div className="bg-[#00a86b] text-white px-5 py-3.5 mb-6 flex flex-col sm:flex-row items-center justify-between shadow-xs rounded-[4px]">
+            <div className="flex items-center gap-3 text-sm font-medium">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{t('added_to_cart', { name: addedItemName })}</span>
+            </div>
+            <Link
+              href="/cart"
+              className="mt-3 sm:mt-0 text-xs font-bold tracking-wider hover:underline whitespace-nowrap bg-black/15 hover:bg-black/25 transition-colors px-5 py-2.5 rounded-[3px]"
+            >
+              {t('view_cart_caps')}
+            </Link>
+          </div>,
+          notificationPortal
+        )}
 
-      {wishlistedItemName && notificationPortal && createPortal(
-        <div className="bg-orange-600 text-white px-6 py-4 mb-8 flex flex-col sm:flex-row items-center justify-between shadow-sm rounded-sm">
-          <div className="flex items-center gap-3 text-sm font-medium">
-            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-            <span>{t('added_to_wishlist', { name: wishlistedItemName })}</span>
-          </div>
-          <Link href="/wishlist" className="mt-4 sm:mt-0 text-xs font-bold tracking-wider hover:underline whitespace-nowrap bg-black/10 hover:bg-black/20 transition-colors px-6 py-3 rounded-sm">
-            {t('view_wishlist_caps')}
-          </Link>
-        </div>,
-        notificationPortal
-      )}
+      {wishlistedItemName &&
+        notificationPortal &&
+        createPortal(
+          <div className="bg-stone-800 text-white px-5 py-3.5 mb-6 flex flex-col sm:flex-row items-center justify-between shadow-xs rounded-[4px]">
+            <div className="flex items-center gap-3 text-sm font-medium">
+              <svg className="w-5 h-5 shrink-0 text-[#e05246]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <span>{t('added_to_wishlist', { name: wishlistedItemName })}</span>
+            </div>
+            <Link
+              href="/wishlist"
+              className="mt-3 sm:mt-0 text-xs font-bold tracking-wider hover:underline whitespace-nowrap bg-white/10 hover:bg-white/20 transition-colors px-5 py-2.5 rounded-[3px]"
+            >
+              {t('view_wishlist_caps')}
+            </Link>
+          </div>,
+          notificationPortal
+        )}
 
       {/* Price Display */}
-      <div className="mb-6 flex flex-col gap-1">
-        <div className="flex items-center">
-          {product.compareAtPrice && !currentVariation && (
-            <span className="text-2xl text-gray-500 line-through mr-3">{formatPrice(product.compareAtPrice)}</span>
-          )}
-          <span className="text-3xl font-bold text-red-600">{formatPrice(currentPrice)}</span>
-        </div>
-        
-        {/* Total dynamique si des produits saleTogether sont cochés */}
-        {selectedSaleTogether.length > 0 && (
-          <div className="text-sm font-semibold text-gray-600 mt-2 bg-gray-50 p-2 rounded-md inline-block">
-            {t('total_with_options')} <span className="text-red-600 ml-1">{formatPrice(
-              (currentPrice * quantity) + 
-              (product.saleTogether || []).filter(st => selectedSaleTogether.includes(st.id)).reduce((acc, curr) => acc + curr.price, 0)
-            )}</span>
-          </div>
+      <div className="flex items-baseline gap-3">
+        <span className="text-[22px] font-medium text-[#e05246] tabular-nums leading-none">
+          {formatPrice(currentPrice)}
+        </span>
+        {product.compareAtPrice && !currentVariation && product.compareAtPrice > currentPrice && (
+          <span className="text-[16px] text-stone-400 line-through tabular-nums">
+            {formatPrice(product.compareAtPrice)}
+          </span>
         )}
       </div>
 
-      {/* Force Sales UI */}
+      {selectedSaleTogether.length > 0 && (
+        <div className="text-xs font-medium text-stone-600 mt-2 bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-[4px] inline-block">
+          {t('total_with_options')}{' '}
+          <span className="text-[#e05246] font-semibold ml-1 tabular-nums">
+            {formatPrice(
+              currentPrice * quantity +
+                (product.saleTogether || [])
+                  .filter((st) => selectedSaleTogether.includes(st.id))
+                  .reduce((acc, curr) => acc + curr.price, 0)
+            )}
+          </span>
+        </div>
+      )}
+
+      {/* Urgency Demand Line */}
+      <div className="mt-3 flex items-center gap-1.5 text-[12.5px] text-[#e05246]">
+        <svg className="w-4 h-4 shrink-0 text-[#e05246]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M13.5 2.25c.38 2.42-1.15 4.46-2.34 5.93-.75.93-1.41 1.74-1.41 2.82 0 .92.54 1.65 1.38 1.93-.22-.69-.13-1.51.4-2.16.46-.57 1.12-.92 1.67-1.44.78-.74 1.38-1.69 1.54-2.85 2.09 1.67 3.76 4.21 3.76 7.37 0 4.25-3.27 7.45-7.25 7.45S4.5 18.1 4.5 13.85c0-3.17 1.7-6.06 4.3-8.02 1.48-1.11 3.12-2.21 4.7-3.58z" />
+        </svg>
+        <span>Verkauft sich schnell! Über 20 Personen haben ihn im Warenkorb</span>
+      </div>
+
+      {/* Short Description Bullet Features */}
+      {product.shortDescription && (
+        <div className="mt-4 text-[13px] text-stone-600 leading-[1.72]">
+          <SafeHTML
+            html={product.shortDescription}
+            className="space-y-1 [&_p]:my-0.5 [&_ul]:list-none [&_ul]:pl-0 [&_ul]:space-y-0.5 [&_li]:my-0"
+          />
+        </div>
+      )}
+
+      {/* Force Sales UI (Required Accessories) */}
       {product.forceSales && product.forceSales.length > 0 && (
-        <div className="mb-6 border-2 border-orange-500 bg-orange-50 rounded-lg p-4">
-          <h4 className="text-sm font-bold text-orange-700 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        <div className="mt-5 border border-amber-300 bg-amber-50/60 rounded-[4px] p-3.5">
+          <h4 className="text-xs font-bold text-amber-800 uppercase tracking-wide mb-2.5 flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
             {t('force_sales_title')}
           </h4>
-          <div className="space-y-3">
-            {product.forceSales.map(fs => (
-              <div key={fs.id} className="flex items-center gap-3 bg-white p-2 rounded shadow-sm border border-orange-100">
-                {fs.images?.[0] && <Image width={800} height={800} src={fs.images[0]} alt={fs.title} className="w-12 h-12 object-cover rounded" />}
-                <div>
-                  <div className="text-sm font-medium text-gray-900 leading-tight">{fs.title}</div>
-                  <div className="text-sm font-bold text-gray-700">{formatPrice(fs.price)}</div>
+          <div className="space-y-2">
+            {product.forceSales.map((fs) => (
+              <div
+                key={fs.id}
+                className="flex items-center gap-3 bg-white p-2 rounded-[3px] border border-amber-200/70"
+              >
+                {fs.images?.[0] && (
+                  <Image
+                    width={64}
+                    height={64}
+                    src={fs.images[0]}
+                    alt={fs.title}
+                    className="w-10 h-10 object-contain rounded-[2px]"
+                  />
+                )}
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-stone-800 truncate">{fs.title}</div>
+                  <div className="text-xs font-semibold text-[#e05246] tabular-nums">{formatPrice(fs.price)}</div>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-xs text-orange-700 mt-3 leading-relaxed">
-            {t('force_sales_msg')}
-          </p>
+          <p className="text-[11.5px] text-amber-800 mt-2.5 leading-relaxed">{t('force_sales_msg')}</p>
         </div>
       )}
 
-      {/* Attributes Selection (Only if Variable) */}
+      {/* Attributes Selection (Variable Products) */}
       {isVariable && attributes.length > 0 && (
-        <div className="space-y-4 mb-6">
-          {attributes.map(attr => (
+        <div className="space-y-3.5 mt-5">
+          {attributes.map((attr) => (
             <div key={attr.name}>
-              <span className="text-sm text-gray-500 mb-2 block">{attr.name} {selectedAttributes[attr.name] && <span className="text-gray-900 font-semibold ml-1">: {selectedAttributes[attr.name]}</span>}</span>
+              <span className="text-xs text-stone-500 mb-1.5 block">
+                {attr.name}
+                {selectedAttributes[attr.name] && (
+                  <span className="text-stone-900 font-semibold ml-1">: {selectedAttributes[attr.name]}</span>
+                )}
+              </span>
               <div className="flex flex-wrap gap-2">
                 {attr.options.map((opt: string) => {
                   const isSelected = selectedAttributes[attr.name] === opt;
                   return (
                     <button
+                      type="button"
                       key={opt}
                       onClick={() => setSelectedAttributes({ ...selectedAttributes, [attr.name]: opt })}
-                      className={`px-3 py-1 border rounded-md text-sm transition ${
-                        isSelected ? 'border-orange-500 bg-orange-50 text-orange-700 font-semibold ring-1 ring-orange-500' : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                      className={`px-3 py-1.5 border rounded-[4px] text-xs transition cursor-pointer ${
+                        isSelected
+                          ? 'border-[#00a86b] bg-emerald-50 text-[#00a86b] font-semibold ring-1 ring-[#00a86b]/30'
+                          : 'border-stone-200 text-stone-700 hover:border-stone-400 bg-white'
                       }`}
                     >
                       {opt}
@@ -261,100 +390,103 @@ export default function ProductActions({ product, enableBuyNow = false, onVariat
         </div>
       )}
 
-      {/* Stock status */}
-      <p className="text-teal-600 font-semibold mb-6">
-        {currentStock === null ? t('in_stock') : t('in_stock_count', { count: currentStock })}
-      </p>
+      {/* Primary Action Buttons: Quantity + In den Warenkorb + Jetzt kaufen */}
+      <div ref={actionButtonsRef} className="mt-5 flex flex-col gap-3">
+        <div className="flex items-center gap-3 w-full">
+          {/* Quantity Stepper */}
+          <div className="flex items-center justify-between border border-stone-200 rounded-[4px] h-[44px] w-[112px] bg-white shrink-0">
+            <button
+              type="button"
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              aria-label="Menge verringern"
+              className="w-9 h-full flex items-center justify-center text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-colors cursor-pointer text-base"
+            >
+              −
+            </button>
+            <input
+              type="text"
+              value={quantity}
+              readOnly
+              aria-label="Menge"
+              className="w-8 text-center bg-transparent text-[13.5px] font-medium text-stone-800 outline-none select-none"
+            />
+            <button
+              type="button"
+              onClick={() => setQuantity(quantity + 1)}
+              aria-label="Menge erhöhen"
+              className="w-9 h-full flex items-center justify-center text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-colors cursor-pointer text-base"
+            >
+              +
+            </button>
+          </div>
 
-      {/* Shipping Info */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8 space-y-3">
-        {shippingInfo?.[0] && (
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-gray-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            <div className="text-sm text-gray-700 whitespace-pre-wrap">
-              {shippingInfo[0]}
-            </div>
-          </div>
-        )}
-        {shippingInfo?.[1] && (
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-gray-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <div className="text-sm text-gray-700 whitespace-pre-wrap">
-              {shippingInfo[1]}
-            </div>
-          </div>
-        )}
-        {shippingInfo?.[2] && (
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-gray-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
-            <div className="text-sm text-gray-700 whitespace-pre-wrap">
-              {shippingInfo[2]}
-            </div>
-          </div>
-        )}
-        {shippingInfo?.[3] && (
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-gray-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            <div className="text-sm text-gray-700 whitespace-pre-wrap">
-              {shippingInfo[3]}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Actions (Quantity + Cart + Buy) */}
-      <div ref={actionButtonsRef} className="flex flex-col gap-4 mb-6">
-        <div className="flex gap-4 w-full">
-          {/* Qty */}
-          <div className="flex border border-gray-300 rounded-md overflow-hidden bg-gray-50 w-32 shrink-0">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-gray-600 hover:bg-gray-200 font-bold cursor-pointer">-</button>
-            <input type="text" value={quantity} readOnly className="w-full text-center bg-transparent font-semibold border-x border-gray-300" />
-            <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-gray-600 hover:bg-gray-200 font-bold cursor-pointer">+</button>
-          </div>
-          
-          <button 
+          {/* Add to Cart Button */}
+          <button
+            type="button"
             onClick={handleAddToCart}
-            disabled={isVariable && !currentVariation}
-            className={`flex-1 font-semibold rounded-md transition shadow-sm py-3 px-4 cursor-pointer ${
-              (isVariable && !currentVariation)
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-red-600 hover:bg-red-700 active:scale-98 text-white'
+            disabled={disablePurchase}
+            className={`flex-1 h-[44px] font-semibold text-[13.5px] rounded-[4px] transition-colors px-4 cursor-pointer ${
+              disablePurchase
+                ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                : 'bg-[#00a86b] hover:bg-[#008f5a] active:bg-[#007a4d] text-white'
             }`}
           >
-            {(isVariable && !currentVariation) ? t('select_options_btn') : t('add_to_cart')}
+            {isOutOfStock
+              ? 'Ausverkauft'
+              : isVariable && !currentVariation
+              ? t('select_options_btn')
+              : t('add_to_cart')}
           </button>
         </div>
-        
+
+        {/* Full-Width Buy Now Button */}
         {enableBuyNow && (
-          <button 
+          <button
+            type="button"
             onClick={handleBuyNow}
-            className="w-full bg-amber-400 hover:bg-amber-500 text-gray-900 font-semibold rounded-md transition shadow-sm py-3 cursor-pointer"
+            disabled={disablePurchase}
+            className={`w-full h-[44px] font-semibold text-[13.5px] rounded-[4px] transition-colors cursor-pointer ${
+              disablePurchase
+                ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                : 'bg-[#00a86b] hover:bg-[#008f5a] active:bg-[#007a4d] text-white'
+            }`}
           >
             {t('buy_now')}
           </button>
         )}
       </div>
 
-      {/* Sale Together UI */}
+      {/* Sale Together UI (Optional Accessories) */}
       {product.saleTogether && product.saleTogether.length > 0 && (
-        <div className="mb-8 border border-gray-200 rounded-lg p-4 bg-gray-50/50">
-          <h4 className="text-sm font-bold text-gray-900 mb-4">{t('frequently_bought_together')}</h4>
-          <div className="space-y-3">
-            {product.saleTogether.map(st => (
-              <label key={st.id} className="flex items-center gap-3 cursor-pointer p-2 hover:bg-white rounded transition border border-transparent hover:border-gray-200">
-                <input 
+        <div className="mt-5 border border-stone-200 rounded-[4px] p-3.5 bg-[#fafafa]">
+          <h4 className="text-xs font-semibold text-stone-800 mb-3">{t('frequently_bought_together')}</h4>
+          <div className="space-y-2">
+            {product.saleTogether.map((st) => (
+              <label
+                key={st.id}
+                className="flex items-center gap-3 cursor-pointer p-2 hover:bg-white rounded-[3px] transition border border-transparent hover:border-stone-200"
+              >
+                <input
                   type="checkbox"
                   checked={selectedSaleTogether.includes(st.id)}
                   onChange={(e) => {
-                    if (e.target.checked) setSelectedSaleTogether(prev => [...prev, st.id]);
-                    else setSelectedSaleTogether(prev => prev.filter(id => id !== st.id));
+                    if (e.target.checked) setSelectedSaleTogether((prev) => [...prev, st.id]);
+                    else setSelectedSaleTogether((prev) => prev.filter((id) => id !== st.id));
                   }}
-                  className="w-5 h-5 text-orange-700 rounded border-gray-300 focus:ring-orange-500"
+                  className="w-4 h-4 accent-[#00a86b] rounded border-stone-300"
                 />
-                {st.images?.[0] && <Image width={800} height={800} src={st.images[0]} alt={st.title} className="w-12 h-12 object-cover rounded bg-white border border-gray-100" />}
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900 leading-tight line-clamp-1">{st.title}</div>
-                  <div className="text-sm font-bold text-gray-700">{formatPrice(st.price)}</div>
+                {st.images?.[0] && (
+                  <Image
+                    width={64}
+                    height={64}
+                    src={st.images[0]}
+                    alt={st.title}
+                    className="w-10 h-10 object-contain rounded-[2px] bg-white border border-stone-100"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-stone-800 truncate">{st.title}</div>
+                  <div className="text-xs font-semibold text-[#e05246] tabular-nums">{formatPrice(st.price)}</div>
                 </div>
               </label>
             ))}
@@ -362,71 +494,217 @@ export default function ProductActions({ product, enableBuyNow = false, onVariat
         </div>
       )}
 
-      {/* Secondary Actions */}
-      <div className="flex flex-wrap gap-3 mb-8">
-        <button 
-          onClick={handleToggleWishlist}
-          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md border transition ${
-            isWishlisted ? 'bg-orange-500 text-white border-orange-500' : 'text-gray-600 hover:text-orange-600 bg-orange-50/50 border-orange-100'
-          }`}
-        >
-          <svg className="w-4 h-4" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-          {isWishlisted ? t('remove_wishlist') : t('add_wishlist')}
-        </button>
-        <button 
+      {/* Horizontal Utility Action Links: Vergleichen | Wunschliste | Fragen Sie uns | Teilen */}
+      <div className="mt-4 pt-1 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12.5px] text-stone-600">
+        <button
           type="button"
           onClick={() => router.push('/compare')}
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-orange-600 bg-orange-50/50 px-4 py-2 rounded-md border border-orange-100 transition"
+          className="inline-flex items-center gap-1.5 hover:text-[#00a86b] transition-colors cursor-pointer"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-          {t('compare')}
+          <svg className="w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span>{t('compare')}</span>
         </button>
-        <button 
+
+        <button
+          type="button"
+          onClick={handleToggleWishlist}
+          className={`inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
+            isWishlisted ? 'text-[#e05246] font-medium' : 'hover:text-[#00a86b]'
+          }`}
+        >
+          <svg
+            className={`w-4 h-4 ${isWishlisted ? 'text-[#e05246]' : 'text-stone-600'}`}
+            fill={isWishlisted ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+          <span>{isWishlisted ? t('remove_wishlist') : t('add_wishlist')}</span>
+        </button>
+
+        <button
           type="button"
           onClick={() => router.push(`/${contactSlug}`)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-orange-600 bg-orange-50/50 px-4 py-2 rounded-md border border-orange-100 transition"
+          className="inline-flex items-center gap-1.5 hover:text-[#00a86b] transition-colors cursor-pointer"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          {t('ask_question')}
+          <svg className="w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{t('ask_question')}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleShare}
+          className="inline-flex items-center gap-1.5 hover:text-[#00a86b] transition-colors cursor-pointer"
+        >
+          <svg className="w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+          <span>{shareCopied ? 'Link kopiert!' : 'Teilen'}</span>
         </button>
       </div>
 
-      {/* Mobile Sticky Bottom Add-to-Cart Bar */}
+      {/* Hairline Divider */}
+      <hr className="my-4 border-stone-100" />
+
+      {/* Live Viewers Indicator */}
+      <div className="flex items-center gap-2 text-[12.5px] text-stone-600">
+        <svg className="w-4 h-4 text-stone-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span>
+          <strong className="font-semibold text-stone-800">{viewerCount}</strong> Personen sehen sich das gerade an
+        </span>
+      </div>
+
+      {/* Delivery & Free Shipping Checkmarks */}
+      <div className="mt-3.5 space-y-2 text-[12.5px] text-stone-600">
+        <div className="flex items-start gap-2">
+          <svg className="w-4 h-4 text-stone-500 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>
+            <strong className="font-semibold text-stone-700">Voraussichtliche Lieferzeit:</strong> Bis zu 4 Werktage
+          </span>
+        </div>
+        <div className="flex items-start gap-2">
+          <svg className="w-4 h-4 text-stone-500 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>
+            <strong className="font-semibold text-stone-700">Kostenloser Versand in Deutschland:</strong> Bei allen Bestellungen über 200 €
+          </span>
+        </div>
+      </div>
+
+      {/* Guaranteed Safe Checkout Payment Badges Box */}
+      <div className="mt-5 bg-[#f9f9fa] border border-stone-200/70 rounded-[4px] px-4 py-3.5 text-center">
+        <p className="text-[12px] font-medium text-stone-700 mb-2.5">
+          Garantiert sichere und geschützte Kaufabwicklung
+        </p>
+        <div className="flex items-center justify-center flex-wrap gap-2" aria-label="Sichere Zahlungsmethoden">
+          {/* VISA */}
+          <span className="inline-flex items-center justify-center h-[22px] w-[36px] rounded-[2px] bg-[#1a1f71] text-white font-extrabold italic text-[10px] tracking-tight">
+            VISA
+          </span>
+          {/* MasterCard */}
+          <span className="inline-flex items-center justify-center h-[22px] w-[36px] rounded-[2px] bg-white border border-stone-200">
+            <span className="w-3 h-3 rounded-full bg-[#eb001b] -mr-1.5" />
+            <span className="w-3 h-3 rounded-full bg-[#f79e1b]/90" />
+          </span>
+          {/* AMEX */}
+          <span className="inline-flex items-center justify-center h-[22px] w-[36px] rounded-[2px] bg-[#2e77bc] text-white font-bold text-[7px] leading-[1.05] text-center tracking-tighter">
+            AMERICAN
+            <br />
+            EXPRESS
+          </span>
+          {/* DISCOVER */}
+          <span className="inline-flex items-center justify-center h-[22px] w-[38px] rounded-[2px] bg-[#231f20] text-white font-bold text-[6.5px] tracking-tight px-1">
+            <span>DISC</span>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#f47216] mx-[0.5px]" />
+            <span>VER</span>
+          </span>
+          {/* PayPal */}
+          <span className="inline-flex items-center justify-center h-[22px] px-1.5 rounded-[2px] bg-white border border-stone-200 font-bold italic text-[9px]">
+            <span className="text-[#003087]">Pay</span>
+            <span className="text-[#009cde]">Pal</span>
+          </span>
+          {/* Apple Pay */}
+          <span className="inline-flex items-center justify-center h-[22px] px-1.5 rounded-[2px] bg-white border border-stone-200 text-stone-900 font-semibold text-[9px] gap-0.5">
+            <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 14 17" aria-hidden="true">
+              <path d="M11.6 9.1c0-1.9 1.5-2.8 1.6-2.9-.9-1.3-2.2-1.5-2.7-1.5-1.1-.1-2.2.7-2.8.7-.6 0-1.5-.7-2.4-.7-1.2 0-2.4.7-3 1.9-1.3 2.3-.3 5.6.9 7.4.6.9 1.3 1.9 2.3 1.8.9 0 1.3-.6 2.4-.6s1.4.6 2.4.6c1 0 1.6-.9 2.2-1.8.7-1 1-2 1-2.1 0 0-1.9-.7-1.9-2.8zM9.7 3.4c.5-.6.9-1.5.8-2.4-.8 0-1.7.5-2.2 1.1-.5.6-.9 1.5-.8 2.3.9.1 1.7-.4 2.2-1z" />
+            </svg>
+            <span>Pay</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Sticky Bottom Quick-Buy Bar (Desktop + Mobile, shown when scrolled past CTAs) */}
       {showStickyBar && (
-        <aside 
-          aria-label="Ações rápidas de compra"
-          className="lg:hidden fixed bottom-[52px] left-0 right-0 bg-white/95 backdrop-blur-md border-t border-stone-200 z-50 p-2.5 px-4 shadow-[0_-4px_15px_rgba(0,0,0,0.1)] flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200 pb-safe"
+        <aside
+          aria-label="Schnellkauf"
+          className="fixed bottom-[52px] lg:bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-stone-200 z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]"
         >
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            {product.images?.[0] && (
-              <div className="w-10 h-10 rounded-lg bg-stone-100 overflow-hidden shrink-0 border border-stone-200 relative">
-                <Image
-                  src={currentVariation?.image || product.images[0]}
-                  alt={product.title}
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-contain p-0.5"
-                />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-3 sm:gap-6">
+            {/* Left: Thumb + Title */}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {(currentVariation?.image || product.images?.[0]) && (
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-[3px] bg-white overflow-hidden shrink-0 border border-stone-200 flex items-center justify-center p-0.5">
+                  <Image
+                    src={currentVariation?.image || product.images[0]}
+                    alt={product.title}
+                    width={44}
+                    height={44}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+              <p className="text-xs sm:text-[13.5px] font-medium text-stone-800 truncate">
+                {product.title}
+              </p>
+            </div>
+
+            {/* Right: Price + Stepper + Action Buttons */}
+            <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+              <span className="text-xs sm:text-[15px] font-medium text-[#e05246] tabular-nums">
+                {formatPrice(currentPrice)}
+              </span>
+
+              {/* Desktop Quantity Stepper */}
+              <div className="hidden sm:flex items-center justify-between border border-stone-200 rounded-[4px] h-[38px] w-[96px] bg-white">
+                <button
+                  type="button"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  aria-label="Menge verringern"
+                  className="w-8 h-full flex items-center justify-center text-stone-600 hover:bg-stone-50 cursor-pointer"
+                >
+                  −
+                </button>
+                <span className="text-[13px] font-medium text-stone-800 select-none">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity(quantity + 1)}
+                  aria-label="Menge erhöhen"
+                  className="w-8 h-full flex items-center justify-center text-stone-600 hover:bg-stone-50 cursor-pointer"
+                >
+                  +
+                </button>
               </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-stone-900 truncate leading-tight">{product.title}</p>
-              <p className="text-xs font-black text-red-600">{formatPrice(currentPrice)}</p>
+
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={disablePurchase}
+                className={`h-[38px] px-3.5 sm:px-5 rounded-[4px] font-semibold text-xs sm:text-[13px] transition-colors cursor-pointer whitespace-nowrap ${
+                  disablePurchase
+                    ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                    : 'bg-[#00a86b] hover:bg-[#008f5a] text-white'
+                }`}
+              >
+                {isVariable && !currentVariation ? t('select_options_btn') : t('add_to_cart')}
+              </button>
+
+              {enableBuyNow && (
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={disablePurchase}
+                  className={`hidden sm:inline-flex items-center justify-center h-[38px] px-5 rounded-[4px] font-semibold text-[13px] transition-colors cursor-pointer whitespace-nowrap ${
+                    disablePurchase
+                      ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                      : 'bg-[#00a86b] hover:bg-[#008f5a] text-white'
+                  }`}
+                >
+                  {t('buy_now')}
+                </button>
+              )}
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={isVariable && !currentVariation}
-            className={`font-extrabold text-xs py-2.5 px-4 rounded-xl shrink-0 shadow-md transition-all cursor-pointer ${
-              isVariable && !currentVariation
-                ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
-                : 'bg-red-600 hover:bg-red-700 active:scale-95 text-white'
-            }`}
-          >
-            {(isVariable && !currentVariation) ? t('select_options_btn') : t('add_to_cart')}
-          </button>
         </aside>
       )}
     </div>

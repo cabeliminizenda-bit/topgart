@@ -5,13 +5,8 @@ import { useState, useEffect } from 'react';
 export default function BackToTop() {
   const [isVisible, setIsVisible] = useState(false);
 
-  // Show button when page is scrolled down
   const toggleVisibility = () => {
-    if (window.scrollY > 300) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-    }
+    setIsVisible(window.scrollY > 300);
   };
 
   const scrollToTop = () => {
@@ -26,19 +21,18 @@ export default function BackToTop() {
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
+  if (!isVisible) return null;
+
   return (
-    <>
-      {isVisible && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-44 lg:bottom-24 right-6 z-40 bg-yellow-400 hover:bg-orange-500 text-gray-900 hover:text-white p-3 rounded-full shadow-lg transition-all transform hover:scale-110 flex items-center justify-center opacity-90 hover:opacity-100"
-          aria-label="Retour en haut"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-          </svg>
-        </button>
-      )}
-    </>
+    <button
+      type="button"
+      onClick={scrollToTop}
+      className="fixed bottom-24 lg:bottom-20 right-5 z-30 bg-[#00a86b] hover:bg-[#008f5a] text-white p-2.5 rounded-full shadow-md transition-all hover:scale-105 flex items-center justify-center cursor-pointer"
+      aria-label="Nach oben scrollen"
+    >
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      </svg>
+    </button>
   );
 }

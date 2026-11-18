@@ -79,7 +79,7 @@ export default function MobileHeaderBar({
   wishlistCount,
 }: MobileHeaderBarProps) {
   const badgeClasses =
-    'absolute -top-1.5 -left-2 bg-[#facc15] text-stone-900 text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none shadow-2xs';
+    'absolute -top-1.5 -left-2 bg-[#00a86b] text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none shadow-2xs';
 
   return (
     <div className="lg:hidden w-full bg-white border-b border-stone-200 px-3.5 py-2.5 flex items-center justify-between gap-2 shrink-0">
@@ -100,7 +100,7 @@ export default function MobileHeaderBar({
           onClick={onAccountClick}
           aria-label="Mein Konto"
           title="Mein Konto"
-          className="p-1 hover:text-[#107b46] transition cursor-pointer"
+          className="p-1 hover:text-[#00a86b] transition cursor-pointer"
         >
           <UserSvg className="w-[21px] h-[21px]" />
         </button>
@@ -110,7 +110,7 @@ export default function MobileHeaderBar({
           onClick={onCartClick}
           aria-label="Warenkorb"
           title="Warenkorb"
-          className="relative p-1 hover:text-[#107b46] transition cursor-pointer"
+          className="relative p-1 hover:text-[#00a86b] transition cursor-pointer"
         >
           <BasketSvg className="w-[21px] h-[21px]" />
           <span className={badgeClasses}>{cartCount}</span>
@@ -121,7 +121,7 @@ export default function MobileHeaderBar({
           onClick={onWishlistClick}
           aria-label="Wunschliste"
           title="Wunschliste"
-          className="relative p-1 hover:text-[#107b46] transition cursor-pointer"
+          className="relative p-1 hover:text-[#00a86b] transition cursor-pointer"
         >
           <HeartSvg className="w-[21px] h-[21px]" />
           <span className={badgeClasses}>{wishlistCount}</span>
@@ -132,7 +132,7 @@ export default function MobileHeaderBar({
           onClick={onToggleMenu}
           aria-label={isMenuOpen ? 'Menü schließen' : 'Menü öffnen'}
           aria-expanded={isMenuOpen}
-          className="p-1 -mr-1 text-stone-800 hover:text-[#107b46] transition cursor-pointer"
+          className="p-1 -mr-1 text-stone-800 hover:text-[#00a86b] transition cursor-pointer"
         >
           {isMenuOpen ? <CloseSvg className="w-6 h-6" /> : <HamburgerSvg className="w-6 h-6" />}
         </button>

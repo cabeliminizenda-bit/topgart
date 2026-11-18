@@ -5,6 +5,7 @@ import Link from 'next/link';
 import ProductPageClient from '@/components/product/ProductPageClient';
 import Price from '@/components/Price';
 import ProductReviews from '@/components/product/ProductReviews';
+import Newsletter from '@/components/home/Newsletter';
 import { createClient } from '@/utils/supabase/server';
 import { getTranslations } from 'next-intl/server';
 import { safeJsonLd } from '@/lib/security';
@@ -12,13 +13,34 @@ import { Metadata } from 'next';
 import { getCachedProductBySlug, getCachedSettings, getCachedRelatedProducts } from '@/lib/cache';
 import { getCategoryCanonicalPath } from '@/lib/categories';
 import { SITE_URL } from '@/lib/site';
-import Image from "next/image";
+import Image from 'next/image';
+
+function RelatedStars({ rating }: { rating: number }) {
+  const filledCount = Math.round(rating);
+  return (
+    <div className="flex items-center justify-center gap-0.5 my-1.5" aria-label={`Bewertung ${rating.toFixed(1)} von 5`}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <svg
+          key={star}
+          className="w-3.5 h-3.5 text-[#f5a623]"
+          viewBox="0 0 20 20"
+          fill={star <= filledCount ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          strokeWidth={1.5}
+          aria-hidden="true"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
 
   const product = await getCachedProductBySlug(slug);
-  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Top Gartengeräte';
 
   if (!product) {
     return {
@@ -28,10 +50,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: product.metaTitle ? product.metaTitle : `${product.title} | ${storeName}`,
-    description: product.metaDescription || (product.shortDescription ? product.shortDescription.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').substring(0, 160) : '') || (product.description ? product.description.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').substring(0, 160) : ''),
+    description:
+      product.metaDescription ||
+      (product.shortDescription
+        ? product.shortDescription.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').substring(0, 160)
+        : '') ||
+      (product.description
+        ? product.description.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').substring(0, 160)
+        : ''),
     alternates: {
       canonical: `/produkt/${product.slug}`,
-    }
+    },
   };
 }
 
@@ -51,10 +80,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const t = await getTranslations('Product');
   const settingsMap = await getCachedSettings();
-  const enableBuyNow = settingsMap.ENABLE_BUY_NOW_BUTTON === 'true';
+  const enableBuyNow = settingsMap.ENABLE_BUY_NOW_BUTTON !== 'false';
   const shippingInfo = [
-    settingsMap.SHIPPING_INFO_1 || '2-3 Werktage Lieferzeit (deutschlandweit)',
-    settingsMap.SHIPPING_INFO_2 || 'Lieferung bis zum gewünschten Verwendungsort',
+    settingsMap.SHIPPING_INFO_1 || 'Bis zu 4 Werktage',
+    settingsMap.SHIPPING_INFO_2 || 'Bei allen Bestellungen über 200 €',
     settingsMap.SHIPPING_INFO_3 || 'Kostenlose Rückgabe innerhalb von 14 Tagen',
     settingsMap.SHIPPING_INFO_4 || '2 Jahre gesetzliche Gewährleistung & Top Gartengeräte Garantie',
   ];
@@ -66,7 +95,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // Lowest shipping rate for DE (default)
   const deZone = await prisma.shippingZone.findFirst({
     where: { name: { in: ['DE', 'Deutschland', 'Germany'] }, isActive: true },
-    include: { methods: { where: { isActive: true }, orderBy: { rate: 'asc' } } }
+    include: { methods: { where: { isActive: true }, orderBy: { rate: 'asc' } } },
   });
   const lowestShippingRate = deZone?.methods?.[0]?.rate ?? 0;
 
@@ -76,22 +105,31 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   // Check if logged in
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const isLoggedIn = !!user;
 
   const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Top Gartengeräte';
 
   const reviews = (product as any).reviews || [];
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((acc: number, curr: any) => acc + curr.rating, 0) / reviews.length
-    : 0;
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((acc: number, curr: any) => acc + curr.rating, 0) / reviews.length
+      : 0;
 
   const schemaJson: any = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
     image: product.images || [],
-    description: (product.description ? product.description.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ') : undefined) || (product.shortDescription ? product.shortDescription.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ') : undefined),
+    description:
+      (product.description
+        ? product.description.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')
+        : undefined) ||
+      (product.shortDescription
+        ? product.shortDescription.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ')
+        : undefined),
     sku: product.id.split('-')[0].toUpperCase(),
     offers: {
       '@type': 'Offer',
@@ -100,10 +138,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       price: product.price,
       priceValidUntil: '2027-12-31',
       itemCondition: 'https://schema.org/NewCondition',
-      availability: product.stock && product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      availability:
+        product.stock && product.stock > 0
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
       seller: {
         '@type': 'Organization',
-        name: storeName
+        name: storeName,
       },
       hasMerchantReturnPolicy: {
         '@type': 'MerchantReturnPolicy',
@@ -111,18 +152,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
         merchantReturnDays: 14,
         returnMethod: 'https://schema.org/ReturnByMail',
-        returnFees: 'https://schema.org/FreeReturn'
+        returnFees: 'https://schema.org/FreeReturn',
       },
       shippingDetails: {
         '@type': 'OfferShippingDetails',
         shippingRate: {
           '@type': 'MonetaryAmount',
           value: lowestShippingRate,
-          currency: 'EUR'
+          currency: 'EUR',
         },
         shippingDestination: {
           '@type': 'DefinedRegion',
-          addressCountry: 'DE'
+          addressCountry: 'DE',
         },
         deliveryTime: {
           '@type': 'ShippingDeliveryTime',
@@ -130,17 +171,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             '@type': 'QuantitativeValue',
             minValue: 0,
             maxValue: 1,
-            unitCode: 'd'
+            unitCode: 'd',
           },
           transitTime: {
             '@type': 'QuantitativeValue',
             minValue: 2,
-            maxValue: 3,
-            unitCode: 'd'
-          }
-        }
-      }
-    }
+            maxValue: 4,
+            unitCode: 'd',
+          },
+        },
+      },
+    },
   };
 
   if (reviews.length > 0) {
@@ -166,20 +207,51 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   schemaJson.brand = {
     '@type': 'Brand',
-    name: (product as any).brand?.name || storeName
+    name: (product as any).brand?.name || storeName,
   };
 
   if ((product as any).gtin) {
     schemaJson.gtin = (product as any).gtin;
   }
 
+  const breadcrumbItems = [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Startseite',
+      item: SITE_URL,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Shop',
+      item: `${SITE_URL}/shop`,
+    },
+    ...(primaryCat
+      ? [
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: primaryCat.name,
+            item: `${SITE_URL}${primaryCatPath || `/${primaryCat.slug || primaryCat.id}`}`,
+          },
+        ]
+      : []),
+    {
+      '@type': 'ListItem',
+      position: primaryCat ? 4 : 3,
+      name: product.title,
+      item: `${SITE_URL}/produkt/${product.slug}`,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900 flex flex-col">
-      <main className="flex-grow pb-28 lg:pb-20">
+    <div className="min-h-screen bg-white font-sans text-stone-800 flex flex-col">
+      <main className="flex-grow pb-6">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: safeJsonLd(schemaJson)
+            __html: safeJsonLd(schemaJson),
           }}
         />
         <script
@@ -188,59 +260,49 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             __html: safeJsonLd({
               '@context': 'https://schema.org',
               '@type': 'BreadcrumbList',
-              itemListElement: [
-                {
-                  '@type': 'ListItem',
-                  position: 1,
-                  name: 'Startseite',
-                  item: SITE_URL,
-                },
-                ...(primaryCat ? [{
-                  '@type': 'ListItem',
-                  position: 2,
-                  name: primaryCat.name,
-                  item: `${SITE_URL}${primaryCatPath || `/${primaryCat.slug || primaryCat.id}`}`,
-                }] : []),
-                {
-                  '@type': 'ListItem',
-                  position: primaryCat ? 3 : 2,
-                  name: product.title,
-                  item: `${SITE_URL}/produkt/${product.slug}`,
-                },
-              ],
-            })
+              itemListElement: breadcrumbItems,
+            }),
           }}
         />
 
-        {/* Breadcrumb */}
-        <div className="bg-gray-50 border-b border-gray-200 mb-4 sm:mb-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <Link href="/" className="hover:text-[#107b46] transition">Startseite</Link>
-            <span className="text-gray-300">/</span>
-            {primaryCat ? (
-              <Link
-                href={primaryCatPath || `/${primaryCat.slug || primaryCat.id}`}
-                className="hover:text-[#107b46] transition"
-              >
-                {primaryCat.name}
-              </Link>
-            ) : (
-              <span>Kategorie</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
+          {/* Clean Inline Breadcrumb */}
+          <nav
+            aria-label="Breadcrumb"
+            className="text-[12px] text-stone-500 flex items-center gap-1.5 flex-wrap mb-4 sm:mb-5"
+          >
+            <Link href="/" className="hover:text-[#00a86b] transition-colors">
+              Startseite
+            </Link>
+            <span className="text-stone-400">/</span>
+            <Link href="/shop" className="hover:text-[#00a86b] transition-colors">
+              Shop
+            </Link>
+            {primaryCat && (
+              <>
+                <span className="text-stone-400">/</span>
+                <Link
+                  href={primaryCatPath || `/${primaryCat.slug || primaryCat.id}`}
+                  className="hover:text-[#00a86b] transition-colors"
+                >
+                  {primaryCat.name}
+                </Link>
+              </>
             )}
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-900 font-medium truncate max-w-[200px] sm:max-w-none">{product.title}</span>
-          </div>
-        </div>
+            <span className="text-stone-400">/</span>
+            <span className="text-stone-600 truncate max-w-[240px] sm:max-w-none">{product.title}</span>
+          </nav>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-10">
           <div id="cart-notification-portal"></div>
-          <div className="flex flex-col lg:flex-row gap-12">
+
+          {/* Main 2-Column Product Hero */}
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
             <ProductPageClient
               product={product as any}
               enableBuyNow={enableBuyNow}
               storeName={storeName}
               shippingInfo={shippingInfo}
-              contactSlug={settingsMap.CONTACT_SLUG || 'contact'}
+              contactSlug={settingsMap.CONTACT_SLUG || 'kontakt'}
               translations={{
                 sku: t('sku'),
                 categories: t('categories'),
@@ -248,12 +310,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 sold: t('sold'),
                 customer_reviews: t('customer_reviews', { count: (product as any).reviews?.length || 0 }),
                 uncategorized: t('uncategorized'),
-                brand: t('brand')
+                brand: t('brand'),
               }}
             />
           </div>
 
-          {/* Tabs Section (Description & Reviews) */}
+          {/* Description & Reviews Tabs Card */}
           <ProductReviews
             productId={product.id}
             productTitle={product.title}
@@ -263,36 +325,76 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           />
 
           {/* Related Products Section */}
-          <div className="mt-20">
-            <div className="border-b border-gray-200 pb-4 mb-8">
-              <h2 className="text-xl font-bold text-gray-900">{t('related_products')}</h2>
-            </div>
+          <section className="mt-12 sm:mt-14">
+            <h2 className="text-[19px] font-semibold text-stone-800 mb-4">
+              {t('related_products')}
+            </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.length > 0 ? (
-                relatedProducts.map(rp => (
-                  <Link href={`/produkt/${rp.slug}`} key={rp.id} className="group border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition flex flex-col">
-                    <div className="relative h-48 w-full flex items-center justify-center mb-4">
-                      {rp.images && rp.images[0] ? (
-                        <Image width={800} height={800} src={rp.images[0]} alt={rp.title} title={rp.title} className="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-500" />
-                      ) : (
-                        <div className="text-6xl text-gray-300">🛍️</div>
-                      )}
-                    </div>
-                    <div className="mt-auto">
-                      <p className="text-xs text-[#107b46] font-semibold mb-1">{rp.categories && rp.categories.length > 0 ? rp.categories[0].name : 'Kategorie'}</p>
-                      <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 group-hover:text-[#107b46] transition">{rp.title}</h3>
-                      <Price amount={rp.price} className="font-bold text-[#dc2626]" />
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm">Keine ähnlichen Produkte gefunden.</p>
-              )}
-            </div>
-          </div>
+            {relatedProducts.length > 0 ? (
+              <div className="bg-[#f9f9fa] border border-stone-200/90 rounded-[4px] p-4 sm:p-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {relatedProducts.map((rp: any) => {
+                    const rpReviews = rp.reviews || [];
+                    const rpRating =
+                      rpReviews.length > 0
+                        ? rpReviews.reduce((acc: number, r: any) => acc + r.rating, 0) / rpReviews.length
+                        : 0;
 
+                    return (
+                      <Link
+                        href={`/produkt/${rp.slug}`}
+                        key={rp.id}
+                        className="group bg-white border border-stone-200 rounded-[4px] p-5 flex flex-col items-center text-center hover:border-[#00a86b]/50 hover:shadow-xs transition"
+                      >
+                        <div className="relative h-44 w-full flex items-center justify-center mb-4">
+                          {rp.images && rp.images[0] ? (
+                            <Image
+                              width={400}
+                              height={400}
+                              src={rp.images[0]}
+                              alt={rp.title}
+                              title={rp.title}
+                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-full bg-stone-50 flex items-center justify-center text-stone-300">
+                              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-auto w-full flex flex-col items-center">
+                          <h3 className="text-[13px] text-stone-700 leading-snug line-clamp-2 group-hover:text-[#00a86b] transition-colors">
+                            {rp.title}
+                          </h3>
+                          <RelatedStars rating={rpRating} />
+                          <div className="flex items-center justify-center gap-2 mt-0.5">
+                            {rp.compareAtPrice && rp.compareAtPrice > rp.price && (
+                              <Price
+                                amount={rp.compareAtPrice}
+                                className="text-[12.5px] text-stone-400 line-through tabular-nums"
+                              />
+                            )}
+                            <Price
+                              amount={rp.price}
+                              className="text-[15px] font-medium text-[#e05246] tabular-nums"
+                            />
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className="text-stone-500 text-sm">Keine ähnlichen Produkte gefunden.</p>
+            )}
+          </section>
         </div>
+
+        {/* Newsletter Bar right above Footer */}
+        <Newsletter />
       </main>
     </div>
   );
