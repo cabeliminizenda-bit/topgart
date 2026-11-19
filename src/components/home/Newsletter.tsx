@@ -31,8 +31,7 @@ export default function Newsletter({ config }: { config?: any }) {
     } else if (res.success) {
       setStatus('success');
       setMessage(res.message || 'Vielen Dank für Ihre Anmeldung!');
-      e.currentTarget.reset();
-      router.push('/thank-you');
+      window.location.href = '/thank-you';
     }
   };
 

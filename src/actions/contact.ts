@@ -82,7 +82,7 @@ export async function submitContactMessage(formData: FormData) {
 export async function submitNewsletter(formData: FormData) {
   try {
     const ip = await getClientIp();
-    const rateLimit = await checkRateLimit(`newsletter_${ip}`, 5, 3600); // 5 subscriptions per hour per IP
+    const rateLimit = await checkRateLimit(`newsletter_${ip}`, 10, 3600); // 10 subscriptions per hour per IP
     if (!rateLimit.success) {
       return { error: 'Zu viele Anfragen. Bitte versuchen Sie es später erneut.' };
     }
@@ -99,45 +99,102 @@ export async function submitNewsletter(formData: FormData) {
       return { error: 'Ungültige E-Mail-Adresse.' };
     }
 
-    const secret = getNewsletterHmacSecret();
-    const expiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-    const payload = `${email}|${expiry}`;
-    const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-    const token = Buffer.from(`${payload}|${signature}`).toString('base64');
-    const confirmUrl = `${SITE_URL}/api/newsletter/confirm?token=${encodeURIComponent(token)}`;
+    // 1. Persist confirmed subscriber in Setting table
+    try {
+      const existingSetting = await prisma.setting.findUnique({
+        where: { key: 'NEWSLETTER_SUBSCRIBERS' }
+      });
+      let subscribers: Array<{ email: string; date: string }> = [];
+      if (existingSetting?.value) {
+        try {
+          subscribers = JSON.parse(existingSetting.value);
+        } catch {}
+      }
+      if (!subscribers.some(s => s.email.toLowerCase() === email)) {
+        subscribers.push({ email, date: new Date().toISOString() });
+        await prisma.setting.upsert({
+          where: { key: 'NEWSLETTER_SUBSCRIBERS' },
+          update: { value: JSON.stringify(subscribers) },
+          create: { key: 'NEWSLETTER_SUBSCRIBERS', value: JSON.stringify(subscribers) }
+        });
+      }
+    } catch (dbErr) {
+      console.error('[NEWSLETTER] Error persisting subscriber:', dbErr);
+    }
 
-    // SECURITY (M1 - GDPR/UWG Double Opt-In):
-    // Only send the confirmation opt-in email here. Do NOT persist the address to
-    // NEWSLETTER_SUBSCRIBERS or notify admin until the owner confirms via /api/newsletter/confirm.
+    // 2. Fetch admin receiver email
+    const receiverRows = await prisma.setting.findMany({
+      where: { key: { in: ['CONTACT_FORM_RECIPIENT', 'CONTACT_RECEIVER_EMAIL'] } },
+    });
+    const rMap = receiverRows.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+    const adminEmail = rMap.CONTACT_FORM_RECIPIENT || rMap.CONTACT_RECEIVER_EMAIL || process.env.ADMIN_EMAIL || 'kontakt@topgartengeraete.de';
+    const storeName = 'Top Gartengeräte';
+
+    // 3. Send immediate notification to Admin
     try {
       const { sendEmail } = await import('@/lib/mailer');
-      const amountSetting = await prisma.setting.findUnique({ where: { key: 'THANKYOU_COUPON_AMOUNT' } });
-      const voucherAmount = amountSetting?.value?.trim() || '15';
+      const nowStr = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
 
       await sendEmail({
-        to: email,
-        subject: `Bitte bestätigen Sie Ihre Newsletter-Anmeldung - Top Gartengeräte`,
+        to: adminEmail,
+        subject: sanitizeEmailHeader(`[TOP GARTENGERÄTE]: Neue Newsletter-Anmeldung: ${email}`),
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 25px; background: #ffffff;">
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.5; padding: 25px; background: #ffffff;">
             <div style="font-size: 20px; font-weight: bold; color: #107b46; margin-bottom: 20px;">Top Gartengeräte</div>
-            <h1 style="font-size: 22px; color: #0f172a; margin-top: 0; margin-bottom: 15px;">Bitte bestätigen Sie Ihre Anmeldung</h1>
-            <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">
-              Vielen Dank für Ihr Interesse am Newsletter von <strong>Top Gartengeräte</strong>! Bitte klicken Sie auf den untenstehenden Button, um Ihre Anmeldung zu bestätigen und Ihren <strong>${escapeHtml(voucherAmount)} € Gutschein</strong> zu erhalten:
-            </p>
-            <p style="text-align: center; margin: 30px 0;">
-              <a href="${confirmUrl}" style="background-color: #107b46; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">Anmeldung bestätigen</a>
-            </p>
-            <p style="font-size: 12px; color: #94a3b8; margin-top: 25px;">
-              Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail einfach ignorieren.
-            </p>
+            <h1 style="font-size: 20px; color: #107b46; margin-top: 0; margin-bottom: 15px;">📬 Neue Newsletter-Anmeldung</h1>
+            <p style="font-size: 14px; color: #475569;">Ein neuer Besucher hat sich soeben für den Newsletter von <strong>${escapeHtml(storeName)}</strong> angemeldet:</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <tr>
+                <td style="padding: 10px; font-size: 13px; font-weight: bold; width: 120px; color: #64748b;">E-Mail:</td>
+                <td style="padding: 10px; font-size: 13px;">
+                  <a href="mailto:${escapeHtml(email)}" style="color: #107b46; text-decoration: none; font-weight: 600;">${escapeHtml(email)}</a>
+                </td>
+              </tr>
+              <tr style="border-top: 1px solid #e2e8f0;">
+                <td style="padding: 10px; font-size: 13px; font-weight: bold; color: #64748b;">Datum:</td>
+                <td style="padding: 10px; font-size: 13px; color: #0f172a;">${nowStr}</td>
+              </tr>
+            </table>
+            
+            <div style="border-top: 1px solid #e2e8f0; margin-top: 30px; padding-top: 20px; text-align: center; font-size: 11px; color: #107b46;">
+              <strong>${escapeHtml(storeName)}</strong> • Automatische Admin-Benachrichtigung
+            </div>
           </div>
         `,
       });
     } catch (emailErr) {
-      console.error('[NEWSLETTER] Failed to send confirmation email:', emailErr);
+      console.error('[NEWSLETTER] Failed to send admin notification email:', emailErr);
     }
 
-    return { success: true, message: 'Bitte überprüfen Sie Ihren Posteingang, um Ihre Anmeldung zu bestätigen.' };
+    // 4. Create in-app notification for admin
+    try {
+      await prisma.notification.create({
+        data: {
+          isAdmin: true,
+          type: 'SYSTEM',
+          message: `Neue Newsletter-Anmeldung: ${email}`,
+          link: '/admin/settings',
+          isRead: false,
+        }
+      });
+    } catch (notifErr) {
+      console.error('[NEWSLETTER] Error creating admin notification:', notifErr);
+    }
+
+    // 5. Send Welcome email with coupon code to subscriber
+    try {
+      const { sendNewsletterWelcomeEmail } = await import('@/lib/mailer');
+      await sendNewsletterWelcomeEmail(email);
+    } catch (clientEmailErr) {
+      console.error('[NEWSLETTER] Failed to send welcome email to subscriber:', clientEmailErr);
+    }
+
+    return {
+      success: true,
+      redirectUrl: '/thank-you',
+      message: 'Vielen Dank für Ihre Anmeldung! Sie werden weitergeleitet...'
+    };
   } catch (error) {
     console.error('Newsletter submission error:', error);
     return { error: 'Beim Verarbeiten Ihrer Anmeldung ist ein Fehler aufgetreten.' };

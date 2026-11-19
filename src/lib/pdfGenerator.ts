@@ -40,6 +40,11 @@ export async function generateInvoicePDF(order: any): Promise<Buffer> {
 
   // Robust local logo detection (PNG/JPG only for PDFKit)
   const candidatePaths = [
+    path.join(process.cwd(), 'public', 'logo-topgartengeraete.png'),
+    path.join(process.cwd(), 'logo top gartengeraete.png'),
+    path.join(process.cwd(), 'Logo topgartengeraete.png'),
+    path.join(process.cwd(), 'public', 'logo.png'),
+    path.join(process.cwd(), 'public', 'images', 'logo.png'),
     path.join(process.cwd(), 'LOGO-TOP-GARTENGERAETE.png'),
     path.join(process.cwd(), 'public', 'LOGO-TOP-GARTENGERAETE.png'),
   ];

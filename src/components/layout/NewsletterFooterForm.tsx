@@ -27,7 +27,7 @@ export default function NewsletterFooterForm({ placeholder = 'Geben Sie Ihre Ema
         setError(res.error);
       } else {
         // Redirection vers la page Thank You
-        router.push('/thank-you');
+        window.location.href = '/thank-you';
       }
     });
   };

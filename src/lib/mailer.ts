@@ -49,7 +49,10 @@ async function getTransporter() {
   const storeName = settings.STORE_NAME || settings.NEXT_PUBLIC_STORE_NAME || process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
   const storeEmail = settings.CONTACT_EMAIL_DISPLAY || settings.FOOTER_SUPPORT_EMAIL || 'kontakt@topgartengeraete.de';
   const storeAddress = settings.CONTACT_ADDRESS || settings.FOOTER_ADDRESS_1 || 'Rosenstraße 19, 26529 Marienhafe, Deutschland';
-  const logo = settings.HEADER_LOGO_IMAGE || settings.STYLE2_LOGO || '';
+  let logo = settings.HEADER_LOGO_IMAGE || settings.STYLE2_LOGO || 'https://topgartengeraete.de/logo-topgartengeraete.png';
+  if (logo && logo.startsWith('/')) {
+    logo = `https://topgartengeraete.de${logo}`;
+  }
 
   // Clean from address: avoid legacy domains or bare 'resend' username
   let from = process.env.SMTP_FROM || settings.SMTP_FROM || `"${storeName}" <kontakt@topgartengeraete.de>`;
