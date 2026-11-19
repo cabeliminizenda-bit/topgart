@@ -120,7 +120,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let menuLinks = defaultMenuLinks;
   try {
     if (settingsMap.HEADER_MENU_LINKS) {
-      menuLinks = JSON.parse(settingsMap.HEADER_MENU_LINKS);
+      const parsed = JSON.parse(settingsMap.HEADER_MENU_LINKS);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const isOldDefault = parsed.length === 4 && parsed[0]?.label === 'Startseite' && parsed[1]?.label === 'Shop';
+        if (!isOldDefault) {
+          menuLinks = parsed;
+        }
+      }
     }
   } catch (e) {
     console.error("Erreur parsing HEADER_MENU_LINKS", e);
@@ -179,31 +185,31 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     }
   } catch { }
 
-  const defaultTopBarLinks: { label: string; icon: string; url: string }[] = [
-    { label: 'Bestellung verfolgen', icon: 'truck', url: '/order-tracking' },
+  const defaultTopBarLinks = [
+    { label: 'AGB', url: '/agb' },
+    { label: 'Blog', url: '/blog' },
+    { label: 'Versand', url: '/lieferzeiten' },
+    { label: 'Widerrufsbelehrung', url: '/widerrufsbelehrung' },
   ];
   let topBarLinks = defaultTopBarLinks;
   try {
     if (settingsMap.TOP_BAR_LINKS) {
-      topBarLinks = JSON.parse(settingsMap.TOP_BAR_LINKS);
+      const parsed = JSON.parse(settingsMap.TOP_BAR_LINKS);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const isOld = parsed.length === 1 && parsed[0]?.icon === 'truck';
+        if (!isOld) {
+          topBarLinks = parsed;
+        }
+      }
     }
   } catch { }
-
-  // Remove Store location and ensure Order Tracking is in German
-  topBarLinks = (topBarLinks || [])
-    .filter((link) => !link.label?.toLowerCase().includes('store') && !link.url?.includes('store-locator'))
-    .map((link) => {
-      if (link.label?.toLowerCase().includes('order') || link.label?.toLowerCase().includes('track') || link.url?.includes('order-tracking') || link.label?.toLowerCase().includes('rastrear')) {
-        return { ...link, label: 'Bestellung verfolgen' };
-      }
-      return link;
-    });
 
   const { newCount: newProductsCount, hotCount: hotProductsCount, saleCount: saleProductsCount } = await getCachedProductCounts();
 
   const storeSettings = {
     announcement: settingsMap.HEADER_ANNOUNCEMENT_TEXT || settingsMap.HEADER_ANNOUNCEMENT || 'Willkommen bei Top Gartengeräte • Kostenloser Versand ab 200 € • 2 Jahre Garantie',
     logoImage: settingsMap.HEADER_LOGO_IMAGE && settingsMap.HEADER_LOGO_IMAGE !== '/logo.png' && settingsMap.HEADER_LOGO_IMAGE !== '/logo.jpg' && settingsMap.HEADER_LOGO_IMAGE !== '/LOGO-HLG-HAUSGERAETE.png' ? settingsMap.HEADER_LOGO_IMAGE : '/logo-top-gartengeraete-dark.svg',
+    headerShopBtnText: settingsMap.HEADER_SHOP_BTN_TEXT || 'ZUM SHOP GEHEN',
     supportPhone: settingsMap.FOOTER_SUPPORT_PHONE ?? settingsMap.HEADER_SUPPORT_PHONE ?? '',
     supportEmail: settingsMap.FOOTER_SUPPORT_EMAIL ?? settingsMap.HEADER_SUPPORT_EMAIL ?? 'kontakt@topgartengeraete.de',
     menuLinks: menuLinks,

@@ -14,10 +14,11 @@ type StoreLayoutProps = {
     logoImage: string;
     headerLogoHeight?: string;
     mobileLogoHeight?: string;
+    headerShopBtnText?: string;
     supportPhone: string;
     supportEmail: string;
     menuLinks: Array<{ label: string, url: string }>;
-    topBarLinks?: Array<{ label: string, icon: string, url: string }>;
+    topBarLinks?: Array<{ label: string, icon?: string, url: string }>;
     topBarBgColor?: string;
     topBarTextColor?: string;
     loginText?: string;
@@ -116,6 +117,7 @@ export default function StoreLayout({ children, settings, userRole }: StoreLayou
         supportEmail={settings.supportEmail}
         headerLogoHeight={settings.headerLogoHeight}
         mobileLogoHeight={settings.mobileLogoHeight}
+        headerShopBtnText={settings.headerShopBtnText}
         menuLinks={settings.menuLinks}
         topBarLinks={settings.topBarLinks}
         topBarBgColor={settings.topBarBgColor}

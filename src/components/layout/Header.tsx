@@ -24,8 +24,9 @@ type HeaderProps = {
   logoImage?: string;
   headerLogoHeight?: string;
   mobileLogoHeight?: string;
+  headerShopBtnText?: string;
   menuLinks?: Array<{ label: string; url: string }>;
-  topBarLinks?: Array<{ label: string; icon: string; url: string }>;
+  topBarLinks?: Array<{ label: string; icon?: string; url: string }>;
   loginText?: string;
   myAccountText?: string;
   adminDashboardText?: string;
@@ -86,6 +87,8 @@ const defaultNavLinks = [
 export default function Header({
   logoImage = '/logo-top-gartengeraete-dark.svg',
   menuLinks = [],
+  topBarLinks = [],
+  headerShopBtnText = 'ZUM SHOP GEHEN',
   categories = [],
   searchPlaceholder = 'Produkte suchen...',
   searchBtnText = 'Suche',
@@ -224,6 +227,7 @@ export default function Header({
   };
 
   const navLinks = menuLinks && menuLinks.length > 0 ? menuLinks : defaultNavLinks;
+  const activeTopLinks = topBarLinks && topBarLinks.length > 0 ? topBarLinks : topUtilityLinks;
 
   const currentLogo =
     logoImage &&
@@ -276,8 +280,8 @@ export default function Header({
               </span>
             </div>
             <nav aria-label="Rechtliche Kurzlinks" className="flex items-center text-[12px] text-stone-500">
-              {topUtilityLinks.map((item, idx) => (
-                <div key={item.url} className="flex items-center">
+              {activeTopLinks.map((item, idx) => (
+                <div key={`${item.url}-${idx}`} className="flex items-center">
                   {idx > 0 && <span className="mx-3 h-3 w-px bg-stone-200" aria-hidden="true" />}
                   <Link
                     href={item.url}
@@ -619,7 +623,7 @@ export default function Header({
                   href="/shop"
                   className="w-full bg-[#00a86b] hover:bg-[#008f5a] text-white font-bold text-[12.5px] tracking-wider uppercase px-5 py-3 rounded-[5px] flex items-center justify-between transition-all shadow-xs hover:shadow-md hover:shadow-emerald-600/20"
                 >
-                  <span>ZUM SHOP GEHEN</span>
+                  <span>{headerShopBtnText || 'ZUM SHOP GEHEN'}</span>
                   <span className="w-5 h-5 rounded-full bg-white text-[#00a86b] flex items-center justify-center shrink-0">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
