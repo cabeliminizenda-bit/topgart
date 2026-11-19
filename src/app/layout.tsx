@@ -127,13 +127,55 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   const defaultFooterColumns = [
-    { title: 'Kundenservice', links: [{ label: 'Kontakt', url: `/${contactSlug}` }, { label: 'Rückgabe & Erstattung', url: '/rueckgabe-und-erstattung' }] },
-    { title: 'Mein Konto', links: [{ label: 'Shop', url: '/shop' }, { label: 'Warenkorb', url: '/cart' }] }
+    {
+      title: 'Rechtliches',
+      links: [
+        { label: 'AGB', url: '/agb' },
+        { label: 'Impressum', url: '/impressum' },
+        { label: 'Über uns', url: '/ueber-uns' },
+        { label: 'Datenschutzrichtlinie', url: '/datenschutz' },
+        { label: 'Kontakt', url: `/${contactSlug}` },
+      ],
+    },
+    {
+      title: 'Schnelle Links',
+      links: [
+        { label: 'Versandpolitik', url: '/lieferzeiten' },
+        { label: 'Rückgabe & Rückerstattung', url: '/rueckgabe-und-erstattung' },
+        { label: 'Zahlungsart', url: '/zahlungsinformationen' },
+        { label: 'Cookie-Richtlinie', url: '/cookie-richtlinie' },
+        { label: 'Widerrufsbelehrung', url: '/widerrufsbelehrung' },
+      ],
+    },
+    {
+      title: 'Kunden',
+      links: [
+        { label: 'Warenkorb', url: '/cart' },
+        { label: 'Checkout', url: '/checkout' },
+        { label: 'Wunschliste', url: '/wishlist' },
+      ],
+    },
+    {
+      title: 'Katalog',
+      links: [
+        { label: 'Akku-Rasenmäher', url: '/shop?category=akku-rasenmaeher' },
+        { label: 'Benzin-Rasenmäher', url: '/shop?category=benzin-rasenmaeher' },
+        { label: 'Rasentraktoren', url: '/shop?category=rasentraktoren' },
+        { label: 'Mähroboter', url: '/shop?category=maehroboter' },
+        { label: 'Kettensäge & Rasentrimmer', url: '/shop?category=kettensaege-rasentrimmer' },
+      ],
+    },
   ];
   let footerColumns = defaultFooterColumns;
   try {
     if (settingsMap.FOOTER_COLUMNS) {
-      footerColumns = JSON.parse(settingsMap.FOOTER_COLUMNS);
+      const parsed = JSON.parse(settingsMap.FOOTER_COLUMNS);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const isOld = parsed.length === 2 && parsed[0]?.title === 'Kundenservice' && parsed[1]?.title === 'Mein Konto';
+        if (!isOld) {
+          footerColumns = parsed;
+        }
+      }
     }
   } catch { }
 
@@ -171,17 +213,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     adminDashboardText: settingsMap.ADMIN_DASHBOARD_TEXT || 'Admin-Dashboard',
     topBarBgColor: settingsMap.TOP_BAR_BG_COLOR || '#ffffff',
     topBarTextColor: settingsMap.TOP_BAR_TEXT_COLOR || '#4b5563',
-    footerBgColor: settingsMap.FOOTER_BG_COLOR || '#0f172a',
-    footerTextColor: settingsMap.FOOTER_TEXT_COLOR || '#d1d5db',
-    footerHeadingColor: settingsMap.FOOTER_HEADING_COLOR || '#ffffff',
+    footerBgColor: (settingsMap.FOOTER_BG_COLOR && settingsMap.FOOTER_BG_COLOR !== '#0B162C' && settingsMap.FOOTER_BG_COLOR !== '#0f172a') ? settingsMap.FOOTER_BG_COLOR : '#ffffff',
+    footerTextColor: (settingsMap.FOOTER_TEXT_COLOR && settingsMap.FOOTER_TEXT_COLOR !== '#d1d5db') ? settingsMap.FOOTER_TEXT_COLOR : '#374151',
+    footerHeadingColor: (settingsMap.FOOTER_HEADING_COLOR && settingsMap.FOOTER_HEADING_COLOR !== '#ffffff') ? settingsMap.FOOTER_HEADING_COLOR : '#e05246',
+    footerAccentColor: settingsMap.FOOTER_ACCENT_COLOR || '#00a86b',
     footerAddress1: settingsMap.FOOTER_ADDRESS_1 ?? 'Rosenstraße 19, 26529 Marienhafe, Deutschland',
     footerAddress2: settingsMap.FOOTER_ADDRESS_2 ?? 'Zuverlässige Lieferung direkt zu Ihnen nach Hause',
     footerLocationsTitle: settingsMap.FOOTER_LOCATIONS_TITLE || 'Standort & Liefergebiet',
+    footerContactTitle: settingsMap.FOOTER_CONTACT_TITLE || 'Kontaktinformationen',
+    footerBadgeText: settingsMap.FOOTER_BADGE_TEXT || 'Geprüfte Fachhändler-Qualität',
+    footerShowCategoriesStrip: settingsMap.FOOTER_SHOW_CATEGORIES_STRIP !== 'false',
+    footerCategoriesTitle: settingsMap.FOOTER_CATEGORIES_TITLE || 'Kategorien :',
     footerNewsletterTitle: settingsMap.FOOTER_NEWSLETTER_TITLE || 'Top Gartengeräte Newsletter',
     footerNewsletterText: settingsMap.FOOTER_NEWSLETTER_TEXT || 'Abonnieren Sie unseren Newsletter für exklusive Angebote und Gutscheine.',
     footerNewsletterPlaceholder: settingsMap.FOOTER_NEWSLETTER_PLACEHOLDER || 'Ihre E-Mail-Adresse...',
     footerCallUsText: settingsMap.FOOTER_CALL_US_TEXT || 'Kundenservice',
-    footerCopyright: settingsMap.FOOTER_COPYRIGHT || `© 2026 TOP GARTENGERÄTE`,
+    footerCopyright: (settingsMap.FOOTER_COPYRIGHT && !settingsMap.FOOTER_COPYRIGHT.includes('HLG')) ? settingsMap.FOOTER_COPYRIGHT : `© 2026 TOP GARTENGERÄTE`,
     footerSocialFacebook: settingsMap.FOOTER_SOCIAL_FACEBOOK || '#',
     footerSocialTwitter: settingsMap.FOOTER_SOCIAL_TWITTER || '#',
     footerSocialInstagram: settingsMap.FOOTER_SOCIAL_INSTAGRAM || '#',
@@ -191,12 +238,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     footerDescription: settingsMap.FOOTER_DESCRIPTION || 'Top Gartengeräte ist Ihr zuverlässiger Fachhändler für hochwertige Gartengeräte. Entdecken Sie erstklassige Rasenmäher, Mähroboter, Motorsägen, Heckenscheren und Gartentechnik führender Marken zu Spitzenpreisen.',
     footerShowAddress: settingsMap.FOOTER_SHOW_ADDRESS !== 'false',
     footerShowEmail: settingsMap.FOOTER_SHOW_EMAIL !== 'false',
-    footerShowPhone: settingsMap.FOOTER_SHOW_PHONE !== 'false',
+    footerShowPhone: settingsMap.FOOTER_SHOW_PHONE === 'true',
     footerPaymentAmex: settingsMap.FOOTER_PAYMENT_AMEX !== 'false',
-    footerPaymentApplePay: settingsMap.FOOTER_PAYMENT_APPLE_PAY !== 'false',
-    footerPaymentGooglePay: settingsMap.FOOTER_PAYMENT_GOOGLE_PAY !== 'false',
+    footerPaymentApplePay: settingsMap.FOOTER_PAYMENT_APPLE_PAY === 'true',
+    footerPaymentGooglePay: settingsMap.FOOTER_PAYMENT_GOOGLE_PAY === 'true',
     footerPaymentMastercard: settingsMap.FOOTER_PAYMENT_MASTERCARD !== 'false',
     footerPaymentVisa: settingsMap.FOOTER_PAYMENT_VISA !== 'false',
+    footerPaymentPaypal: settingsMap.FOOTER_PAYMENT_PAYPAL !== 'false',
+    footerPaymentCb: settingsMap.FOOTER_PAYMENT_CB !== 'false',
+    footerPaymentMaestro: settingsMap.FOOTER_PAYMENT_MAESTRO !== 'false',
     footerPaymentOpay: settingsMap.FOOTER_PAYMENT_OPAY !== 'false',
     categories: await getCachedCategoriesTree(),
     maintenanceMode: settingsMap.MAINTENANCE_MODE === 'true',

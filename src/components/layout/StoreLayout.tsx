@@ -26,9 +26,14 @@ type StoreLayoutProps = {
     footerBgColor: string;
     footerTextColor: string;
     footerHeadingColor?: string;
+    footerAccentColor?: string;
     footerAddress1: string;
     footerAddress2: string;
     footerLocationsTitle: string;
+    footerContactTitle?: string;
+    footerBadgeText?: string;
+    footerShowCategoriesStrip?: boolean;
+    footerCategoriesTitle?: string;
     footerNewsletterTitle: string;
     footerNewsletterText: string;
     footerNewsletterPlaceholder: string;
@@ -50,6 +55,9 @@ type StoreLayoutProps = {
     footerPaymentGooglePay?: boolean;
     footerPaymentMastercard?: boolean;
     footerPaymentVisa?: boolean;
+    footerPaymentPaypal?: boolean;
+    footerPaymentCb?: boolean;
+    footerPaymentMaestro?: boolean;
     footerPaymentOpay?: boolean;
     maintenanceMode?: boolean;
     maintenanceTitle?: string;
@@ -144,9 +152,14 @@ export default function StoreLayout({ children, settings, userRole }: StoreLayou
         footerBgColor={settings.footerBgColor}
         footerTextColor={settings.footerTextColor}
         footerHeadingColor={settings.footerHeadingColor}
+        footerAccentColor={settings.footerAccentColor}
         footerAddress1={settings.footerAddress1}
         footerAddress2={settings.footerAddress2}
         footerLocationsTitle={settings.footerLocationsTitle}
+        footerContactTitle={settings.footerContactTitle}
+        footerBadgeText={settings.footerBadgeText}
+        footerShowCategoriesStrip={settings.footerShowCategoriesStrip}
+        footerCategoriesTitle={settings.footerCategoriesTitle}
         footerNewsletterTitle={settings.footerNewsletterTitle}
         footerNewsletterText={settings.footerNewsletterText}
         footerNewsletterPlaceholder={settings.footerNewsletterPlaceholder}
@@ -168,6 +181,9 @@ export default function StoreLayout({ children, settings, userRole }: StoreLayou
         footerPaymentGooglePay={settings.footerPaymentGooglePay}
         footerPaymentMastercard={settings.footerPaymentMastercard}
         footerPaymentVisa={settings.footerPaymentVisa}
+        footerPaymentPaypal={settings.footerPaymentPaypal}
+        footerPaymentCb={settings.footerPaymentCb}
+        footerPaymentMaestro={settings.footerPaymentMaestro}
         footerPaymentOpay={settings.footerPaymentOpay}
         contactSlug={settings.contactSlug}
       />
