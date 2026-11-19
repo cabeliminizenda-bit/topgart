@@ -111,7 +111,10 @@ export default function GardenDealsShowcase({
   const promoTitle = config?.promoTitle || 'Beste Angebote';
   const promoBadgeTop = config?.promoBadgeTop || 'Ab';
   const promoBadgePrice = config?.promoBadgePrice || '250€';
-  const promoImage = config?.promoImage || '/images/promo-summer-lawn.jpg';
+  const promoImage =
+    (typeof config?.promoImage === 'string' && config.promoImage.trim()) ||
+    (typeof config?.spotlight?.image === 'string' && config.spotlight.image.trim()) ||
+    '/images/promo-summer-lawn.jpg';
   const promoUrl = config?.promoUrl || '/shop';
   const couponCode = config?.couponCode || 'GUT727AG';
   const sectionTitle = config?.title || 'Aktuelle Angebote';
@@ -243,9 +246,9 @@ export default function GardenDealsShowcase({
               {/* 1. Kostenlose Rückgabe */}
               <Link
                 href="/rueckgabe-und-erstattung"
-                className="bg-white border border-stone-200/90 hover:border-[#00a86b]/45 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group"
+                className="bg-[#f9f9fa] hover:bg-[#f4f5f6] border border-stone-200/85 hover:border-[#00a86b]/45 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group"
               >
-                <div className="w-11 h-11 rounded-full bg-emerald-50/80 border border-emerald-100 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-full bg-white border border-stone-200/80 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:border-[#00a86b] group-hover:text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -268,9 +271,9 @@ export default function GardenDealsShowcase({
               {/* 2. Kostenlose Lieferung */}
               <Link
                 href="/lieferzeiten"
-                className="bg-white border border-stone-200/90 hover:border-[#00a86b]/45 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group"
+                className="bg-[#f9f9fa] hover:bg-[#f4f5f6] border border-stone-200/85 hover:border-[#00a86b]/45 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group"
               >
-                <div className="w-11 h-11 rounded-full bg-emerald-50/80 border border-emerald-100 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-full bg-white border border-stone-200/80 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:border-[#00a86b] group-hover:text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -294,10 +297,10 @@ export default function GardenDealsShowcase({
               <button
                 type="button"
                 onClick={handleCopyCoupon}
-                className="bg-white border border-stone-200/90 hover:border-[#00a86b]/45 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group text-left cursor-pointer"
+                className="bg-[#f9f9fa] hover:bg-[#f4f5f6] border border-stone-200/85 hover:border-[#00a86b]/45 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_20px_-10px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 rounded-[6px] px-4 py-4 flex items-center gap-3.5 transition-all group text-left cursor-pointer"
                 title={`Rabattcode ${couponCode} kopieren`}
               >
-                <div className="w-11 h-11 rounded-full bg-emerald-50/80 border border-emerald-100 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-full bg-white border border-stone-200/80 text-[#00a86b] flex items-center justify-center shrink-0 group-hover:bg-[#00a86b] group-hover:border-[#00a86b] group-hover:text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -313,7 +316,7 @@ export default function GardenDealsShowcase({
                   </h4>
                   <p className="text-[12px] text-stone-500 mt-0.5 truncate">
                     Rabattcode{' '}
-                    <span className="text-[#e05246] font-semibold bg-red-50/80 px-1.5 py-0.5 rounded-[3px]">{couponCode}</span>
+                    <span className="text-[#e05246] font-semibold bg-white/90 px-1.5 py-0.5 rounded-[3px]">{couponCode}</span>
                   </p>
                 </div>
               </button>

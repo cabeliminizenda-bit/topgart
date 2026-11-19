@@ -202,8 +202,8 @@ export default function HeroSectionEditor({
   const blockTitles: Record<number, string> = {
     0: 'Hero-Container (Gesamt)',
     1: 'Block 1 (Kategorien)',
-    2: 'Block 2 (Hauptbanner)',
-    3: 'Block 3 (Highlight-Karte)',
+    2: 'Block 2 (Folie 1 / Hauptbanner)',
+    3: 'Block 3 (Folie 2 / Banner 2)',
   };
 
   return (

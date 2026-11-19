@@ -13,6 +13,7 @@ import AktuelleAngeboteEditor from '@/components/admin/settings/AktuelleAngebote
 import CategoryShowcaseEditor from '@/components/admin/settings/CategoryShowcaseEditor';
 import CategoryOverviewEditor from '@/components/admin/settings/CategoryOverviewEditor';
 import BrandShowcaseEditor from '@/components/admin/settings/BrandShowcaseEditor';
+import { ImageFramePicker } from '@/components/admin/settings/ImageFramePicker';
 import {
   CATEGORY_PRESET_DEFAULTS,
   CatalogBrandSummary,
@@ -338,6 +339,81 @@ export default function LandingForm({
           handleUpload={handleUpload}
           brands={brands}
         />
+      );
+    }
+
+    if (section.type === 'GardenCategoryShowcase') {
+      const s = section.settings || {};
+      const showBanner = s.showBanner !== false;
+      const showSidebar = s.showSidebar !== false;
+      return (
+        <div className="p-3.5 bg-white space-y-4 text-xs text-stone-800">
+          <h3 className="font-bold text-sm text-stone-900 border-b border-stone-100 pb-2">
+            {section.name || 'Kategorie-Sektion'}
+          </h3>
+
+          {showBanner && (
+            <ImageFramePicker
+              label="Banner-Bild (BG)"
+              imageUrl={s.bannerImage || '/images/banner-robot-mower-wide.jpg'}
+              onSelectClick={() => handleUpload(section.id, 'bannerImage')}
+              onClearClick={() => updateSectionSettings(section.id, 'bannerImage', '')}
+              objectFit="cover"
+            />
+          )}
+
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Titel</label>
+            <input
+              type="text"
+              value={s.title ?? ''}
+              onChange={(e) => updateSectionSettings(section.id, 'title', e.target.value)}
+              placeholder="z. B. UNSERE RASENTRAKTOREN"
+              className="w-full text-xs p-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          {showSidebar && (
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Sidebar-Titel</label>
+              <input
+                type="text"
+                value={s.sidebarTitle ?? 'Angebote Mähroboter'}
+                onChange={(e) => updateSectionSettings(section.id, 'sidebarTitle', e.target.value)}
+                className="w-full text-xs p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Link-Text</label>
+              <input
+                type="text"
+                value={s.linkText ?? 'Mehr anzeigen'}
+                onChange={(e) => updateSectionSettings(section.id, 'linkText', e.target.value)}
+                className="w-full text-xs p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Link-Ziel</label>
+              <input
+                type="text"
+                value={s.linkUrl ?? '/shop'}
+                onChange={(e) => updateSectionSettings(section.id, 'linkUrl', e.target.value)}
+                className="w-full text-xs p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setEditingId(null)}
+            className="w-full py-2 bg-[#00a86b] hover:bg-[#008f5a] text-white font-bold rounded-lg transition-colors cursor-pointer"
+          >
+            &larr; Zurück zur Sektionsliste
+          </button>
+        </div>
       );
     }
 
@@ -672,6 +748,10 @@ export default function LandingForm({
                 idx === brandIdx ? { ...item, logo: url } : { ...item }
               );
               updateSectionSettings(sectionId, 'brands', nextBrands);
+            } else if (key === 'sideCardImage') {
+              updateSectionSettings(sectionId, { sideCardImage: url, showcaseBgImage: url });
+            } else if (key === 'bannerImage') {
+              updateSectionSettings(sectionId, { bannerImage: url, bgImageUrl: url });
             } else {
               updateSectionSettings(sectionId, key, url);
             }

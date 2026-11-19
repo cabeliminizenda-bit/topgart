@@ -159,6 +159,43 @@ export default function HlgHero({
   const block2BtnBg = parseColorSetting(config?.block2BtnBg, '#ef3e2d');
   const block2BtnTextColor = parseColorSetting(config?.block2BtnTextColor, '#ffffff');
 
+  // Block 3 settings (Slide 2 Banner)
+  const rawSideImage =
+    typeof config?.sideCardImage === 'string' && config.sideCardImage.trim().length > 0
+      ? config.sideCardImage.trim()
+      : typeof config?.showcaseBgImage === 'string' && config.showcaseBgImage.trim().length > 0
+        ? config.showcaseBgImage.trim()
+        : '';
+  const slide2Image =
+    rawSideImage && rawSideImage !== '/images/hero-coffee-machine.jpg'
+      ? rawSideImage
+      : '/images/hero-robot-mower.jpg';
+
+  const slide2Title =
+    config?.sideCardTitle && !String(config.sideCardTitle).includes('Kaffeevollautomaten')
+      ? config.sideCardTitle
+      : 'Mähroboter & Gartentechnik';
+
+  const slide2Subtitle =
+    config?.sideCardCategory && !String(config.sideCardCategory).includes('Genuss auf Knopfdruck')
+      ? config.sideCardCategory
+      : 'Perfekter Rasen – vollautomatisch und leise!';
+
+  const slide2Description =
+    config?.sideCardSubtitle && !String(config.sideCardSubtitle).includes('Barista-Kaffee')
+      ? config.sideCardSubtitle
+      : 'Top-Marken, 2 Jahre Garantie & schneller Versand\nJetzt attraktive Saisonangebote entdecken!';
+
+  const slide2CtaText =
+    config?.sideCardCtaText && !String(config.sideCardCtaText).includes('Geräte entdecken')
+      ? config.sideCardCtaText
+      : 'Jetzt entdecken';
+
+  const slide2CtaUrl =
+    config?.sideCardUrl && !String(config.sideCardUrl).includes('kaffeemaschinen')
+      ? config.sideCardUrl
+      : '/shop?category=maehroboter';
+
   const slides: HeroSlide[] = [
     {
       image: customImage,
@@ -169,12 +206,12 @@ export default function HlgHero({
       ctaUrl: primaryCtaUrl,
     },
     {
-      image: '/images/hero-robot-mower.jpg',
-      title: 'Mähroboter & Gartentechnik',
-      subtitle: 'Perfekter Rasen – vollautomatisch und leise!',
-      description: 'Top-Marken, 2 Jahre Garantie & schneller Versand\nJetzt attraktive Saisonangebote entdecken!',
-      ctaText: 'Jetzt entdecken',
-      ctaUrl: '/shop?category=maehroboter',
+      image: slide2Image,
+      title: slide2Title,
+      subtitle: slide2Subtitle,
+      description: slide2Description,
+      ctaText: slide2CtaText,
+      ctaUrl: slide2CtaUrl,
     },
   ];
 
@@ -302,7 +339,11 @@ export default function HlgHero({
             onMouseLeave={() => setIsPaused(false)}
           >
             {isPreview && sectionId && (
-              <HeroPreviewEditButton sectionId={sectionId} blockNum={2} label="Block 2: Hauptbanner" />
+              <HeroPreviewEditButton
+                sectionId={sectionId}
+                blockNum={activeSlide === 0 ? 2 : 3}
+                label={activeSlide === 0 ? 'Block 2: Folie 1' : 'Block 3: Folie 2'}
+              />
             )}
 
             {/* Slide Background Images */}

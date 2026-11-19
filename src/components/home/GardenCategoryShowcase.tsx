@@ -324,12 +324,12 @@ export default function GardenCategoryShowcase({
         <div className="flex flex-col lg:flex-row items-start gap-6">
           {/* LEFT COLUMN: Sidebar card or alignment spacer (exact 254px column) */}
           {showSidebar ? (
-            <aside className="w-full lg:w-[254px] shrink-0 bg-white border border-stone-200/90 border-t-2 border-t-[#00a86b] rounded-[6px] p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
-              <h2 className="text-[15.5px] font-semibold text-stone-800 pb-3 mb-3.5 border-b border-stone-100">
+            <aside className="w-full lg:w-[254px] shrink-0 bg-[#f9f9fa] border border-stone-200/85 border-t-2 border-t-[#00a86b] rounded-[6px] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+              <h2 className="text-[15.5px] font-semibold text-stone-800 pb-3 mb-3.5 border-b border-stone-200/70">
                 {sidebarTitle}
               </h2>
 
-              <div className="divide-y divide-stone-100">
+              <div className="divide-y divide-stone-200/60">
                 {sidebarProducts.map((product) => {
                   const href = product.slug ? `/produkt/${product.slug}` : '/shop?category=maehroboter';
                   const imageSrc = product.images?.[0] || '/images/hero-robot-mower.jpg';
@@ -339,7 +339,7 @@ export default function GardenCategoryShowcase({
                       href={href}
                       className="flex items-start gap-3 py-3 first:pt-0 last:pb-0 group"
                     >
-                      <div className="w-[68px] h-[68px] shrink-0 bg-stone-50/60 border border-stone-200/70 rounded-[4px] p-1.5 flex items-center justify-center overflow-hidden group-hover:border-[#00a86b]/40 transition-colors">
+                      <div className="w-[68px] h-[68px] shrink-0 bg-white border border-stone-200/80 rounded-[4px] p-1.5 flex items-center justify-center overflow-hidden group-hover:border-[#00a86b]/45 transition-colors">
                         <Image
                           src={imageSrc}
                           alt={product.title}
