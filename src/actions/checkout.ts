@@ -81,19 +81,62 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
       return { error: "Zu viele Anfragen. Bitte warten Sie einen Moment." };
     }
 
-    const email = String(formData.get('email') || '').trim().toLowerCase();
-    const firstName = formData.get('firstName') as string;
-    const lastName = formData.get('lastName') as string;
-    const country = formData.get('country') as string;
-    const shippingMethodId = formData.get('shippingMethod') as string;
+    const cleanStr = (val: unknown, maxLen: number): string => {
+      if (typeof val !== 'string') return '';
+      return val.trim().slice(0, maxLen);
+    };
+
+    const email = cleanStr(formData.get('email'), 254).toLowerCase();
+    const firstName = cleanStr(formData.get('firstName'), 100);
+    const lastName = cleanStr(formData.get('lastName'), 100);
+    const country = cleanStr(formData.get('country'), 10).toUpperCase();
+    const company = cleanStr(formData.get('companyName') || formData.get('company'), 150);
+    const address1 = cleanStr(formData.get('address1'), 200);
+    const address2 = cleanStr(formData.get('address2'), 200);
+    const city = cleanStr(formData.get('city'), 100);
+    const postalCode = cleanStr(formData.get('postalCode'), 30);
+    const phone = cleanStr(formData.get('phone'), 50);
+    const shippingMethodId = cleanStr(formData.get('shippingMethod'), 100);
     const shipToDifferentAddress = formData.get('shipToDifferentAddress') === 'on';
-    const shippingCountry = formData.get('shippingCountry') as string;
+    const shippingCountry = cleanStr(formData.get('shippingCountry'), 10).toUpperCase();
 
     const effectiveCountry = shipToDifferentAddress ? shippingCountry : country;
 
     // ===== INPUT VALIDATION (never trust the client) =====
     if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return { error: "Bitte geben Sie eine gültige E-Mail-Adresse an." };
+    }
+
+    if (!firstName || !lastName || !address1 || !city || !postalCode || !country) {
+      return { error: "Bitte füllen Sie alle erforderlichen Rechnungsadressfelder aus." };
+    }
+
+    let shippingData: any = null;
+    if (shipToDifferentAddress) {
+      const shippingFirstName = cleanStr(formData.get('shippingFirstName'), 100);
+      const shippingLastName = cleanStr(formData.get('shippingLastName'), 100);
+      const shippingAddress1 = cleanStr(formData.get('shippingAddress1'), 200);
+      const shippingAddress2 = cleanStr(formData.get('shippingAddress2'), 200);
+      const shippingCity = cleanStr(formData.get('shippingCity'), 100);
+      const shippingPostalCode = cleanStr(formData.get('shippingPostalCode'), 30);
+      const shippingPhone = cleanStr(formData.get('shippingPhone'), 50);
+      const shippingComp = cleanStr(formData.get('shippingCompany'), 150);
+
+      if (!shippingFirstName || !shippingLastName || !shippingAddress1 || !shippingCity || !shippingPostalCode || !shippingCountry) {
+        return { error: "Bitte füllen Sie alle erforderlichen Lieferadressfelder aus." };
+      }
+
+      shippingData = {
+        firstName: shippingFirstName,
+        lastName: shippingLastName,
+        company: shippingComp,
+        phone: shippingPhone,
+        address1: shippingAddress1,
+        address2: shippingAddress2,
+        city: shippingCity,
+        postalCode: shippingPostalCode,
+        country: shippingCountry
+      };
     }
 
     if (!(ALLOWED_PAYMENT_METHODS as readonly string[]).includes(paymentMethod)) {
@@ -331,14 +374,35 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
       }
 
       if (coupon && coupon.isActive) {
-        // SECURITY (M2): Enforce single-use per customer email for the Thank-You welcome coupon
+        // SECURITY (M3): Enforce single-use per customer email for the Thank-You welcome coupon
         if (configuredThankYouCode && upperCoupon === configuredThankYouCode) {
+          // Normalize email: remove dots for gmail, remove +aliases
+          const normalizedEmail = email.replace(/\+.*(?=@)/, '');
+
+          // Check if customer email is a confirmed subscriber
+          const subscriberSetting = await prisma.setting.findUnique({
+            where: { key: 'NEWSLETTER_SUBSCRIBERS' }
+          });
+          let subscribers: Array<{ email: string; date: string }> = [];
+          if (subscriberSetting?.value) {
+            try {
+              subscribers = JSON.parse(subscriberSetting.value);
+            } catch {}
+          }
+          const isSubscribed = subscribers.some(s => s.email.toLowerCase().trim() === email);
+          if (!isSubscribed) {
+            return { error: "Dieser Willkommens-Gutschein ist ausschließlich für bestätigte Newsletter-Abonnenten gültig." };
+          }
+
+          // Check prior usage across exact or alias normalized email
           const priorUsage = await prisma.order.findFirst({
             where: {
               status: { not: 'CANCELLED' },
               OR: [
                 { user: { email } },
-                { destinationAddress: { contains: `"email":"${email}"` } }
+                { user: { email: normalizedEmail } },
+                { destinationAddress: { contains: `"email":"${email}"` } },
+                { destinationAddress: { contains: `"email":"${normalizedEmail}"` } }
               ],
               destinationAddress: { contains: `"couponCode":"${upperCoupon}"` }
             },
@@ -355,6 +419,8 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
           discountAmount = Math.min(coupon.value, serverCartTotal);
         }
         appliedCouponCode = upperCoupon;
+      } else if (coupon && !coupon.isActive) {
+        return { error: "Dieser Gutscheincode ist nicht mehr aktiv oder abgelaufen." };
       }
     }
 
@@ -391,34 +457,24 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
       }
     }
 
-    const rawVatId = ((formData.get('vatId') as string) || (formData.get('nif') as string) || (formData.get('nipc') as string) || '').trim().toUpperCase();
+    const rawVatId = cleanStr(formData.get('vatId') || formData.get('nif') || formData.get('nipc'), 50).toUpperCase();
 
     const orderMetadata = {
       billing: {
         firstName,
         lastName,
-        company: ((formData.get('companyName') as string) || (formData.get('company') as string) || '').trim(),
+        company,
         vatId: rawVatId,
         nif: rawVatId,
         email,
-        phone: formData.get('phone') as string,
-        address1: formData.get('address1') as string,
-        address2: formData.get('address2') as string,
-        city: formData.get('city') as string,
-        postalCode: formData.get('postalCode') as string,
+        phone,
+        address1,
+        address2,
+        city,
+        postalCode,
         country: country
       },
-      shipping: shipToDifferentAddress ? {
-        firstName: formData.get('shippingFirstName') as string,
-        lastName: formData.get('shippingLastName') as string,
-        company: formData.get('shippingCompany') as string,
-        phone: formData.get('shippingPhone') as string,
-        address1: formData.get('shippingAddress1') as string,
-        address2: formData.get('shippingAddress2') as string,
-        city: formData.get('shippingCity') as string,
-        postalCode: formData.get('shippingPostalCode') as string,
-        country: shippingCountry
-      } : null,
+      shipping: shippingData,
       shippingCost: shippingRate,
       shippingMethodName: validZone.methods[0].type,
       subTotal: serverCartTotal,

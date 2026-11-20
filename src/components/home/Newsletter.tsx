@@ -30,8 +30,7 @@ export default function Newsletter({ config }: { config?: any }) {
       setMessage(res.error);
     } else if (res.success) {
       setStatus('success');
-      setMessage(res.message || 'Vielen Dank für Ihre Anmeldung!');
-      window.location.href = '/thank-you';
+      setMessage(res.message || 'Vielen Dank für Ihre Anmeldung! Bitte prüfen Sie Ihr E-Mail-Postfach zur Bestätigung.');
     }
   };
 

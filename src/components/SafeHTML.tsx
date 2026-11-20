@@ -31,7 +31,7 @@ export default function SafeHTML({
     if (html) {
       const htmlToRender = html.replace(/&nbsp;/g, ' ');
 
-      // Restrict iframes to trusted domains only
+      // Restrict iframes to trusted domains only and enforce sandbox & no srcdoc
       DOMPurify.addHook('uponSanitizeElement', (node, data) => {
         if (data.tagName === 'iframe') {
           const el = node as Element;
@@ -39,6 +39,9 @@ export default function SafeHTML({
           const isAllowed = /^(https?:)?\/\/(www\.)?(youtube\.com|youtube-nocookie\.com|player\.vimeo\.com|google\.com\/maps|maps\.google\.com)\//i.test(src);
           if (!isAllowed) {
             el.parentNode?.removeChild(el);
+          } else {
+            el.removeAttribute('srcdoc');
+            el.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
           }
         }
       });
@@ -63,13 +66,13 @@ export default function SafeHTML({
           'class', 'id', 'style',
           'colspan', 'rowspan',
           'controls', 'autoplay', 'muted', 'loop', 'type',
-          'allowfullscreen', 'frameborder',
+          'allowfullscreen', 'frameborder', 'sandbox',
         ],
         // Allow safe URI schemes only
         ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
         // Remove any script-related content
         FORBID_TAGS: ['script', 'object', 'embed', 'form', 'input', 'textarea', 'select', 'button'],
-        FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+        FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'srcdoc'],
       }));
     }
   }, [html]);

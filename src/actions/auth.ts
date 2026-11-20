@@ -231,7 +231,7 @@ export async function setupAdmin(formData: FormData) {
 
   if (error) {
     console.error('[setupAdmin] Supabase error:', error.message);
-    return { error: `Fehler beim Erstellen des Administratorkontos: ${error.message}` };
+    return { error: 'Fehler beim Erstellen des Administratorkontos. Bitte überprüfen Sie Ihre Eingaben.' };
   }
 
   if (data.user) {

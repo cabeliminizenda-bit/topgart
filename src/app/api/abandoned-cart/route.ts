@@ -60,10 +60,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Cart data is required' }, { status: 400 });
     }
 
-    const totalAmountNum = Number(body.totalAmount);
-    const totalAmount = Number.isFinite(totalAmountNum) && totalAmountNum >= 0 && totalAmountNum < 1_000_000
-      ? Math.round(totalAmountNum * 100) / 100
-      : 0;
+    // SECURITY (M6): Calculate totalAmount server-side from database prices rather than trusting client input
+    const productIds = cartData.map((item: any) => item.productId);
+    const dbProducts = await prisma.product.findMany({
+      where: { id: { in: productIds }, isDeleted: false },
+      select: { id: true, price: true },
+    });
+    const priceMap = new Map(dbProducts.map((p) => [p.id, p.price]));
+    let calculatedTotal = 0;
+    for (const item of cartData) {
+      const unitPrice = priceMap.get(item.productId) || 0;
+      calculatedTotal += unitPrice * item.quantity;
+    }
+    const totalAmount = Math.round(calculatedTotal * 100) / 100;
 
     // SECURITY (L6): Avoid overwriting existing PII or a recently recovered order record by unauthenticated callers
     const existing = await prisma.abandonedCart.findUnique({ where: { email } });

@@ -11,12 +11,14 @@ interface Props {
 export default function NewsletterFooterForm({ placeholder = 'Geben Sie Ihre Email ein' }: Props) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
 
     const formData = new FormData();
     formData.set('email', email);
@@ -26,8 +28,8 @@ export default function NewsletterFooterForm({ placeholder = 'Geben Sie Ihre Ema
       if (res.error) {
         setError(res.error);
       } else {
-        // Redirection vers la page Thank You
-        window.location.href = '/thank-you';
+        setSuccessMsg(res.message || 'Vielen Dank! Bitte prüfen Sie Ihre E-Mails zur Bestätigung.');
+        setEmail('');
       }
     });
   };
@@ -64,6 +66,9 @@ export default function NewsletterFooterForm({ placeholder = 'Geben Sie Ihre Ema
       </form>
       {error && (
         <p className="mt-2 text-xs text-red-300 font-medium">{error}</p>
+      )}
+      {successMsg && (
+        <p className="mt-2 text-xs text-green-300 font-medium">{successMsg}</p>
       )}
     </div>
   );

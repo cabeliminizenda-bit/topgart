@@ -99,7 +99,7 @@ export async function submitNewsletter(formData: FormData) {
       return { error: 'Ungültige E-Mail-Adresse.' };
     }
 
-    // 1. Persist confirmed subscriber in Setting table
+    // Check if already subscribed
     try {
       const existingSetting = await prisma.setting.findUnique({
         where: { key: 'NEWSLETTER_SUBSCRIBERS' }
@@ -110,90 +110,34 @@ export async function submitNewsletter(formData: FormData) {
           subscribers = JSON.parse(existingSetting.value);
         } catch {}
       }
-      if (!subscribers.some(s => s.email.toLowerCase() === email)) {
-        subscribers.push({ email, date: new Date().toISOString() });
-        await prisma.setting.upsert({
-          where: { key: 'NEWSLETTER_SUBSCRIBERS' },
-          update: { value: JSON.stringify(subscribers) },
-          create: { key: 'NEWSLETTER_SUBSCRIBERS', value: JSON.stringify(subscribers) }
-        });
+      if (subscribers.some(s => s.email.toLowerCase() === email)) {
+        return {
+          success: true,
+          message: 'Diese E-Mail-Adresse ist bereits für unseren Newsletter angemeldet.'
+        };
       }
-    } catch (dbErr) {
-      console.error('[NEWSLETTER] Error persisting subscriber:', dbErr);
+    } catch (checkErr) {
+      console.error('[NEWSLETTER] Error checking existing subscriber:', checkErr);
     }
 
-    // 2. Fetch admin receiver email
-    const receiverRows = await prisma.setting.findMany({
-      where: { key: { in: ['CONTACT_FORM_RECIPIENT', 'CONTACT_RECEIVER_EMAIL'] } },
-    });
-    const rMap = receiverRows.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
-    const adminEmail = rMap.CONTACT_FORM_RECIPIENT || rMap.CONTACT_RECEIVER_EMAIL || process.env.ADMIN_EMAIL || 'kontakt@topgartengeraete.de';
-    const storeName = 'Top Gartengeräte';
+    // Double Opt-In (UWG §7 / DSGVO): Generate secure HMAC token with 48h validity
+    const expiry = Date.now() + 48 * 60 * 60 * 1000; // 48 hours
+    const secret = getNewsletterHmacSecret();
+    const payload = `${email}|${expiry}`;
+    const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+    const token = Buffer.from(`${email}|${expiry}|${signature}`).toString('base64');
 
-    // 3. Send immediate notification to Admin
-    try {
-      const { sendEmail } = await import('@/lib/mailer');
-      const nowStr = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL || 'https://topgartengeraete.de';
+    const confirmUrl = `${baseUrl}/api/newsletter/confirm?token=${encodeURIComponent(token)}`;
 
-      await sendEmail({
-        to: adminEmail,
-        subject: sanitizeEmailHeader(`[TOP GARTENGERÄTE]: Neue Newsletter-Anmeldung: ${email}`),
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.5; padding: 25px; background: #ffffff;">
-            <div style="font-size: 20px; font-weight: bold; color: #107b46; margin-bottom: 20px;">Top Gartengeräte</div>
-            <h1 style="font-size: 20px; color: #107b46; margin-top: 0; margin-bottom: 15px;">📬 Neue Newsletter-Anmeldung</h1>
-            <p style="font-size: 14px; color: #475569;">Ein neuer Besucher hat sich soeben für den Newsletter von <strong>${escapeHtml(storeName)}</strong> angemeldet:</p>
-            
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-              <tr>
-                <td style="padding: 10px; font-size: 13px; font-weight: bold; width: 120px; color: #64748b;">E-Mail:</td>
-                <td style="padding: 10px; font-size: 13px;">
-                  <a href="mailto:${escapeHtml(email)}" style="color: #107b46; text-decoration: none; font-weight: 600;">${escapeHtml(email)}</a>
-                </td>
-              </tr>
-              <tr style="border-top: 1px solid #e2e8f0;">
-                <td style="padding: 10px; font-size: 13px; font-weight: bold; color: #64748b;">Datum:</td>
-                <td style="padding: 10px; font-size: 13px; color: #0f172a;">${nowStr}</td>
-              </tr>
-            </table>
-            
-            <div style="border-top: 1px solid #e2e8f0; margin-top: 30px; padding-top: 20px; text-align: center; font-size: 11px; color: #107b46;">
-              <strong>${escapeHtml(storeName)}</strong> • Automatische Admin-Benachrichtigung
-            </div>
-          </div>
-        `,
-      });
-    } catch (emailErr) {
-      console.error('[NEWSLETTER] Failed to send admin notification email:', emailErr);
-    }
-
-    // 4. Create in-app notification for admin
-    try {
-      await prisma.notification.create({
-        data: {
-          isAdmin: true,
-          type: 'SYSTEM',
-          message: `Neue Newsletter-Anmeldung: ${email}`,
-          link: '/admin/settings',
-          isRead: false,
-        }
-      });
-    } catch (notifErr) {
-      console.error('[NEWSLETTER] Error creating admin notification:', notifErr);
-    }
-
-    // 5. Send Welcome email with coupon code to subscriber
-    try {
-      const { sendNewsletterWelcomeEmail } = await import('@/lib/mailer');
-      await sendNewsletterWelcomeEmail(email);
-    } catch (clientEmailErr) {
-      console.error('[NEWSLETTER] Failed to send welcome email to subscriber:', clientEmailErr);
-    }
+    // Send Double Opt-In confirmation email to user
+    const { sendNewsletterConfirmationEmail } = await import('@/lib/mailer');
+    await sendNewsletterConfirmationEmail(email, confirmUrl);
 
     return {
       success: true,
-      redirectUrl: '/thank-you',
-      message: 'Vielen Dank für Ihre Anmeldung! Sie werden weitergeleitet...'
+      needsConfirmation: true,
+      message: 'Vielen Dank! Wir haben Ihnen eine Bestätigungs-E-Mail gesendet. Bitte bestätigen Sie Ihre Anmeldung über den Link in der E-Mail, um Ihren Willkommens-Gutschein zu erhalten.'
     };
   } catch (error) {
     console.error('Newsletter submission error:', error);

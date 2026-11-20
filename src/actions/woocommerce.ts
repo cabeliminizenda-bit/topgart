@@ -17,6 +17,47 @@ cloudinary.config({
 /**
  * Helper to extract a clean original filename without random hash
  */
+/**
+ * Validates a remote WooCommerce URL to prevent Server-Side Request Forgery (SSRF).
+ * Enforces HTTPS and rejects loopback, link-local, and private IP ranges.
+ */
+function validateSafeWooCommerceUrl(url: string): string {
+  if (!url || typeof url !== 'string') {
+    throw new Error('Ungültige oder fehlende URL.');
+  }
+  const trimmed = url.trim().replace(/\/$/, '');
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error('Ungültiges URL-Format.');
+  }
+
+  if (parsed.protocol !== 'https:') {
+    throw new Error('Nur sichere HTTPS-Verbindungen sind für den WooCommerce-Import zulässig.');
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  const isPrivateOrLoopback =
+    hostname === 'localhost' ||
+    hostname.endsWith('.localhost') ||
+    hostname.endsWith('.local') ||
+    hostname.endsWith('.internal') ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '0.0.0.0' ||
+    /^10\./.test(hostname) ||
+    /^192\.168\./.test(hostname) ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+    /^169\.254\./.test(hostname);
+
+  if (isPrivateOrLoopback) {
+    throw new Error('Zugriff auf private oder lokale Netzwerke ist nicht gestattet.');
+  }
+
+  return trimmed;
+}
+
 function extractOriginalFilename(url: string, fallbackName?: string): string {
   try {
     const urlObj = new URL(url);
@@ -60,6 +101,29 @@ async function uploadImageFromUrlToCloudinary(
   preferredName?: string
 ): Promise<string | null> {
   try {
+    if (!imageUrl || typeof imageUrl !== 'string') return null;
+    try {
+      const parsed = new URL(imageUrl);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+      const host = parsed.hostname.toLowerCase();
+      if (
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        host === '::1' ||
+        host === '0.0.0.0' ||
+        host.endsWith('.local') ||
+        host.endsWith('.internal') ||
+        /^10\./.test(host) ||
+        /^192\.168\./.test(host) ||
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
+        /^169\.254\./.test(host)
+      ) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+
     const response = await fetch(imageUrl);
     if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
 
@@ -378,7 +442,7 @@ export interface ProcessWcProductsResult {
 
 export async function testWooCommerceConnection(url: string, consumerKey: string, consumerSecret: string) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const apiUrl = `${baseUrl}/wp-json/wc/v3/system_status`;
 
   try {
@@ -405,7 +469,7 @@ export async function testWooCommerceConnection(url: string, consumerKey: string
  */
 export async function fetchWooCommerceCategoriesList(url: string, consumerKey: string, consumerSecret: string) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const apiUrl = `${baseUrl}/wp-json/wc/v3/products/categories`;
 
   try {
@@ -461,7 +525,7 @@ export async function fetchWooCommerceProductsList(
   categoryFilter?: number
 ) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   let apiUrl = `${baseUrl}/wp-json/wc/v3/products?per_page=20&page=${page}`;
 
   if (search) {
@@ -544,7 +608,7 @@ export async function importWooCommerceCategories(
   categoryIds?: number[]
 ) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const apiUrl = `${baseUrl}/wp-json/wc/v3/products/categories`;
 
   try {
@@ -664,7 +728,7 @@ export async function countWooCommerceProducts(
   categoryIds?: number[]
 ) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   let apiUrl = `${baseUrl}/wp-json/wc/v3/products?per_page=1`;
 
   if (categoryIds && categoryIds.length > 0) {
@@ -1095,7 +1159,7 @@ export async function importWooCommerceProductsBatch(
 ) {
   await requireAdmin();
 
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const apiUrl = `${baseUrl}/wp-json/wc/v3/products`;
 
   try {
@@ -1176,7 +1240,7 @@ export async function importWooCommerceSelectedProducts(
     return { success: true, count: 0, successCount: 0, alreadyExistsCount: 0, failedCount: 0, results: [] };
   }
 
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const apiUrl = `${baseUrl}/wp-json/wc/v3/products`;
 
   try {
@@ -1250,7 +1314,7 @@ export async function importWooCommerceOrders(
   consumerSecret: string
 ) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const apiUrl = `${baseUrl}/wp-json/wc/v3/orders`;
 
   try {
@@ -1421,7 +1485,7 @@ export async function importWordPressPages(
   consumerSecret: string
 ) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const apiUrl = `${baseUrl}/wp-json/wp/v2/pages`;
 
   try {
@@ -1504,7 +1568,7 @@ export async function importWordPressArticles(
   consumerSecret: string
 ) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const apiUrl = `${baseUrl}/wp-json/wp/v2/posts?_embed=true`;
 
   try {
@@ -1646,7 +1710,7 @@ export async function importWooCommerceShipping(
   consumerSecret: string
 ) {
   await requireAdmin();
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const authHeader = 'Basic ' + Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
 
   try {
@@ -1799,7 +1863,7 @@ export async function syncWooCommerceRankMathSEO(
 ) {
   await requireAdmin();
 
-  const baseUrl = url.replace(/\/$/, '');
+  const baseUrl = validateSafeWooCommerceUrl(url);
   const authHeader = 'Basic ' + Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
 
   let updatedProductsCount = 0;

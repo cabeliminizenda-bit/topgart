@@ -43,7 +43,7 @@ export function basicSanitizeHtml(html: string): string {
 
   // 1. Remove dangerous elements together with their content
   out = out.replace(
-    /<\s*(script|style|noscript|template|object|embed|applet|form|textarea|select|button|svg|math)\b[\s\S]*?<\s*\/\s*\1\s*>/gi,
+    /<\s*(script|style|noscript|template|object|embed|applet|form|textarea|select|button|svg|math|base|meta|link)\b[\s\S]*?<\s*\/\s*\1\s*>/gi,
     ''
   );
   // 2. Remove remaining (self-closing / unclosed) dangerous tags
@@ -55,6 +55,9 @@ export function basicSanitizeHtml(html: string): string {
   // 3. Remove inline event handlers with any whitespace or slash separator
   // Handles: onclick=..., /onerror=..., onfocus = "...", etc.
   out = out.replace(/(?:[\s/]|&NewLine;)+on[a-z0-9_-]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>/]+))?/gi, '');
+
+  // 3b. Completely strip srcdoc attributes to prevent iframe script execution
+  out = out.replace(/(?:[\s/]|&NewLine;)+srcdoc(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>/]+))?/gi, '');
 
   // Helper to decode HTML entities and strip whitespace/control chars for protocol checking
   function normalizeUrl(url: string) {
@@ -88,10 +91,16 @@ export function basicSanitizeHtml(html: string): string {
     return match;
   });
 
-  // 6. Only allow iframes from trusted video providers
-  out = out.replace(/<\s*iframe\b[^>]*>[\s\S]*?<\s*\/\s*iframe\s*>/gi, (match) =>
-    /src\s*=\s*["']https:\/\/(www\.)?(youtube\.com|youtube-nocookie\.com|player\.vimeo\.com)\//i.test(match) ? match : ''
-  );
+  // 6. Only allow iframes from trusted video / map providers with strict sandbox and no srcdoc
+  out = out.replace(/<\s*iframe\b([^>]*)>[\s\S]*?<\s*\/\s*iframe\s*>/gi, (match, attrs) => {
+    const srcMatch = attrs.match(/src\s*=\s*["']([^"']+)["']/i);
+    if (!srcMatch) return '';
+    const srcUrl = srcMatch[1];
+    const isAllowed = /^https:\/\/(www\.)?(youtube\.com|youtube-nocookie\.com|player\.vimeo\.com|google\.com\/maps|maps\.google\.com)\//i.test(srcUrl);
+    if (!isAllowed) return '';
+    // Rebuild safe iframe with strict sandbox
+    return `<iframe src="${srcUrl.replace(/"/g, '&quot;')}" sandbox="allow-scripts allow-same-origin allow-presentation" frameborder="0" allowfullscreen loading="lazy"></iframe>`;
+  });
 
   return out;
 }

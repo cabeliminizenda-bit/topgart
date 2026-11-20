@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 import { ChatSender, ChatSessionStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
-import { checkRateLimit } from '@/lib/rateLimit';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 // UUID validation helper
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -15,6 +15,13 @@ const MAX_EMAIL_LENGTH = 254;
 
 // Client actions
 export async function getOrCreateSession(guestId: string, guestName?: string, guestEmail?: string) {
+  // Rate limit session creation per IP to prevent DoS & notification flooding
+  const ip = await getClientIp();
+  const rl = await checkRateLimit(`chat_session_${ip}`, 10, 600);
+  if (!rl.success) {
+    throw new Error('Zu viele Chat-Anfragen. Bitte warten Sie einige Minuten.');
+  }
+
   // Validate guestId format
   if (!guestId || !UUID_REGEX.test(guestId)) {
     throw new Error('Ungültige Gast-Kennung.');

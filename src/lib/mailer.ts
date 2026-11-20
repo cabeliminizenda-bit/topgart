@@ -412,7 +412,7 @@ export async function sendClientOrderConfirmation(order: any, userEmail: string,
                   ${billingName}<br/>
                   ${billingAddressHtml}<br/>
                   ${b.phone ? `<span style="color: #107b46;">Tel: ${escapeHtml(b.phone)}</span><br/>` : ''}
-                  ${b.email ? `<a href="mailto:${b.email}" style="color: #2563eb; text-decoration: underline;">${escapeHtml(b.email)}</a>` : ''}
+                  ${b.email ? `<a href="mailto:${escapeHtml(b.email)}" style="color: #2563eb; text-decoration: underline;">${escapeHtml(b.email)}</a>` : ''}
                 </div>
               </td>
               <td style="vertical-align: top; width: 50%; padding-left: 10px;">
@@ -429,13 +429,13 @@ export async function sendClientOrderConfirmation(order: any, userEmail: string,
         
         <div style="text-align: center; margin-top: 35px; margin-bottom: 30px; font-size: 13px; color: #475569;">
           <p style="margin-bottom: 8px;">Vielen Dank für Ihren Einkauf und Ihr Vertrauen in Top Gartengeräte!</p>
-          <p style="margin-top: 0;">Bei Fragen zu Ihrer Lieferung erreichen Sie unseren Kundenservice unter <a href="mailto:${storeEmail}" style="color: #107b46; font-weight: bold; text-decoration: none;">${storeEmail}</a>.</p>
+          <p style="margin-top: 0;">Bei Fragen zu Ihrer Lieferung erreichen Sie unseren Kundenservice unter <a href="mailto:${escapeHtml(storeEmail)}" style="color: #107b46; font-weight: bold; text-decoration: none;">${escapeHtml(storeEmail)}</a>.</p>
         </div>
         
         <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; font-size: 11px; color: #94a3b8; line-height: 1.5;">
           <strong style="color: #64748b;">${escapeHtml(storeName)}</strong><br/>
           ${escapeHtml(storeAddress)}<br/>
-          E-Mail: ${storeEmail}
+          E-Mail: ${escapeHtml(storeEmail)}
         </div>
       </div>
     `;
@@ -596,7 +596,7 @@ export async function sendAdminOrderNotification(order: any, adminEmail: string,
                   ${billingName}<br/>
                   ${billingAddressHtml}<br/>
                   ${b.phone ? `<span style="color: #107b46;">Tel: ${escapeHtml(b.phone)}</span><br/>` : ''}
-                  ${b.email ? `<a href="mailto:${b.email}" style="color: #2563eb; text-decoration: underline;">${escapeHtml(b.email)}</a>` : ''}
+                  ${b.email ? `<a href="mailto:${escapeHtml(b.email)}" style="color: #2563eb; text-decoration: underline;">${escapeHtml(b.email)}</a>` : ''}
                 </div>
               </td>
               <td style="vertical-align: top; width: 50%; padding-left: 10px;">
@@ -809,13 +809,13 @@ export async function sendOrderStatusUpdate(order: any, userEmail: string, statu
         </div>
         
         <div style="text-align: center; margin-top: 35px; margin-bottom: 25px; font-size: 13px; color: #475569;">
-          <p>Bei weiteren Fragen zu Ihrer Bestellung stehen wir Ihnen gerne unter <a href="mailto:${storeEmail}" style="color: #107b46; text-decoration: none; font-weight: bold;">${storeEmail}</a> zur Verfügung.</p>
+          <p>Bei weiteren Fragen zu Ihrer Bestellung stehen wir Ihnen gerne unter <a href="mailto:${escapeHtml(storeEmail)}" style="color: #107b46; text-decoration: none; font-weight: bold;">${escapeHtml(storeEmail)}</a> zur Verfügung.</p>
         </div>
         
         <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; font-size: 11px; color: #94a3b8;">
           <strong style="color: #64748b;">${escapeHtml(storeName)}</strong><br/>
           ${escapeHtml(storeAddress)}<br/>
-          E-Mail: ${storeEmail}
+          E-Mail: ${escapeHtml(storeEmail)}
         </div>
       </div>
     `;
@@ -938,7 +938,7 @@ export async function sendAbandonedCartRecoveryEmail(cart: any, userEmail: strin
         </div>
         
         <div style="text-align: center; margin-top: 40px; margin-bottom: 30px; font-size: 13px; color: #475569;">
-          <p>Falls Sie Fragen zu Artikeln oder zur Lieferung haben, zögern Sie nicht, uns unter <a href="mailto:${storeEmail}" style="color: #107b46; font-weight: bold; text-decoration: none;">${storeEmail}</a> zu kontaktieren.</p>
+          <p>Falls Sie Fragen zu Artikeln oder zur Lieferung haben, zögern Sie nicht, uns unter <a href="mailto:${escapeHtml(storeEmail)}" style="color: #107b46; font-weight: bold; text-decoration: none;">${escapeHtml(storeEmail)}</a> zu kontaktieren.</p>
         </div>
         
         <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; font-size: 11px; color: #94a3b8;">
@@ -1147,7 +1147,7 @@ export async function sendAdminNewChatMessageEmail(
             <td style="padding: 12px; font-size: 13px; font-weight: bold; width: 100px; color: #64748b;">Von:</td>
             <td style="padding: 12px; font-size: 13px; color: #0f172a;">
               <strong>${escapeHtml(guestName) || "Besucher"}</strong>
-              ${guestEmail ? ` &lt;<a href="mailto:${guestEmail}" style="color: #2563eb;">${escapeHtml(guestEmail)}</a>&gt;` : ""}
+              ${guestEmail ? ` &lt;<a href="mailto:${escapeHtml(guestEmail)}" style="color: #2563eb;">${escapeHtml(guestEmail)}</a>&gt;` : ""}
             </td>
           </tr>
           <tr style="border-top: 1px solid #e2e8f0;">
@@ -1171,8 +1171,10 @@ export async function sendAdminNewChatMessageEmail(
       </div>
     `;
 
-    const replyTo = guestEmail
-      ? (guestName ? `"${guestName}" <${guestEmail}>` : guestEmail)
+    const safeGuestEmail = guestEmail ? sanitizeEmailHeader(guestEmail) : undefined;
+    const safeGuestName = guestName ? sanitizeEmailHeader(guestName).replace(/"/g, '') : undefined;
+    const replyTo = safeGuestEmail
+      ? (safeGuestName ? `"${safeGuestName}" <${safeGuestEmail}>` : safeGuestEmail)
       : undefined;
 
     return sendEmail({
@@ -1259,12 +1261,15 @@ export async function sendNewsletterWelcomeEmail(userEmail: string) {
         
         <div style="text-align: center; margin-top: 35px; margin-bottom: 25px; font-size: 13px; color: #475569;">
           <p style="font-weight: bold; color: #107b46; margin-bottom: 4px;">Top Gartengeräte Kundenservice</p>
-          <p style="margin-top: 0; font-size: 12px; color: #64748b;">Kontakt: ${storeEmail}</p>
+          <p style="margin-top: 0; font-size: 12px; color: #64748b;">Kontakt: <a href="mailto:${escapeHtml(storeEmail)}" style="color: #107b46; text-decoration: none;">${escapeHtml(storeEmail)}</a></p>
         </div>
         
-        <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; font-size: 11px; color: #94a3b8;">
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; font-size: 11px; color: #94a3b8; line-height: 1.5;">
           <strong style="color: #64748b;">${escapeHtml(storeName)}</strong><br/>
-          ${escapeHtml(storeAddress)}
+          ${escapeHtml(storeAddress)}<br/>
+          <p style="margin-top: 10px; font-size: 10px; color: #94a3b8;">
+            Sie erhalten diese E-Mail, weil Sie den Newsletter von ${escapeHtml(storeName)} abonniert haben. Sie können sich jederzeit formlos per E-Mail an <a href="mailto:${escapeHtml(storeEmail)}" style="color: #107b46;">${escapeHtml(storeEmail)}</a> abmelden.
+          </p>
         </div>
       </div>
     `;
@@ -1276,6 +1281,81 @@ export async function sendNewsletterWelcomeEmail(userEmail: string) {
     });
   } catch (e) {
     console.error(e);
+  }
+}
+
+// 8b. Newsletter Double Opt-In Confirmation Email (Rechtskonform nach UWG §7 & DSGVO)
+export async function sendNewsletterConfirmationEmail(userEmail: string, confirmUrl: string) {
+  try {
+    const { logo, storeName, storeEmail, storeAddress } = await getTransporter().catch(() => ({
+      logo: '',
+      storeName: 'Top Gartengeräte',
+      storeEmail: 'kontakt@topgartengeraete.de',
+      storeAddress: 'Rosenstraße 19, 26529 Marienhafe, Deutschland'
+    }));
+
+    let couponAmount = '15';
+    try {
+      const tySetting = await prisma.setting.findUnique({
+        where: { key: 'THANKYOU_COUPON_AMOUNT' }
+      });
+      if (tySetting?.value) couponAmount = tySetting.value.trim();
+    } catch {}
+
+    const logoHtml = logo
+      ? `<div style="text-align: left; margin-bottom: 25px;"><img src="${logo}" alt="${escapeHtml(storeName)}" style="max-height: 48px;"></div>`
+      : `<div style="font-size: 20px; font-weight: bold; color: #107b46; margin-bottom: 25px;">${escapeHtml(storeName)}</div>`;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 25px; background: #ffffff;">
+        ${logoHtml}
+        <h1 style="font-size: 22px; color: #0f172a; margin-top: 0; margin-bottom: 12px;">
+          Bestätigen Sie Ihre Newsletter-Anmeldung 🌿
+        </h1>
+        
+        <p style="font-size: 14px; color: #475569; margin-bottom: 16px;">
+          Vielen Dank für Ihr Interesse am Newsletter von <strong>${escapeHtml(storeName)}</strong>!
+        </p>
+        <p style="font-size: 14px; color: #475569; margin-bottom: 25px;">
+          Um Ihre Anmeldung abzuschließen und Ihren <strong>${escapeHtml(couponAmount)} € Willkommens-Gutschein</strong> zu erhalten, bestätigen Sie bitte Ihre E-Mail-Adresse durch einen Klick auf die folgende Schaltfläche:
+        </p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${confirmUrl}" style="background-color: #107b46; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">
+            Anmeldung jetzt bestätigen
+          </a>
+        </div>
+
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 25px; line-height: 1.5;">
+          Falls die Schaltfläche nicht funktioniert, kopieren Sie bitte den folgenden Bestätigungslink in die Adresszeile Ihres Browsers:<br/>
+          <a href="${confirmUrl}" style="color: #107b46; word-break: break-all;">${confirmUrl}</a>
+        </p>
+
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; font-size: 12px; color: #64748b; margin-top: 25px;">
+          <p style="margin: 0;">
+            <strong>Hinweis zum Datenschutz:</strong> Falls Sie diese Anmeldung nicht veranlasst haben, können Sie diese Nachricht einfach ignorieren. Es entstehen Ihnen keine Verpflichtungen und Ihre Daten werden nicht für den Newsletter verwendet.
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 35px; margin-bottom: 20px; font-size: 12px; color: #64748b;">
+          <p style="font-weight: bold; color: #107b46; margin-bottom: 4px;">Top Gartengeräte Kundenservice</p>
+          <p style="margin-top: 0;">Kontakt: <a href="mailto:${escapeHtml(storeEmail)}" style="color: #107b46; text-decoration: none;">${escapeHtml(storeEmail)}</a></p>
+        </div>
+        
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; font-size: 11px; color: #94a3b8;">
+          <strong style="color: #64748b;">${escapeHtml(storeName)}</strong><br/>
+          ${escapeHtml(storeAddress)}
+        </div>
+      </div>
+    `;
+
+    return sendEmail({
+      to: userEmail,
+      subject: `Bitte bestätigen Sie Ihre Anmeldung zum Top Gartengeräte Newsletter`,
+      html,
+    });
+  } catch (e) {
+    console.error('[sendNewsletterConfirmationEmail] Error:', e);
   }
 }
 

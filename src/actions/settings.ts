@@ -56,7 +56,8 @@ export async function updateSetting(key: string, value: string) {
     updateTag('settings');
     return { success: true };
   } catch (error: any) {
-    return { error: error.message };
+    console.error('[updateSetting] Error:', error);
+    return { error: 'Fehler beim Speichern der Einstellung.' };
   }
 }
 
@@ -76,7 +77,8 @@ export async function updateSettingsBatch(settingsMap: Record<string, string>) {
     updateTag('settings');
     return { success: true };
   } catch (error: any) {
-    return { error: error.message };
+    console.error('[updateSettingsBatch] Error:', error);
+    return { error: 'Fehler beim Speichern der Einstellungen.' };
   }
 }
 

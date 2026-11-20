@@ -72,8 +72,9 @@ export async function getMediaList(page = 1, limit = 24, search = '', mediaType 
 }
 
 export async function getMediaByUrl(url: string) {
-  return await prisma.media.findUnique({
-    where: { url },
+  if (!url || typeof url !== 'string') return null;
+  return await prisma.media.findFirst({
+    where: { url, isDeleted: false },
   });
 }
 
