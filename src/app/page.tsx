@@ -17,6 +17,7 @@ import FeaturedProductTabs from '@/components/home/FeaturedProductTabs';
 import HeatingGuideBlogs from '@/components/home/HeatingGuideBlogs';
 import prisma from '@/lib/prisma';
 import { getCatalogBrandSummaries } from '@/lib/brands';
+import { getOptimizedImageUrl } from '@/lib/images';
 import {
   CatalogBrandSummary,
   DEFAULT_HLG_SECTIONS,
@@ -139,12 +140,16 @@ export default async function Home() {
   // Extract LCP Hero image for instant SSR preload tag (Lighthouse / PageSpeed optimization)
   const heroSection = activeSections.find(s => s.type === 'Hero');
   const heroConfig = heroSection?.settings;
-  const lcpHeroImage =
+  const rawHeroImage =
     heroConfig?.bannerImage && heroConfig.bannerImage !== '/images/hero-appliances.jpg'
       ? heroConfig.bannerImage
       : heroConfig?.bgImageUrl && heroConfig.bgImageUrl !== '/images/hero-appliances.jpg'
         ? heroConfig.bgImageUrl
         : '/images/hero-garden-mower.jpg';
+
+  const lcpHeroImage = rawHeroImage.startsWith('/images/')
+    ? rawHeroImage
+    : getOptimizedImageUrl(rawHeroImage, 1200);
 
   const renderSection = (section: SectionConfig) => {
     switch (section.type) {

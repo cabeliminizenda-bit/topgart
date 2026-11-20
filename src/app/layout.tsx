@@ -19,6 +19,8 @@ import { SITE_URL } from '@/lib/site';
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
 });
 
 const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
