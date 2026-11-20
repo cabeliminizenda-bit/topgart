@@ -198,6 +198,16 @@ export default function GardenDealsShowcase({
             {promoImage === '/images/promo-summer-lawn.jpg' ? (
               <picture className="absolute inset-0 w-full h-full">
                 <source
+                  type="image/avif"
+                  media="(max-width: 768px)"
+                  srcSet="/images/promo-summer-lawn-mobile.avif"
+                />
+                <source
+                  type="image/avif"
+                  media="(min-width: 769px)"
+                  srcSet="/images/promo-summer-lawn.avif"
+                />
+                <source
                   type="image/webp"
                   media="(max-width: 768px)"
                   srcSet="/images/promo-summer-lawn-mobile.webp"

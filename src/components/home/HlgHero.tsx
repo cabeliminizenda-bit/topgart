@@ -357,6 +357,16 @@ export default function HlgHero({
                 {idx === 0 && slide.image.includes('hero-garden-mower') ? (
                   <picture className="absolute inset-0 w-full h-full">
                     <source
+                      type="image/avif"
+                      media="(max-width: 768px)"
+                      srcSet="/images/hero-garden-mower-mobile.avif"
+                    />
+                    <source
+                      type="image/avif"
+                      media="(min-width: 769px)"
+                      srcSet="/images/hero-garden-mower.avif"
+                    />
+                    <source
                       type="image/webp"
                       media="(max-width: 768px)"
                       srcSet="/images/hero-garden-mower-mobile.webp"
@@ -365,11 +375,6 @@ export default function HlgHero({
                       type="image/webp"
                       media="(min-width: 769px)"
                       srcSet="/images/hero-garden-mower.webp"
-                    />
-                    <source
-                      type="image/jpeg"
-                      media="(max-width: 768px)"
-                      srcSet="/images/hero-garden-mower-mobile.jpg"
                     />
                     <img
                       src="/images/hero-garden-mower.jpg"
@@ -382,6 +387,11 @@ export default function HlgHero({
                   </picture>
                 ) : idx === 1 && slide.image.includes('hero-robot-mower') ? (
                   <picture className="absolute inset-0 w-full h-full">
+                    <source
+                      type="image/avif"
+                      media="(max-width: 768px)"
+                      srcSet="/images/hero-robot-mower-mobile.avif"
+                    />
                     <source
                       type="image/webp"
                       media="(max-width: 768px)"

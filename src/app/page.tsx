@@ -30,15 +30,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   // Hoist instant LCP Preloads directly into HTML <head> via React 19 API (0ms Resource Load Delay)
-  ReactDOM.preload('/images/hero-garden-mower-mobile.webp', {
+  ReactDOM.preload('/images/hero-garden-mower-mobile.avif', {
     as: 'image',
     media: '(max-width: 768px)',
     fetchPriority: 'high',
+    type: 'image/avif',
   });
-  ReactDOM.preload('/images/hero-garden-mower.webp', {
+  ReactDOM.preload('/images/hero-garden-mower.avif', {
     as: 'image',
     media: '(min-width: 769px)',
     fetchPriority: 'high',
+    type: 'image/avif',
   });
 
   const { getCachedSettings, getCachedCategoriesTree } = await import('@/lib/cache');
