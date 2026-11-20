@@ -195,13 +195,35 @@ export default function GardenDealsShowcase({
             href={promoUrl}
             className="relative w-full lg:w-[254px] shrink-0 min-h-[320px] lg:min-h-[370px] rounded-[5px] overflow-hidden block group shadow-xs border border-stone-200/70"
           >
-            <Image
-              src={promoImage}
-              alt={promoTitle}
-              fill
-              sizes="(max-width: 1024px) 100vw, 254px"
-              className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
-            />
+            {promoImage === '/images/promo-summer-lawn.jpg' ? (
+              <picture className="absolute inset-0 w-full h-full">
+                <source
+                  type="image/webp"
+                  media="(max-width: 768px)"
+                  srcSet="/images/promo-summer-lawn-mobile.webp"
+                />
+                <source
+                  type="image/webp"
+                  media="(min-width: 769px)"
+                  srcSet="/images/promo-summer-lawn.webp"
+                />
+                <img
+                  src="/images/promo-summer-lawn.jpg"
+                  alt={promoTitle}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                />
+              </picture>
+            ) : (
+              <Image
+                src={promoImage}
+                alt={promoTitle}
+                fill
+                sizes="(max-width: 1024px) 100vw, 254px"
+                className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+              />
+            )}
 
             {/* Soft bright top haze so red headline pops cleanly just like mockup */}
             <div

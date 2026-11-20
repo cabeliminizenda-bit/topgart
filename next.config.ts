@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
     optimizePackageImports: ['react-hot-toast', 'zustand'],
+    inlineCss: true,
   },
   turbopack: {},
 

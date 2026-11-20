@@ -218,8 +218,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* High-priority preload link hoisted into <head> for instant LCP discovery by browser */}
-      <link rel="preload" as="image" href={lcpHeroImage} fetchPriority="high" />
       <main>
         {activeSections.map(renderSection)}
       </main>

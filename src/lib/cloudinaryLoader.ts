@@ -28,7 +28,7 @@ export default function cloudinaryLoader({
     const uploadIndex = src.indexOf('/image/upload/');
     const prefix = src.slice(0, uploadIndex + '/image/upload/'.length);
     const suffix = src.slice(uploadIndex + '/image/upload/'.length);
-    const q = quality ? `q_${quality}` : 'q_auto';
+    const q = quality && quality <= 80 ? `q_${quality}` : 'q_auto:good';
     const w = width ? `w_${width},c_limit` : 'w_600,c_limit';
     return `${prefix}f_auto,${q},${w}/${suffix}`;
   }

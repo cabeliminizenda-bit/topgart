@@ -389,13 +389,35 @@ export default function GardenCategoryShowcase({
                 href={bannerUrl}
                 className="relative w-full h-[145px] sm:h-[175px] lg:h-[195px] rounded-[6px] overflow-hidden block group border border-stone-200/80 shadow-xs"
               >
-                <Image
-                  src={bannerImage}
-                  alt={bannerAlt}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 960px"
-                  className="object-cover object-center group-hover:scale-[1.03] transition-transform duration-700"
-                />
+                {bannerImage === '/images/banner-robot-mower-wide.jpg' ? (
+                  <picture className="absolute inset-0 w-full h-full">
+                    <source
+                      type="image/webp"
+                      media="(max-width: 768px)"
+                      srcSet="/images/banner-robot-mower-wide-mobile.webp"
+                    />
+                    <source
+                      type="image/webp"
+                      media="(min-width: 769px)"
+                      srcSet="/images/banner-robot-mower-wide.webp"
+                    />
+                    <img
+                      src="/images/banner-robot-mower-wide.jpg"
+                      alt={bannerAlt}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700"
+                    />
+                  </picture>
+                ) : (
+                  <Image
+                    src={bannerImage}
+                    alt={bannerAlt}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 960px"
+                    className="object-cover object-center group-hover:scale-[1.03] transition-transform duration-700"
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
                 <span className="absolute left-5 bottom-4 inline-flex items-center gap-1.5 bg-white/95 backdrop-blur-xs text-stone-800 group-hover:bg-[#00a86b] group-hover:text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm transition-colors">
                   <span>Mähroboter entdecken</span>

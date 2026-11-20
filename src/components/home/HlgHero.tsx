@@ -354,18 +354,65 @@ export default function HlgHero({
                   idx === activeSlide ? 'opacity-100 z-0' : 'opacity-0 z-0 pointer-events-none'
                 }`}
               >
-                <Image
-                  src={slide.image}
-                  alt={stripHtmlTags(slide.title)}
-                  fill
-                  priority={idx === 0}
-                  loading={idx === 0 ? 'eager' : 'lazy'}
-                  fetchPriority={idx === 0 ? 'high' : 'auto'}
-                  unoptimized={idx === 0 && slide.image.startsWith('/images/')}
-                  sizes={idx === 0 && slide.image.startsWith('/images/') ? undefined : '(max-width: 1024px) 100vw, 960px'}
-                  quality={90}
-                  className="object-cover object-center"
-                />
+                {idx === 0 && slide.image.includes('hero-garden-mower') ? (
+                  <picture className="absolute inset-0 w-full h-full">
+                    <source
+                      type="image/webp"
+                      media="(max-width: 768px)"
+                      srcSet="/images/hero-garden-mower-mobile.webp"
+                    />
+                    <source
+                      type="image/webp"
+                      media="(min-width: 769px)"
+                      srcSet="/images/hero-garden-mower.webp"
+                    />
+                    <source
+                      type="image/jpeg"
+                      media="(max-width: 768px)"
+                      srcSet="/images/hero-garden-mower-mobile.jpg"
+                    />
+                    <img
+                      src="/images/hero-garden-mower.jpg"
+                      alt={stripHtmlTags(slide.title)}
+                      fetchPriority="high"
+                      loading="eager"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
+                  </picture>
+                ) : idx === 1 && slide.image.includes('hero-robot-mower') ? (
+                  <picture className="absolute inset-0 w-full h-full">
+                    <source
+                      type="image/webp"
+                      media="(max-width: 768px)"
+                      srcSet="/images/hero-robot-mower-mobile.webp"
+                    />
+                    <source
+                      type="image/webp"
+                      media="(min-width: 769px)"
+                      srcSet="/images/hero-robot-mower.webp"
+                    />
+                    <img
+                      src="/images/hero-robot-mower.jpg"
+                      alt={stripHtmlTags(slide.title)}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
+                  </picture>
+                ) : (
+                  <Image
+                    src={slide.image}
+                    alt={stripHtmlTags(slide.title)}
+                    fill
+                    priority={idx === 0}
+                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={idx === 0 ? 'high' : 'auto'}
+                    sizes="(max-width: 1024px) 100vw, 960px"
+                    quality={85}
+                    className="object-cover object-center"
+                  />
+                )}
               </div>
             ))}
 
