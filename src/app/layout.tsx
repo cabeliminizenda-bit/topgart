@@ -313,23 +313,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <head>
         <link rel="alternate" type="application/rss+xml" title={`${storeName} - Blog RSS`} href="/rss.xml" />
-        {/* Instant LCP Preload in HTML Head: Eliminates Resource Load Delay on Mobile and Desktop */}
-        <link
-          rel="preload"
-          as="image"
-          type="image/webp"
-          media="(max-width: 768px)"
-          href="/images/hero-garden-mower-mobile.webp"
-          fetchPriority="high"
-        />
-        <link
-          rel="preload"
-          as="image"
-          type="image/webp"
-          media="(min-width: 769px)"
-          href="/images/hero-garden-mower.webp"
-          fetchPriority="high"
-        />
         {settingsMap.FAVICON_IMAGE && (
           <>
             <link rel="icon" href={settingsMap.FAVICON_IMAGE} />

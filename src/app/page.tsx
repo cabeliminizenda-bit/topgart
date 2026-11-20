@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+import ReactDOM from 'react-dom';
 import HlgHero from '@/components/home/HlgHero';
 import GardenDealsShowcase from '@/components/home/GardenDealsShowcase';
 import GardenCategoryShowcase from '@/components/home/GardenCategoryShowcase';
@@ -28,6 +29,18 @@ import {
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  // Hoist instant LCP Preloads directly into HTML <head> via React 19 API (0ms Resource Load Delay)
+  ReactDOM.preload('/images/hero-garden-mower-mobile.webp', {
+    as: 'image',
+    media: '(max-width: 768px)',
+    fetchPriority: 'high',
+  });
+  ReactDOM.preload('/images/hero-garden-mower.webp', {
+    as: 'image',
+    media: '(min-width: 769px)',
+    fetchPriority: 'high',
+  });
+
   const { getCachedSettings, getCachedCategoriesTree } = await import('@/lib/cache');
   const [settings, categories] = await Promise.all([
     getCachedSettings(),
@@ -43,6 +56,7 @@ export default async function Home() {
     catalogBrands = await getCatalogBrandSummaries();
     const allDbProds = await prisma.product.findMany({
       where: { isDeleted: false },
+      take: 60,
       select: {
         id: true,
         title: true,
@@ -65,7 +79,7 @@ export default async function Home() {
       slug: p.slug,
       price: p.price,
       compareAtPrice: p.compareAtPrice,
-      images: p.images || [],
+      images: (p.images || []).slice(0, 2),
       discountLabel: p.discountLabel || (p.compareAtPrice && p.compareAtPrice > p.price ? `-${Math.round(((p.compareAtPrice - p.price) / p.compareAtPrice) * 100)}%` : null),
       categorySlug: p.categories[0]?.slug || '',
       categoryName: p.categories[0]?.name || '',
