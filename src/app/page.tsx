@@ -136,6 +136,16 @@ export default async function Home() {
   // Filter only enabled sections
   const activeSections = layout.filter(s => s.enabled);
 
+  // Extract LCP Hero image for instant SSR preload tag (Lighthouse / PageSpeed optimization)
+  const heroSection = activeSections.find(s => s.type === 'Hero');
+  const heroConfig = heroSection?.settings;
+  const lcpHeroImage =
+    heroConfig?.bannerImage && heroConfig.bannerImage !== '/images/hero-appliances.jpg'
+      ? heroConfig.bannerImage
+      : heroConfig?.bgImageUrl && heroConfig.bgImageUrl !== '/images/hero-appliances.jpg'
+        ? heroConfig.bgImageUrl
+        : '/images/hero-garden-mower.jpg';
+
   const renderSection = (section: SectionConfig) => {
     switch (section.type) {
       case 'Hero':
@@ -203,6 +213,8 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* High-priority preload link hoisted into <head> for instant LCP discovery by browser */}
+      <link rel="preload" as="image" href={lcpHeroImage} fetchPriority="high" />
       <main>
         {activeSections.map(renderSection)}
       </main>

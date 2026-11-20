@@ -688,7 +688,7 @@ export default function ProductActions({
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-3 sm:gap-6">
             {/* Left: Thumb + Title */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden pr-2">
               {(currentVariation?.image || product.images?.[0]) && (
                 <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-[3px] bg-white overflow-hidden shrink-0 border border-stone-200 flex items-center justify-center p-0.5">
                   <Image
@@ -706,13 +706,13 @@ export default function ProductActions({
             </div>
 
             {/* Right: Price + Stepper + Action Buttons */}
-            <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
-              <span className="text-xs sm:text-[15px] font-medium text-[#e05246] tabular-nums">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <span className="text-xs sm:text-[15px] font-medium text-[#e05246] tabular-nums shrink-0">
                 {formatPrice(currentPrice)}
               </span>
 
               {/* Desktop Quantity Stepper */}
-              <div className="hidden sm:flex items-center justify-between border border-stone-200 rounded-[4px] h-[38px] w-[96px] bg-white">
+              <div className="hidden md:flex items-center justify-between border border-stone-200 rounded-[4px] h-[38px] w-[96px] bg-white shrink-0">
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -736,7 +736,7 @@ export default function ProductActions({
                 type="button"
                 onClick={handleAddToCart}
                 disabled={disablePurchase}
-                className={`h-[38px] px-3.5 sm:px-5 rounded-[4px] font-semibold text-xs sm:text-[13px] transition-colors cursor-pointer whitespace-nowrap ${
+                className={`h-[38px] px-3 sm:px-4 rounded-[4px] font-semibold text-xs sm:text-[13px] transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                   disablePurchase
                     ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
                     : 'bg-[#00a86b] hover:bg-[#008f5a] text-white'
@@ -750,7 +750,7 @@ export default function ProductActions({
                   type="button"
                   onClick={handleBuyNow}
                   disabled={disablePurchase}
-                  className={`hidden sm:inline-flex items-center justify-center h-[38px] px-5 rounded-[4px] font-semibold text-[13px] transition-colors cursor-pointer whitespace-nowrap ${
+                  className={`hidden sm:inline-flex items-center justify-center h-[38px] px-3.5 sm:px-4 rounded-[4px] font-semibold text-xs sm:text-[13px] transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     disablePurchase
                       ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
                       : 'bg-[#00a86b] hover:bg-[#008f5a] text-white'

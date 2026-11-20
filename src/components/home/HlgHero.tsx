@@ -359,6 +359,8 @@ export default function HlgHero({
                   alt={stripHtmlTags(slide.title)}
                   fill
                   priority={idx === 0}
+                  loading={idx === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={idx === 0 ? 'high' : 'auto'}
                   sizes="(max-width: 1024px) 100vw, 960px"
                   quality={90}
                   className="object-cover object-center"

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import ProductPageClient from '@/components/product/ProductPageClient';
 import Price from '@/components/Price';
 import ProductReviews from '@/components/product/ProductReviews';
+import ProductCard from '@/components/shop/ProductCard';
+import StoreTrustCards from '@/components/common/StoreTrustCards';
 import Newsletter from '@/components/home/Newsletter';
 import { createClient } from '@/utils/supabase/server';
 import { getTranslations } from 'next-intl/server';
@@ -324,67 +326,37 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             isLoggedIn={isLoggedIn}
           />
 
+          {/* 3 Trust Feature Cards (Kostenlose Rückgabe, Lieferung, Erstkunden-Rabatt) */}
+          <div className="mt-10 sm:mt-12">
+            <StoreTrustCards couponCode={settingsMap.COUPON_CODE || 'GUT727AG'} />
+          </div>
+
           {/* Related Products Section */}
-          <section className="mt-12 sm:mt-14">
+          <section className="mt-10 sm:mt-12">
             <h2 className="text-[19px] font-semibold text-stone-800 mb-4">
               {t('related_products')}
             </h2>
 
             {relatedProducts.length > 0 ? (
-              <div className="bg-[#f9f9fa] border border-stone-200/90 rounded-[4px] p-4 sm:p-5">
+              <div className="bg-[#f9f9fa] border border-stone-200/90 rounded-[6px] p-4 sm:p-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {relatedProducts.map((rp: any) => {
-                    const rpReviews = rp.reviews || [];
-                    const rpRating =
-                      rpReviews.length > 0
-                        ? rpReviews.reduce((acc: number, r: any) => acc + r.rating, 0) / rpReviews.length
-                        : 0;
-
-                    return (
-                      <Link
-                        href={`/produkt/${rp.slug}`}
-                        key={rp.id}
-                        className="group bg-white border border-stone-200 rounded-[4px] p-5 flex flex-col items-center text-center hover:border-[#00a86b]/50 hover:shadow-xs transition"
-                      >
-                        <div className="relative h-44 w-full flex items-center justify-center mb-4">
-                          {rp.images && rp.images[0] ? (
-                            <Image
-                              width={400}
-                              height={400}
-                              src={rp.images[0]}
-                              alt={rp.title}
-                              title={rp.title}
-                              className="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 rounded-full bg-stone-50 flex items-center justify-center text-stone-300">
-                              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div className="mt-auto w-full flex flex-col items-center">
-                          <h3 className="text-[13px] text-stone-700 leading-snug line-clamp-2 group-hover:text-[#00a86b] transition-colors">
-                            {rp.title}
-                          </h3>
-                          <RelatedStars rating={rpRating} />
-                          <div className="flex items-center justify-center gap-2 mt-0.5">
-                            {rp.compareAtPrice && rp.compareAtPrice > rp.price && (
-                              <Price
-                                amount={rp.compareAtPrice}
-                                className="text-[12.5px] text-stone-400 line-through tabular-nums"
-                              />
-                            )}
-                            <Price
-                              amount={rp.price}
-                              className="text-[15px] font-medium text-[#e05246] tabular-nums"
-                            />
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                  {relatedProducts.map((rp: any) => (
+                    <ProductCard
+                      key={rp.id}
+                      product={{
+                        id: rp.id,
+                        title: rp.title,
+                        slug: rp.slug,
+                        price: rp.price,
+                        compareAtPrice: rp.compareAtPrice,
+                        images: rp.images || [],
+                        discountLabel: rp.discountLabel,
+                        categories: rp.categories || [],
+                        reviews: rp.reviews || [],
+                        type: rp.type,
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
             ) : (
