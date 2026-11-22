@@ -89,7 +89,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     const email = cleanStr(formData.get('email'), 254).toLowerCase();
     const firstName = cleanStr(formData.get('firstName'), 100);
     const lastName = cleanStr(formData.get('lastName'), 100);
-    const country = cleanStr(formData.get('country'), 10).toUpperCase();
+    const country = cleanStr(formData.get('country'), 100);
     const company = cleanStr(formData.get('companyName') || formData.get('company'), 150);
     const address1 = cleanStr(formData.get('address1'), 200);
     const address2 = cleanStr(formData.get('address2'), 200);
@@ -98,7 +98,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
     const phone = cleanStr(formData.get('phone'), 50);
     const shippingMethodId = cleanStr(formData.get('shippingMethod'), 100);
     const shipToDifferentAddress = formData.get('shipToDifferentAddress') === 'on';
-    const shippingCountry = cleanStr(formData.get('shippingCountry'), 10).toUpperCase();
+    const shippingCountry = cleanStr(formData.get('shippingCountry'), 100);
 
     const effectiveCountry = shipToDifferentAddress ? shippingCountry : country;
 
@@ -246,16 +246,40 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
       return { error: "Diese Zahlungsmethode ist derzeit nicht verfügbar." };
     }
 
-    let validZone = await prisma.shippingZone.findFirst({
-      where: { name: effectiveCountry, isActive: true },
-      include: { methods: { where: { id: shippingMethodId, isActive: true } } }
-    });
+    let validZone = null;
 
-    if (!validZone && isGermanyCountryName(effectiveCountry)) {
+    if (isGermanyCountryName(effectiveCountry)) {
       validZone = await prisma.shippingZone.findFirst({
-        where: { name: { in: ['Germany', 'Deutschland', 'Allemagne', 'DE'] }, isActive: true },
+        where: {
+          name: { in: ['Germany', 'Deutschland', 'Allemagne', 'DE'], mode: 'insensitive' },
+          isActive: true
+        },
         include: { methods: { where: { id: shippingMethodId, isActive: true } } }
       });
+    }
+
+    if (!validZone) {
+      validZone = await prisma.shippingZone.findFirst({
+        where: {
+          name: { equals: effectiveCountry, mode: 'insensitive' },
+          isActive: true
+        },
+        include: { methods: { where: { id: shippingMethodId, isActive: true } } }
+      });
+    }
+
+    // Direct fallback by shippingMethodId: if the method belongs to an active zone, accept it
+    if (!validZone && shippingMethodId) {
+      const methodWithZone = await prisma.shippingMethod.findFirst({
+        where: { id: shippingMethodId, isActive: true },
+        include: { zone: true }
+      });
+      if (methodWithZone && methodWithZone.zone && methodWithZone.zone.isActive) {
+        validZone = {
+          ...methodWithZone.zone,
+          methods: [methodWithZone]
+        } as any;
+      }
     }
 
     if (!validZone) {

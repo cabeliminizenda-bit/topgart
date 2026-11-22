@@ -153,6 +153,7 @@ export function isGermanyCountryName(name?: string | null): boolean {
   return (
     normalized === 'germany' ||
     normalized === 'deutschland' ||
+    normalized === 'deutschlan' ||
     normalized === 'allemagne' ||
     normalized === 'de'
   );
