@@ -12,9 +12,21 @@ export default async function SaleProductsPage() {
     where: {
       compareAtPrice: { not: null }
     },
-    include: { categories: true, reviews: { select: { rating: true } } },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      price: true,
+      compareAtPrice: true,
+      images: true,
+      stock: true,
+      discountLabel: true,
+      isBestSeller: true,
+      categories: { select: { name: true, slug: true } },
+      reviews: { select: { rating: true } },
+    },
     orderBy: { updatedAt: 'desc' },
-    take: 50 // Fetch sale products
+    take: 40 // Fetch sale products
   });
 
   return (

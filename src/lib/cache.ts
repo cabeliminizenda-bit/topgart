@@ -258,3 +258,41 @@ export const getCachedProductCounts = unstable_cache(
   ['layout-product-counts'],
   { tags: ['products'], revalidate: 3600 }
 );
+
+// Egress Saver: Cache shop filter metadata (categories with product count, brands, price range)
+// instead of hitting Supabase PostgreSQL 4 times on every /shop visit
+export const getCachedShopFilterMetadata = unstable_cache(
+  async () => {
+    const [allCategories, allBrands, priceAgg] = await Promise.all([
+      prisma.category.findMany({
+        include: {
+          _count: {
+            select: { products: { where: { isDeleted: false } } }
+          }
+        },
+        orderBy: { name: 'asc' }
+      }),
+      prisma.brand.findMany({
+        include: {
+          _count: {
+            select: { products: { where: { isDeleted: false } } }
+          }
+        },
+        orderBy: { name: 'asc' }
+      }),
+      prisma.product.aggregate({
+        where: { isDeleted: false },
+        _min: { price: true },
+        _max: { price: true }
+      })
+    ]);
+    return {
+      allCategories,
+      allBrands,
+      globalMinPrice: Math.floor(priceAgg._min?.price || 0),
+      globalMaxPrice: Math.ceil(priceAgg._max?.price || 1000)
+    };
+  },
+  ['shop-filter-metadata'],
+  { tags: ['categories', 'brands', 'products'], revalidate: 300 }
+);

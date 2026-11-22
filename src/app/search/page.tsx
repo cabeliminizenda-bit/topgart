@@ -54,6 +54,7 @@ export default async function SearchPage({
       ? Promise.resolve([])
       : prisma.product.findMany({
         where,
+        take: 48,
         select: {
           id: true,
           title: true,

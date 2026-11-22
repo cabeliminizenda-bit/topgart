@@ -31,6 +31,7 @@ export default async function BlogIndexPage({
       ...(query ? { title: { contains: query, mode: 'insensitive' } } : {})
     },
     orderBy: { createdAt: 'desc' },
+    take: 20,
     include: { _count: { select: { comments: { where: { isApproved: true } } } } }
   });
 

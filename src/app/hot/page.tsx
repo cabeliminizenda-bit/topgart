@@ -9,7 +9,19 @@ export default async function HotProductsPage() {
   const t = await getTranslations('HotProducts');
 
   const products = await prisma.product.findMany({
-    include: { categories: true, reviews: { select: { rating: true } } },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      price: true,
+      compareAtPrice: true,
+      images: true,
+      stock: true,
+      discountLabel: true,
+      isBestSeller: true,
+      categories: { select: { name: true, slug: true } },
+      reviews: { select: { rating: true } },
+    },
     orderBy: {
       orderItems: {
         _count: 'desc'

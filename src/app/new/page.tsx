@@ -9,7 +9,19 @@ export default async function NewArrivalsPage() {
   const t = await getTranslations('NewArrivals');
 
   const products = await prisma.product.findMany({
-    include: { categories: true, reviews: { select: { rating: true } } },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      price: true,
+      compareAtPrice: true,
+      images: true,
+      stock: true,
+      discountLabel: true,
+      isBestSeller: true,
+      categories: { select: { name: true, slug: true } },
+      reviews: { select: { rating: true } },
+    },
     orderBy: { createdAt: 'desc' },
     take: 12 // Fetch latest 12 products
   });
@@ -36,12 +48,12 @@ export default async function NewArrivalsPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
             {products.map((product) => (
-              <ProductCard 
-                key={product.id} 
+              <ProductCard
+                key={product.id}
                 product={{
                   ...product,
                   discountLabel: t('new_badge')
-                } as any} 
+                } as any}
               />
             ))}
           </div>

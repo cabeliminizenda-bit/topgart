@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import prisma from '@/lib/prisma';
+import { getCachedShopFilterMetadata, getCachedSettings } from '@/lib/cache';
 import ProductCard from '@/components/shop/ProductCard';
 import ShopFilters from '@/components/shop/ShopFilters';
 import ShopSort from '@/components/shop/ShopSort';
@@ -131,81 +132,76 @@ export default async function ShopPage({
     if (maxPrice !== undefined && !isNaN(maxPrice)) where.price.lte = maxPrice;
   }
 
-  // Fetch all categories for the filter sidebar with product counts
-  const allCategories = await prisma.category.findMany({
-    include: {
-      _count: {
-        select: { products: { where: { isDeleted: false } } }
-      }
-    },
-    orderBy: { name: 'asc' }
-  });
+  // Egress Saver: Fetch categories, brands, price range and settings from fast cache
+  const [{ allCategories, allBrands, globalMinPrice, globalMaxPrice }, settingsMap] = await Promise.all([
+    getCachedShopFilterMetadata(),
+    getCachedSettings(),
+  ]);
 
-  // Get global min/max price for the slider
-  const priceAgg = await prisma.product.aggregate({
-    where: { isDeleted: false },
-    _min: { price: true },
-    _max: { price: true }
-  });
-  const globalMinPrice = Math.floor(priceAgg._min?.price || 0);
-  const globalMaxPrice = Math.ceil(priceAgg._max?.price || 1000);
-
-  // Fetch all brands for the filter sidebar with product counts
-  const allBrands = await prisma.brand.findMany({
-    include: {
-      _count: {
-        select: { products: { where: { isDeleted: false } } }
-      }
-    },
-    orderBy: { name: 'asc' }
-  });
-
-  // Fetch shop specific settings
-  const settingsDb = await prisma.setting.findMany({
-    where: { key: { in: ['SHOP_CARD_STYLE', 'SHOP_CARD_BORDER_COLOR'] } }
-  });
-  const settingsMap = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
   const cardStyle = (settingsMap.SHOP_CARD_STYLE as 'design1' | 'design2') || 'design2';
   const borderColor = settingsMap.SHOP_CARD_BORDER_COLOR || '';
 
-  // Since filtering by average rating requires relation aggregation not directly supported 
-  // in a simple where clause, we fetch products and filter in memory if ratings filter is active.
-  // For sorting, we can do it in Prisma.
+  // Sorting
   let orderBy: any = { createdAt: 'desc' }; // default 'newest'
   if (sort === 'price_asc') orderBy = { price: 'asc' };
   if (sort === 'price_desc') orderBy = { price: 'desc' };
 
-  // Fetch products
-  const products = await prisma.product.findMany({
-    where,
-    include: {
-      categories: { select: { name: true, slug: true } },
-      reviews: { select: { rating: true } }
-    },
-    orderBy
-  });
+  // Strict field selection: avoids downloading megabytes of description, attributes, specs
+  const productCardSelect = {
+    id: true,
+    title: true,
+    slug: true,
+    price: true,
+    compareAtPrice: true,
+    images: true,
+    stock: true,
+    discountLabel: true,
+    isBestSeller: true,
+    categories: { select: { name: true, slug: true } },
+    reviews: { select: { rating: true } },
+  };
 
-  // Filter by rating in memory if needed
-  let filteredProducts = products;
-  if (ratings.length > 0) {
-    filteredProducts = products.filter(p => {
+  let totalResults = 0;
+  let paginatedProducts: any[] = [];
+
+  if (ratings.length === 0) {
+    // 99% of requests: Strict SQL pagination in PostgreSQL (huge Egress & latency reduction)
+    const [count, rows] = await Promise.all([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        select: productCardSelect,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+    totalResults = count;
+    paginatedProducts = rows;
+  } else {
+    // When rating filter is active: fetch only card fields
+    const products = await prisma.product.findMany({
+      where,
+      select: productCardSelect,
+      orderBy,
+    });
+
+    const filteredProducts = products.filter(p => {
       const avg = p.reviews.length > 0
-        ? p.reviews.reduce((acc, curr) => acc + curr.rating, 0) / p.reviews.length
+        ? p.reviews.reduce((acc, curr: any) => acc + curr.rating, 0) / p.reviews.length
         : 0;
       const roundedAvg = Math.round(avg);
-      // We check if the rounded average rating is within the selected ratings
       return ratings.includes(roundedAvg) || (ratings.includes(0) && p.reviews.length === 0);
     });
+
+    totalResults = filteredProducts.length;
+    const startIndex = (page - 1) * limit;
+    paginatedProducts = filteredProducts.slice(startIndex, startIndex + limit);
   }
 
-  const totalResults = filteredProducts.length;
   const totalPages = Math.ceil(totalResults / limit);
   const startIndex = (page - 1) * limit;
   const endIndex = Math.min(startIndex + limit, totalResults);
-
-  // Paginate in memory (since we might have filtered in memory)
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + limit);
-
   const currentRange = `${totalResults > 0 ? startIndex + 1 : 0}-${endIndex}`;
 
   const validCategories = allCategories

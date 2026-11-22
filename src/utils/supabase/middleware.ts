@@ -6,6 +6,15 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Fast path: If the visitor has no Supabase auth cookies, do not make an outbound HTTPS call to Supabase Auth.
+  // This saves massive network Egress and latency on all anonymous and bot traffic.
+  const hasAuthCookie = request.cookies.getAll().some(
+    c => c.name.startsWith('sb-') && (c.name.endsWith('-auth-token') || c.name.includes('-auth-token.'))
+  )
+  if (!hasAuthCookie) {
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

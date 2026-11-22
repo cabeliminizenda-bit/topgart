@@ -32,10 +32,10 @@ export async function middleware(request: NextRequest) {
       (forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
       (request as NextRequest & { ip?: string }).ip ||
       '127.0.0.1';
-    
+
     // Check limit for this IP
     const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`);
-    
+
     if (!success) {
       const isRSC = request.headers.get('rsc') === '1' || request.nextUrl.searchParams.has('_rsc');
       if (isRSC || request.headers.get('accept')?.includes('application/json')) {
@@ -55,15 +55,15 @@ export async function middleware(request: NextRequest) {
 
       return new NextResponse(
         `<!DOCTYPE html><html lang="de"><head><title>429 Zu viele Anfragen</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family: system-ui; text-align: center; padding: 2rem; background: #f9fafb;"><h1 style="color: #ef4444;">Zugriff vorübergehend gesperrt</h1><p>Sie haben in kurzer Zeit zu viele Anfragen gesendet.</p><p>Aus Sicherheitsgründen warten Sie bitte einige Sekunden, bevor Sie es erneut versuchen.</p></body></html>`,
-        { 
-          status: 429, 
+        {
+          status: 429,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
             'X-RateLimit-Limit': limit.toString(),
             'X-RateLimit-Remaining': remaining.toString(),
             'X-RateLimit-Reset': reset.toString(),
             'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
-          } 
+          }
         }
       );
     }
@@ -115,6 +115,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|eot)$).*)',
   ],
 }
