@@ -16,8 +16,12 @@ import CategoryExplorer from '@/components/home/CategoryExplorer';
 import ShippingSimulator from '@/components/home/ShippingSimulator';
 import FeaturedProductTabs from '@/components/home/FeaturedProductTabs';
 import HeatingGuideBlogs from '@/components/home/HeatingGuideBlogs';
-import prisma from '@/lib/prisma';
-import { getCatalogBrandSummaries } from '@/lib/brands';
+import {
+  getCachedSettings,
+  getCachedCategoriesTree,
+  getCachedHomepageProducts,
+  getCachedCatalogBrandSummaries,
+} from '@/lib/cache';
 import { getOptimizedImageUrl } from '@/lib/images';
 import {
   CatalogBrandSummary,
@@ -26,7 +30,7 @@ import {
   normalizeHomepageSections,
 } from '@/components/home/categorySectionData';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 export default async function Home() {
   // Hoist instant LCP Preloads directly into HTML <head> via React 19 API (0ms Resource Load Delay)
@@ -43,77 +47,15 @@ export default async function Home() {
     type: 'image/avif',
   });
 
-  const { getCachedSettings, getCachedCategoriesTree } = await import('@/lib/cache');
-  const [settings, categories] = await Promise.all([
+  const [settings, categories, homepageData, catalogBrands] = await Promise.all([
     getCachedSettings(),
     getCachedCategoriesTree(),
+    getCachedHomepageProducts(),
+    getCachedCatalogBrandSummaries(),
   ]);
 
-  // Fetch products & brands from Prisma
-  let formattedProducts: any[] = [];
-  let dbBestsellers: any[] = [];
-  let catalogBrands: CatalogBrandSummary[] = [];
-
-  try {
-    catalogBrands = await getCatalogBrandSummaries();
-    const allDbProds = await prisma.product.findMany({
-      where: { isDeleted: false },
-      take: 60,
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        price: true,
-        compareAtPrice: true,
-        images: true,
-        discountLabel: true,
-        isBestSeller: true,
-        gtin: true,
-        brand: { select: { name: true } },
-        categories: { select: { name: true, slug: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    formattedProducts = allDbProds.map(p => ({
-      id: p.id,
-      title: p.title,
-      slug: p.slug,
-      price: p.price,
-      compareAtPrice: p.compareAtPrice,
-      images: (p.images || []).slice(0, 2),
-      discountLabel: p.discountLabel || (p.compareAtPrice && p.compareAtPrice > p.price ? `-${Math.round(((p.compareAtPrice - p.price) / p.compareAtPrice) * 100)}%` : null),
-      categorySlug: p.categories[0]?.slug || '',
-      categoryName: p.categories[0]?.name || '',
-      categories: p.categories.map(c => ({ name: c.name, slug: c.slug || '' })),
-      allCategories: p.categories.map(c => `${c.name} ${c.slug}`).join(' ')
-    }));
-
-    // Dynamic detection of best-selling products:
-    // Prioritize isBestSeller flag, then products with valid images and highest interest
-    const detectedBestsellers = allDbProds
-      .filter(p => p.isBestSeller)
-      .concat(allDbProds.filter(p => !p.isBestSeller && p.images && p.images.length > 0))
-      .slice(0, 6)
-      .map((p, idx) => ({
-        id: p.id,
-        title: p.title,
-        price: `${p.price.toFixed(2).replace('.', ',')}€`,
-        rawPrice: p.price,
-        image: p.images?.[0] || '/images/deals/bestseller-1.jpg',
-        slug: p.slug,
-        rank: idx + 1,
-        energyRating: p.title.match(/\b([A-G]|\bA\+{1,3})\b/i)?.[1]?.toUpperCase() || undefined,
-        rating: 5,
-        ratingScore: '(5.00)'
-      }));
-
-    if (detectedBestsellers.length > 0) {
-      dbBestsellers = detectedBestsellers;
-    }
-  } catch (e) {
-    console.error('Failed to fetch products for homepage:', e);
-  }
+  const formattedProducts = homepageData.formattedProducts;
+  const dbBestsellers = homepageData.dbBestsellers;
 
   let layout: SectionConfig[] = [];
   try {

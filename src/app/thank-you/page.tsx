@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
-import prisma from '@/lib/prisma';
 import ThankYouClient from './ThankYouClient';
+import { getCachedSettings } from '@/lib/cache';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
   const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
@@ -17,15 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ThankYouPage() {
-  const settingsDb = await prisma.setting.findMany({
-    where: {
-      key: {
-        startsWith: 'THANKYOU_'
-      }
-    }
-  });
-
-  const settings = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+  const settings = await getCachedSettings();
 
   return <ThankYouClient settings={settings} />;
 }

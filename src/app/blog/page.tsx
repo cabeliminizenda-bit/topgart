@@ -2,11 +2,12 @@ import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import BlogSidebar from '@/components/blog/BlogSidebar';
 import { getRecentComments } from '@/actions/blog';
+import { getCachedBlogArticles } from '@/lib/cache';
 import { getTranslations, getLocale } from 'next-intl/server';
 import Image from "next/image";
 import { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Ratgeber & Blog | Top Gartengeräte',
@@ -25,22 +26,43 @@ export default async function BlogIndexPage({
   const t = await getTranslations('Blog');
   const locale = await getLocale();
   
-  const articles = await prisma.article.findMany({
-    where: {
-      isPublished: true,
-      ...(query ? { title: { contains: query, mode: 'insensitive' } } : {})
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 20,
-    include: { _count: { select: { comments: { where: { isApproved: true } } } } }
-  });
+  let articles: any[] = [];
+  let recentArticles: any[] = [];
 
-  const recentArticles = await prisma.article.findMany({
-    where: { isPublished: true },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
-    select: { id: true, title: true, slug: true }
-  });
+  if (!query) {
+    const cached = await getCachedBlogArticles();
+    articles = cached.articles;
+    recentArticles = cached.recentArticles;
+  } else {
+    const [searchedArticles, recents] = await Promise.all([
+      prisma.article.findMany({
+        where: {
+          isPublished: true,
+          title: { contains: query, mode: 'insensitive' }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          image: true,
+          category: true,
+          createdAt: true,
+          excerpt: true,
+          _count: { select: { comments: { where: { isApproved: true } } } }
+        }
+      }),
+      prisma.article.findMany({
+        where: { isPublished: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { id: true, title: true, slug: true }
+      })
+    ]);
+    articles = searchedArticles;
+    recentArticles = recents;
+  }
 
   const recentComments = await getRecentComments(5);
 
@@ -89,7 +111,7 @@ export default async function BlogIndexPage({
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-3 mb-4 flex-1">
-                      {article.excerpt || article.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').substring(0, 150) + '...'}
+                      {article.excerpt || article.title}
                     </p>
                     <Link href={`/blog/${article.slug}`} className="inline-block mt-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-6 rounded transition self-start">
                       {t('read_more')}

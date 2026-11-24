@@ -1,6 +1,6 @@
 import { getSettings } from '@/actions/settings';
 import CheckoutClient from './CheckoutClient';
-import prisma from '@/lib/prisma';
+import { getCachedShippingZones } from '@/lib/cache';
 import { Suspense } from 'react';
 import { isGermanyCountryName } from '@/lib/shipping';
 import { Metadata } from 'next';
@@ -26,11 +26,7 @@ export default async function CheckoutPage() {
     BANK_TRANSFER_CHECKOUT_MESSAGE: settings.BANK_TRANSFER_CHECKOUT_MESSAGE || '',
   };
 
-  const rawZones = await prisma.shippingZone.findMany({
-    where: { isActive: true },
-    orderBy: { name: 'asc' },
-    include: { methods: { where: { isActive: true }, orderBy: { createdAt: 'asc' } } }
-  });
+  const rawZones = await getCachedShippingZones();
 
   const zones = [...rawZones].sort((a, b) => {
     const aDe = isGermanyCountryName(a.name) ? 0 : 1;

@@ -26,11 +26,7 @@ const inter = Inter({
 const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Top Gartengeräte";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settingsDb = await prisma.setting.findMany({
-    where: { key: { in: ['FAVICON_IMAGE', 'HOME_META_TITLE', 'HOME_META_DESCRIPTION', 'OG_IMAGE', 'HEADER_LOGO_IMAGE', 'GOOGLE_SITE_VERIFICATION', 'BING_SITE_VERIFICATION'] } }
-  });
-
-  const settingsMap = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+  const settingsMap = await getCachedSettings();
   const faviconUrl = settingsMap['FAVICON_IMAGE'] || '/logo-top-gartengeraete-dark.svg';
   const title = settingsMap['HOME_META_TITLE'] || `${storeName} | Hochwertige Gartengeräte zu besten Preisen`;
   const description = settingsMap['HOME_META_DESCRIPTION'] || "Entdecken Sie hochwertige Gartengeräte zu den besten Preisen bei Top Gartengeräte. Rasenmäher, Mähroboter, Motorsägen, Heckenscheren, Hochdruckreiniger und mehr.";

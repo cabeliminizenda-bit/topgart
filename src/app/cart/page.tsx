@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import { getCachedShippingZones } from '@/lib/cache';
 import CartClient from './CartClient';
 import { isGermanyCountryName } from '@/lib/shipping';
 import { Metadata } from 'next';
@@ -14,11 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CartPage() {
-  const rawZones = await prisma.shippingZone.findMany({
-    where: { isActive: true },
-    orderBy: { name: 'asc' },
-    include: { methods: { where: { isActive: true }, orderBy: { createdAt: 'asc' } } },
-  });
+  const rawZones = await getCachedShippingZones();
 
   const zones = [...rawZones].sort((a, b) => {
     const aDe = isGermanyCountryName(a.name) ? 0 : 1;

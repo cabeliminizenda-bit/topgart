@@ -179,11 +179,12 @@ export default async function ShopPage({
     totalResults = count;
     paginatedProducts = rows;
   } else {
-    // When rating filter is active: fetch only card fields
+    // When rating filter is active: fetch only card fields (capped at 100 max to protect Egress)
     const products = await prisma.product.findMany({
       where,
       select: productCardSelect,
       orderBy,
+      take: 100,
     });
 
     const filteredProducts = products.filter(p => {

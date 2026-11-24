@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import prisma from '@/lib/prisma';
+import { getCachedSettings } from '@/lib/cache';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -12,8 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NotFound() {
-  const settingsDb = await prisma.setting.findMany();
-  const settings = settingsDb.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+  const settings = await getCachedSettings();
 
   let title = settings.NOT_FOUND_TITLE || "Seite nicht gefunden (404)";
   if (/p[aá]gina|n[aã]o|encontrad|oops/i.test(title)) {

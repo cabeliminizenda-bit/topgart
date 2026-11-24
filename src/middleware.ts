@@ -20,6 +20,15 @@ export async function middleware(request: NextRequest) {
   const isPrefetch = request.headers.get('purpose') === 'prefetch' || request.headers.get('x-middleware-prefetch') === '1';
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
 
+  // 0. Anti-Scraper / Bot Protection at Edge (Zero Fluid Active CPU & Zero DB Egress)
+  const userAgent = request.headers.get('user-agent') || '';
+  if (
+    /AhrefsBot|SemrushBot|MJ12bot|DotBot|PetalBot|Bytespider|DataForSeoBot|BLEXBot/i.test(userAgent) &&
+    !isAdminRoute
+  ) {
+    return new NextResponse('Access denied for automated scrapers.', { status: 403 });
+  }
+
   // 1. Rate Limiting Check (Protection anti-DDoS / Brute force sur routes publiques)
   if (ratelimit && !isAdminRoute && !isPrefetch) {
     // Prefer trusted Vercel/proxy headers before generic x-forwarded-for

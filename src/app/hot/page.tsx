@@ -1,34 +1,13 @@
-import prisma from '@/lib/prisma';
+import { getCachedHotProducts } from '@/lib/cache';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import ProductCard from '@/components/shop/ProductCard';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 export default async function HotProductsPage() {
   const t = await getTranslations('HotProducts');
-
-  const products = await prisma.product.findMany({
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      price: true,
-      compareAtPrice: true,
-      images: true,
-      stock: true,
-      discountLabel: true,
-      isBestSeller: true,
-      categories: { select: { name: true, slug: true } },
-      reviews: { select: { rating: true } },
-    },
-    orderBy: {
-      orderItems: {
-        _count: 'desc'
-      }
-    },
-    take: 40 // Fetch hot products
-  });
+  const products = await getCachedHotProducts();
 
   return (
     <div className="bg-gray-50 min-h-screen py-8 font-sans">
