@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
-import { createClient } from '@/utils/supabase/server';
+import { requireAdminPage } from '@/lib/auth';
 import SettingsSidebar from '@/components/admin/SettingsSidebar';
 
 export const dynamic = 'force-dynamic';
@@ -12,19 +12,8 @@ export default async function SettingsLayout({ children }: { children: React.Rea
     redirect('/admin/setup');
   }
 
-  // 2. Check current session
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    redirect('/admin/login');
-  }
-
-  // 3. Verify user role
-  const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-  if (!dbUser || dbUser.role !== 'ADMIN') {
-    redirect('/admin/login');
-  }
+  // 2. Verify admin session (supports standalone Neon session)
+  await requireAdminPage();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
