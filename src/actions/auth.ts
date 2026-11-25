@@ -3,10 +3,16 @@
 import { createClient } from '@/utils/supabase/server';
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { timingSafeStringEqual } from '@/lib/serverSecrets';
 import { SITE_URL } from '@/lib/site';
+import {
+  ADMIN_SESSION_COOKIE,
+  createAdminSessionToken,
+  verifyAdminSessionToken,
+  verifyPassword,
+} from '@/lib/session';
 
 export async function loginUser(formData: FormData) {
   const ip = await getClientIp();
@@ -162,8 +168,14 @@ export async function registerUser(formData: FormData) {
 }
 
 export async function logoutUser() {
-  const supabase = await createClient();
-  await supabase.auth.signOut({ scope: 'global' });
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete(ADMIN_SESSION_COOKIE);
+  } catch {}
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut({ scope: 'global' });
+  } catch {}
   revalidatePath('/', 'layout');
   return { success: true };
 }
@@ -265,7 +277,7 @@ export async function setupAdmin(formData: FormData) {
 
 export async function loginAdmin(formData: FormData) {
   const ip = await getClientIp();
-  const rl = await checkRateLimit(`login_admin_${ip}`, 5, 900); // 5 attempts per 15 mins
+  const rl = await checkRateLimit(`login_admin_${ip}`, 10, 900); // 10 attempts per 15 mins
   if (!rl.success) {
     return { error: 'Zu viele Anmeldeversuche. Zugriff vorübergehend gesperrt.' };
   }
@@ -278,34 +290,79 @@ export async function loginAdmin(formData: FormData) {
   }
 
   // SECURITY (H4): Also rate-limit per admin email across IPs
-  const emailRl = await checkRateLimit(`login_admin_email_${email}`, 5, 900);
+  const emailRl = await checkRateLimit(`login_admin_email_${email}`, 10, 900);
   if (!emailRl.success) {
     return { error: 'Zu viele Anmeldeversuche. Zugriff vorübergehend gesperrt.' };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+  // 1. Standalone Neon Admin Authentication (Zero Supabase Dependency)
+  const dbUser = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: 'insensitive' }, role: 'ADMIN' },
   });
 
-  if (error) {
-    return { error: 'Ungültige Zugangsdaten.' };
-  }
+  if (dbUser) {
+    const [hashSetting, saltSetting] = await Promise.all([
+      prisma.setting.findUnique({ where: { key: 'ADMIN_PASSWORD_HASH' } }),
+      prisma.setting.findUnique({ where: { key: 'ADMIN_PASSWORD_SALT' } }),
+    ]);
 
-  if (data.user) {
-    const user = await prisma.user.findUnique({ where: { id: data.user.id } });
-    if (!user || user.role !== 'ADMIN') {
-      await supabase.auth.signOut({ scope: 'global' });
-      return { error: 'Zugriff verweigert. Sie verfügen über keine Administratorrechte.' };
+    if (hashSetting?.value && saltSetting?.value) {
+      const isValid = verifyPassword(password, hashSetting.value, saltSetting.value);
+      if (isValid) {
+        const token = createAdminSessionToken({
+          id: dbUser.id,
+          email: dbUser.email,
+          role: dbUser.role,
+        });
+
+        const cookieStore = await cookies();
+        cookieStore.set(ADMIN_SESSION_COOKIE, token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 14 * 24 * 60 * 60, // 14 days
+          path: '/',
+        });
+
+        revalidatePath('/admin', 'layout');
+        return { success: true };
+      }
     }
   }
 
-  revalidatePath('/admin', 'layout');
-  return { success: true };
+  // 2. Fallback to Supabase Auth if standalone hash not configured
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!error && data.user) {
+      const user = await prisma.user.findUnique({ where: { id: data.user.id } });
+      if (user && user.role === 'ADMIN') {
+        revalidatePath('/admin', 'layout');
+        return { success: true };
+      }
+    }
+  } catch (supabaseErr) {
+    console.warn('[loginAdmin] Supabase Auth unavailable (fallback passed):', supabaseErr);
+  }
+
+  return { error: 'Ungültige Zugangsdaten.' };
 }
 
 export async function getUserRole() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+    const session = verifyAdminSessionToken(token);
+    if (session?.userId) {
+      const dbUser = await prisma.user.findUnique({ where: { id: session.userId } });
+      if (dbUser) return dbUser.role;
+    }
+  } catch {}
+
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

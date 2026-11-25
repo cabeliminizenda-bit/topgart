@@ -85,7 +85,8 @@ export async function middleware(request: NextRequest) {
   // For example, redirect unauthenticated users away from /account
   const url = request.nextUrl.clone()
   const hasSession = request.cookies.getAll().some(
-    c => c.name.startsWith('sb-') && (c.name.endsWith('-auth-token') || c.name.includes('-auth-token.'))
+    c => (c.name.startsWith('sb-') && (c.name.endsWith('-auth-token') || c.name.includes('-auth-token.'))) ||
+         c.name === 'admin_session'
   )
 
   if (url.pathname.startsWith('/account')) {

@@ -411,7 +411,7 @@ export async function processCheckout(formData: FormData, cartItems: any[], fina
           if (subscriberSetting?.value) {
             try {
               subscribers = JSON.parse(subscriberSetting.value);
-            } catch {}
+            } catch { }
           }
           const isSubscribed = subscribers.some(s => s.email.toLowerCase().trim() === email);
           if (!isSubscribed) {
