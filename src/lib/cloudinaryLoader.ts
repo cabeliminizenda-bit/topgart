@@ -28,8 +28,20 @@ export default function cloudinaryLoader({
     const uploadIndex = src.indexOf('/image/upload/');
     const prefix = src.slice(0, uploadIndex + '/image/upload/'.length);
     const suffix = src.slice(uploadIndex + '/image/upload/'.length);
+    // Quantize width to discrete buckets to collapse permutations and prevent Cloudinary credit exhaustion
+    let targetWidth = 640;
+    if (width <= 384) {
+      targetWidth = 384;
+    } else if (width <= 640) {
+      targetWidth = 640;
+    } else if (width <= 1080) {
+      targetWidth = 1080;
+    } else {
+      targetWidth = 1600;
+    }
+
     const q = quality && quality <= 80 ? `q_${quality}` : 'q_auto:good';
-    const w = width ? `w_${width},c_limit` : 'w_600,c_limit';
+    const w = `w_${targetWidth},c_limit`;
     return `${prefix}f_auto,${q},${w}/${suffix}`;
   }
 
